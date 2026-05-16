@@ -7,6 +7,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toaster } from "@/components/ui/sonner";
 import { ClerkProvider } from "@clerk/nextjs";
 import { shadcn } from "@clerk/ui/themes";
+import { UserStoreWatcher } from "@/providers/UserStoreWatcher";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
 
@@ -65,7 +66,10 @@ export default function RootLayout({
             enableSystem
             disableTransitionOnChange
           >
-            <TooltipProvider>{children}</TooltipProvider>
+            <TooltipProvider>
+              <UserStoreWatcher />
+              {children}
+            </TooltipProvider>
             <Toaster />
           </ThemeProvider>
         </ClerkProvider>
