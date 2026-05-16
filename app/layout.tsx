@@ -5,6 +5,8 @@ import { cn } from "@/lib/utils";
 import { ThemeProvider } from "@/components/custom/ThemeProvider";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toaster } from "@/components/ui/sonner";
+import { ClerkProvider } from "@clerk/nextjs";
+import { shadcn } from "@clerk/ui/themes";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
 
@@ -51,15 +53,22 @@ export default function RootLayout({
       )}
     >
       <body className="min-h-full flex flex-col">
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="system"
-          enableSystem
-          disableTransitionOnChange
+        <ClerkProvider
+          appearance={{
+            theme: shadcn,
+            variables: { colorPrimary: "#9ae600" },
+          }}
         >
-          <TooltipProvider>{children}</TooltipProvider>
-          <Toaster />
-        </ThemeProvider>
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="system"
+            enableSystem
+            disableTransitionOnChange
+          >
+            <TooltipProvider>{children}</TooltipProvider>
+            <Toaster />
+          </ThemeProvider>
+        </ClerkProvider>
       </body>
     </html>
   );
