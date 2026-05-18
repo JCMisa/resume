@@ -40,7 +40,26 @@ export const resumes = pgTable("resumes", {
     .notNull(),
   title: text("title").notNull(),
   category: text("category").notNull().default("General"), // e.g., "Tech", "Healthcare", "VA"
-  content: jsonb("content").notNull(), // Structured JSON from Gemini
+
+  // The core profile text parsed (extracted text organized into structural arrays)
+  content: jsonb("content").notNull(),
+
+  // Store Gemini's direct resume analysis, grading flags, and tips
+  analysis: jsonb("analysis").$type<{
+    overallScore: number;
+    readability: string;
+    keyKeywords: string[];
+    summary: string;
+    strengths: string[];
+    weaknesses: string[];
+    improvements: {
+      section: string;
+      current: string;
+      suggested: string;
+      reason: string;
+    }[];
+    gapsDetected: string[];
+  }>(),
 
   // Professional touches
   isDefault: boolean("is_default").default(false),

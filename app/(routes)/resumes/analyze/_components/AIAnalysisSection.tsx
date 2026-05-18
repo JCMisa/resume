@@ -10,18 +10,37 @@ import {
   TargetIcon,
   ShieldCheckIcon,
   ArrowLeftIcon,
+  AlertTriangleIcon,
 } from "lucide-react";
 import { motion } from "motion/react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { useRouter } from "next/navigation";
+import { Resume } from "@/config/schema";
 
 const AIAnalysisSection = ({
+  data,
   onBack,
   ...props
 }: {
+  data: Resume;
   onBack: () => void;
   [key: string]: any;
 }) => {
+  const router = useRouter();
+
+  const analysis = data?.analysis || {
+    overallScore: 0,
+    readability: "Pending",
+    keyKeywords: [],
+    summary: "No evaluation parsed.",
+    strengths: [],
+    weaknesses: [],
+    improvements: [],
+    gapsDetected: [],
+  };
+
   return (
     <motion.div
       {...props}
@@ -30,23 +49,24 @@ const AIAnalysisSection = ({
       exit={{ opacity: 0, x: -50 }}
       className="space-y-10"
     >
+      {/* TOP METRIC CARDS */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {[
           {
             label: "Job Match Score",
-            value: "92%",
+            value: `${analysis.overallScore}%`,
             icon: TargetIcon,
             color: "text-primary",
           },
           {
             label: "Key Industry Words",
-            value: "24 found",
+            value: `${analysis.keyKeywords.length} found`,
             icon: Search,
             color: "text-blue-500",
           },
           {
             label: "Readability Check",
-            value: "Excellent",
+            value: analysis.readability,
             icon: ShieldCheckIcon,
             color: "text-emerald-500",
           },
@@ -74,6 +94,7 @@ const AIAnalysisSection = ({
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        {/* MAIN FEEDBACK BOX */}
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
@@ -93,27 +114,17 @@ const AIAnalysisSection = ({
                 Overall Summary
               </h3>
               <p className="text-muted-foreground leading-relaxed">
-                You show strong experience in leading engineering tasks and
-                managing product life cycles. Your technical background
-                highlights great knowledge of cloud setups (AWS/GCP) and systems
-                structure. Your work tenure points to great stability and deep
-                expertise in React ecosystems.
+                {analysis.summary}
               </p>
             </div>
 
+            {/* STRENGTHS */}
             <div className="space-y-4">
               <h3 className="text-sm font-bold tracking-widest text-primary uppercase">
                 Your Core Strengths Detected
               </h3>
               <div className="flex flex-wrap gap-2">
-                {[
-                  "Distributed Systems",
-                  "Typescript",
-                  "System Architecture",
-                  "Cloud Native",
-                  "Team Leadership",
-                  "Next.js 15+",
-                ].map((skill) => (
+                {analysis.strengths.map((skill: string) => (
                   <span
                     key={skill}
                     className="px-4 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-bold uppercase tracking-wider"
@@ -123,29 +134,50 @@ const AIAnalysisSection = ({
                 ))}
               </div>
             </div>
+
+            {/* CAREER GAPS / CONCERNS AREA */}
+            {analysis.gapsDetected.length > 0 && (
+              <div className="space-y-3 pt-2">
+                <h3 className="text-sm font-bold tracking-widest text-amber-500 uppercase flex items-center gap-2">
+                  <AlertTriangleIcon className="h-4 w-4" /> Warnings / Timeline
+                  Gaps
+                </h3>
+                <ul className="list-disc pl-5 text-sm text-muted-foreground space-y-1">
+                  {analysis.gapsDetected.map((gap: string, idx: number) => (
+                    <li key={idx}>{gap}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
           </div>
         </motion.div>
 
+        {/* SIDE ACTIONS */}
         <motion.div
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0.4 }}
           className="lg:col-span-4 space-y-6"
         >
-          <div className="p-8 rounded-3xl border bg-stone-50 dark:bg-stone-950  shadow-2xl relative overflow-hidden group">
+          <div className="p-8 rounded-3xl border bg-stone-50 dark:bg-stone-950 shadow-2xl relative overflow-hidden group">
             <div className="absolute top-0 right-0 p-8 opacity-10 scale-150 rotate-12 group-hover:scale-175 transition-transform duration-700">
               <Sparkles size={120} />
             </div>
             <div className="relative z-10 space-y-6">
               <div>
-                <h3 className="text-xl font-bold mb-2">Improve Your Wording</h3>
+                <h3 className="text-xl font-bold mb-2">
+                  Build Your Career Story
+                </h3>
                 <p className="text-stone-500 dark:text-stone-400 text-sm leading-relaxed">
-                  Let AI polish your resume sentences to make them catch the
-                  attention of recruiters and hiring software.
+                  Let AI help you craft a standout resume that highlights your
+                  skills and gets noticed by recruiters and hiring platforms.
                 </p>
               </div>
-              <Button className="w-full bg-black dark:bg-white text-white dark:text-black hover:bg-stone-800 dark:hover:bg-stone-200 transition-colors font-bold py-6 rounded-2xl">
-                Start AI Polishing
+              <Button
+                onClick={() => router.push("/resumes/create")}
+                className="w-full bg-black dark:bg-white text-white dark:text-black hover:bg-stone-800 dark:hover:bg-stone-200 transition-colors font-bold py-6 rounded-2xl"
+              >
+                Start Creating Your Resume
                 <ArrowRightIcon className="h-5 w-5 ml-2" />
               </Button>
             </div>
@@ -154,20 +186,30 @@ const AIAnalysisSection = ({
           <div className="p-6 rounded-3xl border bg-card/50 backdrop-blur-sm space-y-4">
             <h4 className="font-bold flex items-center gap-2">
               <Layout className="h-4 w-4 text-primary" />
-              Recommended Next Steps
+              Industry Suggestions
             </h4>
-            <div className="space-y-3">
-              <div className="flex items-center gap-3 p-3 rounded-xl bg-muted/50 border border-transparent hover:border-primary/20 transition-all cursor-pointer">
-                <div className="h-2 w-2 rounded-full bg-primary" />
-                <span className="text-sm font-medium">
-                  Check Current Salary Rates
-                </span>
+            <ScrollArea className="h-[180px] pr-3">
+              <div className="space-y-2">
+                {analysis.improvements
+                  .slice(0, 3)
+                  .map((item: any, idx: number) => (
+                    <div
+                      key={idx}
+                      className="p-3 rounded-xl bg-muted/50 text-xs space-y-1"
+                    >
+                      <p className="font-bold text-primary uppercase text-[10px]">
+                        {item.section}
+                      </p>
+                      <p className="text-muted-foreground">
+                        <span className="line-through">{item.current}</span> -{" "}
+                        <span className="font-semibold text-foreground">
+                          {item.suggested}
+                        </span>
+                      </p>
+                    </div>
+                  ))}
               </div>
-              <div className="flex items-center gap-3 p-3 rounded-xl bg-muted/50 border border-transparent hover:border-primary/20 transition-all cursor-pointer">
-                <div className="h-2 w-2 rounded-full bg-primary/40" />
-                <span className="text-sm font-medium">Find Skills Gaps</span>
-              </div>
-            </div>
+            </ScrollArea>
           </div>
 
           <Button
@@ -177,6 +219,15 @@ const AIAnalysisSection = ({
           >
             <ArrowLeftIcon className="h-5 w-5 mr-2" />
             Scan a Different File
+          </Button>
+
+          <Button
+            variant="default"
+            onClick={() => router.push("/resumes")}
+            className="w-full rounded-2xl py-6 text-white"
+          >
+            Proceed to Resumes
+            <ArrowRightIcon className="h-5 w-5 mr-2" />
           </Button>
         </motion.div>
       </div>
