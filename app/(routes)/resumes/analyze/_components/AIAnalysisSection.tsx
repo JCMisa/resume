@@ -24,7 +24,7 @@ const AIAnalysisSection = ({
   onBack,
   ...props
 }: {
-  data: Resume;
+  data: Resume | null;
   onBack: () => void;
   [key: string]: any;
 }) => {

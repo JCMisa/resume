@@ -12,11 +12,13 @@ const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 export async function analyzeAndStoreResumeAction(
   rawText: string,
   fileName: string,
+  fileUrl: string,
 ) {
   try {
     const { userId } = await auth();
     if (!userId) throw new Error("Unauthorized access configuration.");
 
+    // 🚀 ALIGNED PROMPT: Matches the exact object parameters expected by the Form view state layers
     const systemPrompt = `
       You are an elite corporate recruiter and professional resume parsing engine. 
       Analyze the raw text extracted from a user's resume PDF and convert it into structured content arrays alongside a critical, honest resume audit.
@@ -26,11 +28,19 @@ export async function analyzeAndStoreResumeAction(
 
       {
         "content": {
-          "fullName": "string",
-          "email": "string",
-          "skills": ["string"],
-          "experience": [{ "company": "string", "role": "string", "duration": "string", "bullets": ["string"] }],
-          "education": [{ "institution": "string", "degree": "string", "year": "string" }]
+          "personalDetails": {
+            "name": "string",
+            "phone": "string",
+            "email": "string",
+            "address": "string",
+            "links": [{ "label": "string", "url": "string" }]
+          },
+          "professionalSummary": "string",
+          "skills": [{ "category": "string", "value": "string" }],
+          "experiences": [{ "company": "string", "role": "string", "duration": "string", "bullets": ["string"] }],
+          "projects": [{ "title": "string", "duration": "string", "description": ["string"] }],
+          "educations": [{ "schoolName": "string", "course": "string", "major": "string", "duration": "string", "gwa": "string" }],
+          "certificates": [{ "title": "string", "issuedDate": "string", "description": "string" }]
         },
         "analysis": {
           "overallScore": number (1 to 100),
@@ -48,9 +58,8 @@ export async function analyzeAndStoreResumeAction(
       ${rawText}
     `;
 
-    // Calling Gemini 3 Flash requesting structured JSON output
     const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
+      model: "gemini-3.1-flash-lite",
       contents: systemPrompt,
       config: {
         responseMimeType: "application/json",
@@ -63,14 +72,58 @@ export async function analyzeAndStoreResumeAction(
 
     const parsedData = JSON.parse(resultText);
 
-    // Drizzle Standard Query Insertion Mapping
+    // 🛠️ BACKFILL ATOMIC IDs & DEFAULT SORT ORDER FOR THE DND SYSTEM
+    // Since Gemini creates raw objects, we map through arrays to append random crypto IDs
+    // so the frontend Drag-and-Drop tracking indexes have structural reference tags right away.
+    const content = parsedData.content;
+
+    if (content.skills)
+      content.skills = content.skills.map((s: any) => ({
+        id: globalThis.crypto.randomUUID(),
+        ...s,
+      }));
+    if (content.experiences)
+      content.experiences = content.experiences.map((e: any) => ({
+        id: globalThis.crypto.randomUUID(),
+        ...e,
+      }));
+    if (content.projects)
+      content.projects = content.projects.map((p: any) => ({
+        id: globalThis.crypto.randomUUID(),
+        ...p,
+      }));
+    if (content.educations)
+      content.educations = content.educations.map((ed: any) => ({
+        id: globalThis.crypto.randomUUID(),
+        ...ed,
+      }));
+    if (content.certificates)
+      content.certificates = content.certificates.map((c: any) => ({
+        id: globalThis.crypto.randomUUID(),
+        ...c,
+      }));
+
+    // Injecting the initial default render positions order sequence list index arrays
+    content.sectionOrder = [
+      "personal",
+      "summary",
+      "skills",
+      "experience",
+      "projects",
+      "education",
+      "certificates",
+    ];
+
+    // Drizzle Insertion
     const [insertedResume] = await db
       .insert(resumes)
       .values({
         userId: userId,
         title: fileName.replace(".pdf", "") + " (AI Analyzed)",
         category: "General",
-        content: parsedData.content,
+        fileUrl: fileUrl,
+        status: "parsed", // Explicitly tag this row as an AI incoming file upload asset
+        content: content,
         analysis: parsedData.analysis,
       })
       .returning();
@@ -106,6 +159,54 @@ export async function getResumeDetailsAction(resumeId: string) {
     return {
       success: false,
       error: error.message || "Failed to load resume details.",
+    };
+  }
+}
+
+export async function createManualResumeAction(payload: {
+  title: string;
+  category: string;
+  content: {
+    personalDetails?: any;
+    professionalSummary?: string;
+    skills?: any[];
+    experiences?: any[];
+    projects?: any[];
+    educations?: any[];
+    certificates?: any[];
+    sectionOrder: string[];
+  };
+}) {
+  try {
+    const { userId } = await auth();
+    if (!userId) throw new Error("Unauthorized access profile configuration.");
+
+    // 1. Mock PDF Generation Stream for Cloudinary
+    // In production, you can link an HTML-to-PDF binary (like puppeteer or resend layout frames)
+    // to pipe a true vector file. For now, we seed a fallback preview file asset url path.
+    const fallbackCloudinaryPdfUrl =
+      "https://res.cloudinary.com/dzxnbappk/raw/upload/v1779182640/resumedocs/cickrhuv6v056tcyhqmx.pdf";
+
+    // 2. Map structural values directly to your resumes pgTable definition
+    const [newRecord] = await db
+      .insert(resumes)
+      .values({
+        userId: userId,
+        title: payload.title || "Untitled Form Resume",
+        category: payload.category || "General",
+        fileUrl: fallbackCloudinaryPdfUrl, // Storing document asset paths securely
+        status: "created", // Tags this item explicitly as a custom built form
+        content: payload.content, // Injects your nested structural forms state arrays
+        // Analysis block remains undefined initially until they trigger an explicit AI review request
+      })
+      .returning();
+
+    return { success: true, data: newRecord };
+  } catch (error: any) {
+    console.error("Studio Creation Pipeline failure:", error);
+    return {
+      success: false,
+      error: error.message || "Failed to catalog manual resume data records.",
     };
   }
 }

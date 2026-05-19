@@ -15,6 +15,20 @@
       "when": 1779110032369,
       "tag": "0001_lowly_millenium_guard",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1779181183723,
+      "tag": "0002_wealthy_marvel_apes",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1779188488713,
+      "tag": "0003_uneven_speedball",
+      "breakpoints": true
     }
   ]
 }

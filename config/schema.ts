@@ -20,6 +20,7 @@ export const interviewStatusEnum = pgEnum("interview_status", [
   "completed",
   "failed",
 ]);
+export const resumeStatusEnum = pgEnum("resume_status", ["parsed", "created"]);
 
 // USERS
 export const users = pgTable("users", {
@@ -39,12 +40,61 @@ export const resumes = pgTable("resumes", {
     .references(() => users.id, { onDelete: "cascade" })
     .notNull(),
   title: text("title").notNull(),
-  category: text("category").notNull().default("General"), // e.g., "Tech", "Healthcare", "VA"
+  category: text("category").notNull().default("General"),
+  fileUrl: text("file_url"), // Cloudinary URL generated upon clicking "Finish"
 
-  // The core profile text parsed (extracted text organized into structural arrays)
-  content: jsonb("content").notNull(),
+  // Differentiating the source background
+  status: resumeStatusEnum("status").default("created").notNull(),
 
-  // Store Gemini's direct resume analysis, grading flags, and tips
+  // 100% Flexible JSON data object containing user form entries + section ordering positions
+  content: jsonb("content")
+    .$type<{
+      personalDetails?: {
+        name?: string;
+        phone?: string;
+        email?: string;
+        address?: string;
+        links?: { label: string; url: string }[];
+      };
+      professionalSummary?: string;
+      skills?: { id: string; category: string; value: string }[];
+      experiences?: {
+        id: string;
+        company: string;
+        role: string;
+        duration: string; // e.g., "July 2025 - Present"
+        bullets: string[];
+      }[];
+      projects?: {
+        id: string;
+        title: string;
+        duration: string;
+        description: string[]; // Bullet points
+        links?: { label: string; url: string }[];
+      }[];
+      educations?: {
+        id: string;
+        schoolName: string;
+        course: string;
+        major?: string;
+        duration: string;
+        gwa?: string;
+      }[];
+      certificates?: {
+        id: string;
+        title: string;
+        issuedDate: string;
+        expirationDate?: string;
+        description?: string;
+        links?: { label: string; url: string }[];
+      }[];
+      // 🎛️ DRAG & DROP TRACKING ORDER SECTION
+      // Keeps track of user preferences, e.g., ["personal", "summary", "projects", "skills"...]
+      sectionOrder: string[];
+    }>()
+    .notNull(),
+
+  // Store Gemini's direct resume analysis, grading flags, and tips (Nullable if manual build)
   analysis: jsonb("analysis").$type<{
     overallScore: number;
     readability: string;
@@ -61,7 +111,6 @@ export const resumes = pgTable("resumes", {
     gapsDetected: string[];
   }>(),
 
-  // Professional touches
   isDefault: boolean("is_default").default(false),
   templateId: text("template_id").default("modern"),
 

@@ -12,7 +12,7 @@ import {
   ArrowRightIcon,
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
-import { cn } from "@/lib/utils";
+import { cn, formatBytes } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { ProcessStage } from "../page";
 
@@ -25,7 +25,6 @@ interface UploadSectionProps {
   handleFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   stage: ProcessStage;
   file: File | null;
-  formatBytes: (bytes: number) => string;
   statusMessage: string;
   progress: number;
   onProceed: () => void;
@@ -40,7 +39,6 @@ const UploadSection = ({
   handleFileChange,
   stage,
   file,
-  formatBytes,
   statusMessage,
   progress,
   onProceed,
@@ -264,7 +262,10 @@ const UploadSection = ({
                 </motion.div>
               )}
 
-              {(stage === "reading" || stage === "extracting") && (
+              {(stage === "reading" ||
+                stage === "extracting" ||
+                stage === "uploading_to_cloud" ||
+                stage === "ai_processing") && (
                 <motion.div
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
@@ -278,10 +279,14 @@ const UploadSection = ({
                       <Sparkles className="h-10 w-10 text-primary animate-pulse" />
                       <div className="text-center">
                         <p className="text-xs font-black text-primary tracking-widest uppercase mb-1">
-                          AI is Reading...
+                          {stage === "uploading_to_cloud"
+                            ? "Archiving Document..."
+                            : "AI is Reading..."}
                         </p>
                         <p className="text-[10px] text-muted-foreground font-mono">
-                          Finding work history, skills, and education...
+                          {stage === "uploading_to_cloud"
+                            ? "Saving original binary layout to cloud storage..."
+                            : "Finding work history, skills, and education..."}
                         </p>
                       </div>
                     </div>

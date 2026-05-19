@@ -145,3 +145,12 @@
 .animate-scan {
   animation: scan 2.5s linear infinite;
 }
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}

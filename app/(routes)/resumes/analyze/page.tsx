@@ -10,11 +10,13 @@ import UploadSection from "./_components/UploadSection";
 import AIAnalysisSection from "./_components/AIAnalysisSection";
 import StepIndicator from "./_components/StepIndicator";
 import { analyzeAndStoreResumeAction } from "@/lib/actions/resume";
+import { useCloudinaryUpload } from "@/hooks/useCloudinaryUpload";
 
 export type ProcessStage =
   | "idle"
   | "reading"
   | "extracting"
+  | "uploading_to_cloud" // ☁️ Added stage to track active Cloudinary pushes
   | "ai_processing"
   | "success"
   | "error";
@@ -30,8 +32,10 @@ const AnalyzeResumePage = () => {
   const [statusMessage, setStatusMessage] = useState("");
   const [extractedText, setExtractedText] = useState("");
 
-  // Track backend state returned payload
   const [analysisResult, setAnalysisResult] = useState<any>(null);
+
+  // Initialize Cloudinary custom client-side hook
+  const { uploadDocument, progress: uploadProgress } = useCloudinaryUpload();
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -108,50 +112,54 @@ const AnalyzeResumePage = () => {
     }
   };
 
-  // Triggers backend server operation workflow
+  // Orchestrates dual cloud storage upload and Gemini text evaluation
   const handleAIAnalysisInference = async () => {
     if (!extractedText || !file) return;
 
-    setStage("ai_processing");
-    setProgress(93);
-    setStatusMessage("AI is reviewing layout structure and keywords...");
+    let secureFileUrl = "";
 
-    // Simulate stepping status indicators for user clarity
-    setTimeout(
-      () =>
-        setStatusMessage(
-          "Gemini is auditing professional experience metrics...",
-        ),
-      1500,
-    );
-    setTimeout(
-      () =>
-        setStatusMessage("Saving structured records securely to database..."),
-      3200,
-    );
+    try {
+      // Step A: Push the file to Cloudinary
+      setStage("uploading_to_cloud");
+      setStatusMessage(
+        "Archiving resume document securely in cloud storage...",
+      );
 
-    const response = await analyzeAndStoreResumeAction(
-      extractedText,
-      file.name,
-    );
+      const cloudUpload = await uploadDocument(file);
+      secureFileUrl = cloudUpload.secure_url;
 
-    if (response.success && response.data) {
-      setProgress(100);
-      setAnalysisResult(response.data);
-      toast.success("Resume processed and saved successfully!");
-      setCurrentView("analysis");
-    } else {
+      // Step B: Fire the Gemini Server Action
+      setStage("ai_processing");
+      setProgress(95);
+      setStatusMessage("AI is reviewing layout structure and keywords...");
+
+      const response = await analyzeAndStoreResumeAction(
+        extractedText,
+        file.name,
+        secureFileUrl, // Pass down the verified Cloudinary secure URL link
+      );
+
+      if (response.success && response.data) {
+        setProgress(100);
+        setAnalysisResult(response.data);
+        toast.success("Resume processed and saved successfully!");
+        setCurrentView("analysis");
+      } else {
+        throw new Error(response.error || "Generation pipeline error.");
+      }
+    } catch (error: any) {
+      console.error("Analysis Pipeline Crash:", error);
       setStage("error");
-      setStatusMessage("AI could not finalize the matrix check. Try again.");
-      toast.error(response.error || "Generation error.");
+      setStatusMessage(
+        error.message || "AI could not finalize the check. Try again.",
+      );
+      toast.error(error.message || "Processing error.");
     }
   };
 
-  const formatBytes = (bytes: number) => {
-    if (bytes === 0) return "0 Bytes";
-    const k = 1024;
-    return parseFloat((bytes / k).toFixed(2)) + " KB";
-  };
+  // Track if progress reflects local text mapping or remote cloud file uploading percentages
+  const currentProgress =
+    stage === "uploading_to_cloud" ? uploadProgress : progress;
 
   return (
     <div className="min-h-screen bg-background transition-colors duration-500 overflow-x-hidden">
@@ -183,9 +191,8 @@ const AnalyzeResumePage = () => {
               handleFileChange={handleFileChange}
               stage={stage}
               file={file}
-              formatBytes={formatBytes}
               statusMessage={statusMessage}
-              progress={progress}
+              progress={currentProgress} // Bind the combined progress variable
               onProceed={handleAIAnalysisInference}
             />
           ) : (
