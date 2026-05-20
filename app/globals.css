@@ -130,6 +130,22 @@
   }
 }
 
+@media print {
+  body {
+    background: white !important;
+    color: black !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* Hides extra scrolling artifacts or container borders during file printing rendering */
+  .no-print,
+  button,
+  nav {
+    display: none !important;
+  }
+}
+
 @keyframes scan {
   0% {
     top: 0%;

@@ -114,29 +114,49 @@ const AnalyzeResumePage = () => {
 
   // Orchestrates dual cloud storage upload and Gemini text evaluation
   const handleAIAnalysisInference = async () => {
-    if (!extractedText || !file) return;
+    // Debug log checks to find exactly what state is missing
+    console.log("Analyzing validation:", {
+      hasText: !!extractedText,
+      textLength: extractedText?.length,
+      hasFile: !!file,
+    });
+
+    if (!extractedText || !file) {
+      toast.error(
+        "Text extraction failed. This PDF might be print-optimized or image-based.",
+        {
+          description:
+            "Try scanning a standard text-based PDF, or click 'Start Creating Your Resume' to input details directly!",
+          duration: 6000,
+        },
+      );
+      setStage("error");
+      setStatusMessage("Parsing failed: No readable text characters found.");
+      return;
+    }
 
     let secureFileUrl = "";
 
     try {
-      // Step A: Push the file to Cloudinary
       setStage("uploading_to_cloud");
       setStatusMessage(
         "Archiving resume document securely in cloud storage...",
       );
 
+      console.log("Initiating Cloudinary upload...");
       const cloudUpload = await uploadDocument(file);
       secureFileUrl = cloudUpload.secure_url;
+      console.log("Cloudinary upload successful! URL:", secureFileUrl);
 
-      // Step B: Fire the Gemini Server Action
       setStage("ai_processing");
       setProgress(95);
       setStatusMessage("AI is reviewing layout structure and keywords...");
 
+      console.log("Invoking Gemini server analysis action pipeline...");
       const response = await analyzeAndStoreResumeAction(
         extractedText,
         file.name,
-        secureFileUrl, // Pass down the verified Cloudinary secure URL link
+        secureFileUrl,
       );
 
       if (response.success && response.data) {
@@ -148,12 +168,10 @@ const AnalyzeResumePage = () => {
         throw new Error(response.error || "Generation pipeline error.");
       }
     } catch (error: any) {
-      console.error("Analysis Pipeline Crash:", error);
+      console.error("CRITICAL PIPELINE CRASH:", error);
       setStage("error");
-      setStatusMessage(
-        error.message || "AI could not finalize the check. Try again.",
-      );
-      toast.error(error.message || "Processing error.");
+      setStatusMessage(error.message || "AI could not finalize the check.");
+      toast.error(error.message || "Processing error execution failure.");
     }
   };
 

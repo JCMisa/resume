@@ -133,7 +133,7 @@ export default function ResumeLivePreview({
             <h3 className="text-xs font-black uppercase tracking-widest text-stone-800 dark:text-stone-200">
               Professional Summary
             </h3>
-            <p className="text-xs leading-relaxed text-stone-600 dark:text-stone-400 text-justify">
+            <p className="text-xs leading-relaxed wrap-break-word text-stone-600 dark:text-stone-400 text-justify">
               {professionalSummary}
             </p>
           </div>
@@ -327,27 +327,30 @@ export default function ResumeLivePreview({
   };
 
   const previewShell = (
-    <div className="w-full min-h-[800px] bg-white dark:bg-neutral-950 rounded-2xl border p-6 lg:p-8 shadow-xl flex flex-col space-y-4 font-sans text-stone-900 dark:text-stone-100 select-none">
-      {sectionOrder.map((sectionId) => {
-        const content = renderSectionContent(sectionId);
-        if (!content) return null;
+    <div className="w-full min-h-[800px] bg-white dark:bg-neutral-950 rounded-2xl border p-6 lg:p-8 print:shadow-none print:border-none flex flex-col space-y-4 font-sans text-stone-900 dark:text-stone-100 select-none">
+      {/* 🚀 1. Filter out empty sections first to calculate the true visible last section index */}
+      {sectionOrder
+        .filter((sectionId) => renderSectionContent(sectionId) !== null)
+        .map((sectionId, index, filteredArray) => {
+          const content = renderSectionContent(sectionId);
 
-        // Wrap each active structural item node into the custom sortable container wrapper
-        return (
-          <SortablePreviewSection
-            key={sectionId}
-            id={sectionId}
-            isFinalPreview={isFinalPreview}
-          >
-            <div className="w-full">
-              {content}
-              {sectionId !== "personal" && (
-                <div className="h-[1px] bg-stone-200 dark:bg-stone-800 w-full my-3 pointer-events-none" />
-              )}
-            </div>
-          </SortablePreviewSection>
-        );
-      })}
+          return (
+            <SortablePreviewSection
+              key={sectionId}
+              id={sectionId}
+              isFinalPreview={isFinalPreview}
+            >
+              <div className="w-full">
+                {content}
+
+                {/* 🚀 2. Apply a separator after every section EXCEPT the very last visible one */}
+                {index < filteredArray.length - 1 && (
+                  <div className="h-[1px] bg-stone-200 dark:bg-stone-800 w-full my-3 pointer-events-none" />
+                )}
+              </div>
+            </SortablePreviewSection>
+          );
+        })}
     </div>
   );
 

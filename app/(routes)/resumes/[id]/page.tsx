@@ -17,6 +17,7 @@ import {
   Globe,
   Code,
   FolderGit2,
+  SparklesIcon,
 } from "lucide-react";
 import Link from "next/link";
 import { getResumeDetailsAction } from "@/lib/actions/resume";
@@ -185,6 +186,13 @@ export default async function ResumeDetailsPage({ params }: PageProps) {
             Original Document Archive
           </h3>
           <ResumeFileViewer url={fileUrl} />
+
+          <Button variant={"outline"} className="w-full mt-5 py-4" asChild>
+            <Link href={"/resumes/analyze"}>
+              <SparklesIcon className="h-4 w-4 mr-2 text-primary" />
+              Analyze your Resume
+            </Link>
+          </Button>
         </div>
 
         {/* RIGHT COLUMN: AI AUDIT AND PARSED SCHEMA TABS */}

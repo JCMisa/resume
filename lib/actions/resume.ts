@@ -181,20 +181,13 @@ export async function createManualResumeAction(payload: {
     const { userId } = await auth();
     if (!userId) throw new Error("Unauthorized access profile configuration.");
 
-    // 1. Mock PDF Generation Stream for Cloudinary
-    // In production, you can link an HTML-to-PDF binary (like puppeteer or resend layout frames)
-    // to pipe a true vector file. For now, we seed a fallback preview file asset url path.
-    const fallbackCloudinaryPdfUrl =
-      "https://res.cloudinary.com/dzxnbappk/raw/upload/v1779182640/resumedocs/cickrhuv6v056tcyhqmx.pdf";
-
-    // 2. Map structural values directly to your resumes pgTable definition
     const [newRecord] = await db
       .insert(resumes)
       .values({
         userId: userId,
         title: payload.title || "Untitled Form Resume",
         category: payload.category || "General",
-        fileUrl: fallbackCloudinaryPdfUrl, // Storing document asset paths securely
+        // fileUrl block remains null initially since this is a manual form creation flow without file upload
         status: "created", // Tags this item explicitly as a custom built form
         content: payload.content, // Injects your nested structural forms state arrays
         // Analysis block remains undefined initially until they trigger an explicit AI review request
