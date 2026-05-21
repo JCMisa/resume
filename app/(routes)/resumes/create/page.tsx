@@ -4,7 +4,6 @@
 import { useState, useRef } from "react";
 import { ThemeToggler } from "@/components/custom/ThemeToggler";
 import {
-  Search,
   ChevronLeft,
   ChevronRight,
   CheckCircle2,
@@ -162,12 +161,6 @@ export default function CreateResumePage() {
       <nav className="border-b bg-background/80 backdrop-blur-md sticky top-0 z-50">
         <div className="max-w-[1600px] mx-auto px-6 h-16 flex items-center justify-between">
           <div className="flex items-center gap-6">
-            <div className="flex items-center gap-2 font-bold text-lg tracking-tight">
-              <div className="h-7 w-7 bg-primary rounded-md flex items-center justify-center text-primary-foreground">
-                <Search className="h-4 w-4" />
-              </div>
-              <span>ResuMe Studio</span>
-            </div>
             <input
               type="text"
               value={resumeTitle}

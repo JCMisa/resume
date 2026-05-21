@@ -2,9 +2,7 @@
 "use client";
 
 import React, { useState, useRef } from "react";
-import { Search } from "lucide-react";
 import { AnimatePresence } from "motion/react";
-import { ThemeToggler } from "@/components/custom/ThemeToggler";
 import { toast } from "sonner";
 import UploadSection from "./_components/UploadSection";
 import AIAnalysisSection from "./_components/AIAnalysisSection";
@@ -181,20 +179,6 @@ const AnalyzeResumePage = () => {
 
   return (
     <div className="min-h-screen bg-background transition-colors duration-500 overflow-x-hidden">
-      <nav className="border-b bg-background/80 backdrop-blur-md sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="h-8 w-8 bg-primary rounded-lg flex items-center justify-center">
-              <Search className="h-5 w-5 text-primary-foreground" />
-            </div>
-            <span className="font-bold text-xl tracking-tight">ResuMe</span>
-          </div>
-          <div className="flex items-center gap-4">
-            <ThemeToggler />
-          </div>
-        </div>
-      </nav>
-
       <section className="max-w-6xl mx-auto px-6 py-12 lg:py-24 space-y-16">
         <StepIndicator currentStep={currentView} />
 

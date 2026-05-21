@@ -138,6 +138,79 @@ export async function analyzeAndStoreResumeAction(
   }
 }
 
+export async function analyzeExistingResumeAction(resumeId: string) {
+  try {
+    const { userId } = await auth();
+    if (!userId) throw new Error("Unauthorized access configuration.");
+
+    // 1. Fetch the existing resume directly from Drizzle
+    const [existingResume] = await db
+      .select()
+      .from(resumes)
+      .where(and(eq(resumes.id, resumeId), eq(resumes.userId, userId)));
+
+    if (!existingResume) throw new Error("Resume record not found.");
+
+    // 2. Build a targeted prompt using the pre-existing content block JSON
+    const optimizationPrompt = `
+      You are an elite corporate recruiter and professional resume parsing engine.
+      Analyze the structured JSON content profile of this candidate's resume and generate a critical, honest resume audit.
+
+      Analyze layout alignment, potential career timeline gaps, wording choices, and alignment with industry standards.
+      You must respond ONLY with a clean JSON object matching this schema format exactly:
+
+      {
+        "analysis": {
+          "overallScore": number (1 to 100),
+          "readability": "string (e.g., Excellent, Good, Needs Improvement)",
+          "keyKeywords": ["string"],
+          "summary": "string",
+          "strengths": ["string"],
+          "weaknesses": ["string"],
+          "improvements": [{ "section": "string", "current": "string", "suggested": "string", "reason": "string" }],
+          "gapsDetected": ["string"]
+        }
+      }
+
+      CANDIDATE DATA TO EVALUATE:
+      ${JSON.stringify(existingResume.content, null, 2)}
+    `;
+
+    // 3. Fire the request up to your active Gemini client tier
+    const response = await ai.models.generateContent({
+      model: "gemini-3.1-flash-lite",
+      contents: optimizationPrompt,
+      config: {
+        responseMimeType: "application/json",
+      },
+    });
+
+    const resultText = response.text;
+    if (!resultText)
+      throw new Error("Empty diagnostic dataset returned from Gemini.");
+
+    const parsedPayload = JSON.parse(resultText);
+
+    // 4. Perform an in-place update on the target row using Drizzle
+    const [updatedResume] = await db
+      .update(resumes)
+      .set({
+        analysis: parsedPayload.analysis,
+        updatedAt: new Date(),
+      })
+      .where(and(eq(resumes.id, resumeId), eq(resumes.userId, userId)))
+      .returning();
+
+    return { success: true, data: updatedResume };
+  } catch (error: any) {
+    console.error("Direct Optimization Pipeline Failure:", error);
+    return {
+      success: false,
+      error: error.message || "Failed to complete internal audit calculations.",
+    };
+  }
+}
+
 export async function getResumeDetailsAction(resumeId: string) {
   try {
     const { userId } = await auth();
@@ -200,6 +273,39 @@ export async function createManualResumeAction(payload: {
     return {
       success: false,
       error: error.message || "Failed to catalog manual resume data records.",
+    };
+  }
+}
+
+export async function updateResumeFileUrlAction(
+  resumeId: string,
+  fileUrl: string,
+) {
+  try {
+    const { userId } = await auth();
+    if (!userId) throw new Error("Unauthorized access configuration.");
+
+    // Perform an in-place update on the target resume's fileUrl property
+    const [updatedRecord] = await db
+      .update(resumes)
+      .set({
+        fileUrl: fileUrl,
+        updatedAt: new Date(),
+      })
+      .where(and(eq(resumes.id, resumeId), eq(resumes.userId, userId)))
+      .returning();
+
+    if (!updatedRecord)
+      throw new Error("Resume record not found or write permissions denied.");
+
+    return { success: true, data: updatedRecord };
+  } catch (error: any) {
+    console.error("File URL Attachment Failure:", error);
+    return {
+      success: false,
+      error:
+        error.message ||
+        "Failed to update file attachments inside the database.",
     };
   }
 }

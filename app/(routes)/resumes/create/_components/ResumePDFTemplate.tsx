@@ -287,7 +287,9 @@ export default function ResumePDFTemplate({ data }: ResumePDFTemplateProps) {
                 <View style={{ alignItems: "flex-end" }}>
                   <Text style={styles.itemDuration}>{edu.duration}</Text>
                   {edu.gwa && (
-                    <Text style={{ fontSize: 8 }}>GWA: {edu.gwa}</Text>
+                    <Text style={{ fontSize: 8, color: "#78716c" }}>
+                      GWA: {edu.gwa}
+                    </Text>
                   )}
                 </View>
               </View>

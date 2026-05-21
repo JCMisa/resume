@@ -282,7 +282,7 @@ export default function ResumeLivePreview({
                       {edu.duration}
                     </p>
                     {edu.gwa && (
-                      <p className="text-[10px] font-mono font-bold text-primary">
+                      <p className="text-[10px] font-mono font-bold text-stone-500">
                         GWA: {edu.gwa}
                       </p>
                     )}
