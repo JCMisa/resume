@@ -178,8 +178,8 @@ const AnalyzeResumePage = () => {
     stage === "uploading_to_cloud" ? uploadProgress : progress;
 
   return (
-    <div className="min-h-screen bg-background transition-colors duration-500 overflow-x-hidden">
-      <section className="max-w-6xl mx-auto px-6 py-12 lg:py-24 space-y-16">
+    <div className="min-h-screen bg-background transition-colors duration-500 overflow-x-hidden overflow-y-auto no-scrollbar w-full">
+      <section className="w-full px-6 py-12 lg:py-24 space-y-16">
         <StepIndicator currentStep={currentView} />
 
         <AnimatePresence mode="wait">

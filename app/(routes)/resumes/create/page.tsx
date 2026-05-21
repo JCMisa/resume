@@ -156,10 +156,10 @@ export default function CreateResumePage() {
   };
 
   return (
-    <div className="min-h-screen bg-background text-foreground overflow-x-hidden flex flex-col">
+    <div className="min-h-screen bg-background text-foreground overflow-x-hidden w-full overflow-y-auto no-scrollbar flex flex-col">
       {/* GLOBAL WORKSPACE NAV BAR */}
-      <nav className="border-b bg-background/80 backdrop-blur-md sticky top-0 z-50">
-        <div className="max-w-[1600px] mx-auto px-6 h-16 flex items-center justify-between">
+      <nav className="border-b bg-background/80 backdrop-blur-md sticky top-0 z-50 w-[calc(100%-20px)]">
+        <div className="w-full px-6 h-16 flex items-center justify-between">
           <div className="flex items-center gap-6">
             <input
               type="text"
@@ -184,7 +184,7 @@ export default function CreateResumePage() {
       </nav>
 
       {/* CORE TWO COLUMN BUILDER WORKSPACE SCREEN */}
-      <div className="flex-grow max-w-[1600px] w-full mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8 p-4 lg:p-8 items-start">
+      <div className="flex-grow w-full  grid grid-cols-1 lg:grid-cols-12 gap-8 p-4 lg:p-8 items-start">
         {/* LEFT PANEL FORM */}
         <div className="lg:col-span-5 border bg-card/40 backdrop-blur-sm rounded-3xl shadow-xl flex flex-col min-h-[650px] overflow-hidden sticky top-24">
           <div className="border-b bg-muted/20 px-6 py-4 flex items-center justify-between">
