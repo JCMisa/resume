@@ -117,7 +117,7 @@ export function AppSidebar({ ...props }: AppSidebarProps) {
         >
           {!isCollapsed ? (
             <Link href={"/"} className="flex items-center mt-2 justify-center">
-              <p className="font-extrabold tracking-wider text-2xl">ResuMe</p>
+              <p className="font-extrabold tracking-wider text-2xl">ResuM</p>
               <Image
                 src="/logo.svg"
                 loading="lazy"

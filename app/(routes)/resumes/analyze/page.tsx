@@ -179,7 +179,7 @@ const AnalyzeResumePage = () => {
 
   return (
     <div className="min-h-screen bg-background transition-colors duration-500 overflow-x-hidden overflow-y-auto no-scrollbar w-full">
-      <section className="w-full px-6 py-12 lg:py-24 space-y-16">
+      <section className="w-full px-6 py-8 lg:py-16 space-y-16">
         <StepIndicator currentStep={currentView} />
 
         <AnimatePresence mode="wait">

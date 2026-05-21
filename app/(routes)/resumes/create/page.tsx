@@ -2,7 +2,6 @@
 "use client";
 
 import { useState, useRef } from "react";
-import { ThemeToggler } from "@/components/custom/ThemeToggler";
 import {
   ChevronLeft,
   ChevronRight,
@@ -168,18 +167,15 @@ export default function CreateResumePage() {
               className="bg-muted/40 px-3 py-1.5 rounded-xl border border-transparent hover:border-border focus:border-primary text-sm font-bold transition-all focus:outline-none"
             />
           </div>
-          <div className="flex items-center gap-4">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setIsFinalPreview(!isFinalPreview)}
-              className="rounded-xl font-bold gap-1.5 text-xs hidden md:flex"
-            >
-              <Eye className="h-4 w-4" />
-              {isFinalPreview ? "Edit Mode" : "Final Clear View"}
-            </Button>
-            <ThemeToggler />
-          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setIsFinalPreview(!isFinalPreview)}
+            className="rounded-xl font-bold gap-1.5 text-xs hidden md:flex"
+          >
+            <Eye className="h-4 w-4" />
+            {isFinalPreview ? "Edit Mode" : "Final Clear View"}
+          </Button>
         </div>
       </nav>
 
