@@ -6,8 +6,24 @@ import { auth } from "@clerk/nextjs/server";
 import { db } from "@/config/db";
 import { resumes } from "@/config/schema";
 import { and, eq } from "drizzle-orm";
+import arcjet, { shield, tokenBucket, request } from "@arcjet/next"; // 🚀 1. Import Arcjet
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+
+// 🚀 2. Initialize the rate-limiting guard config
+const aj = arcjet({
+  key: process.env.ARCJET_KEY!,
+  characteristics: ["userId"], // Unique identifier rate-limiting fingerprint
+  rules: [
+    shield({ mode: "LIVE" }),
+    tokenBucket({
+      mode: "LIVE",
+      refillRate: 1, // Refill 1 token
+      interval: "1h", // Every hour
+      capacity: 1, // Maximum burst size capacity is 1 request
+    }),
+  ],
+});
 
 export async function analyzeAndStoreResumeAction(
   rawText: string,
@@ -17,6 +33,21 @@ export async function analyzeAndStoreResumeAction(
   try {
     const { userId } = await auth();
     if (!userId) throw new Error("Unauthorized access configuration.");
+
+    // 🚀 3. Intercept and evaluate rate limits
+    const decision = await aj.protect(await request(), {
+      userId,
+      requested: 1,
+    });
+
+    if (decision.isDenied()) {
+      if (decision.reason.isRateLimit()) {
+        throw new Error(
+          `Rate limit exceeded. You can analyze again in a few moments. Remaining tokens: 0`,
+        );
+      }
+      throw new Error("Request rejected by security gate.");
+    }
 
     // 🚀 ALIGNED PROMPT: Matches the exact object parameters expected by the Form view state layers
     const systemPrompt = `
@@ -142,6 +173,21 @@ export async function analyzeExistingResumeAction(resumeId: string) {
   try {
     const { userId } = await auth();
     if (!userId) throw new Error("Unauthorized access configuration.");
+
+    // 🚀 4. Apply identical structural protection block here
+    const decision = await aj.protect(await request(), {
+      userId,
+      requested: 1,
+    });
+
+    if (decision.isDenied()) {
+      if (decision.reason.isRateLimit()) {
+        throw new Error(
+          "Rate limit hit. Please wait an hour for token bucket refresh.",
+        );
+      }
+      throw new Error("Forbidden access transaction.");
+    }
 
     // 1. Fetch the existing resume directly from Drizzle
     const [existingResume] = await db

@@ -2,7 +2,6 @@
 "use client";
 
 import {
-  Sparkles,
   Search,
   Layout,
   ArrowRightIcon,
@@ -18,6 +17,7 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useRouter } from "next/navigation";
 import { Resume } from "@/config/schema";
+import Image from "next/image";
 
 const AIAnalysisSection = ({
   data,
@@ -161,7 +161,13 @@ const AIAnalysisSection = ({
         >
           <div className="p-8 rounded-3xl border bg-stone-50 dark:bg-stone-950 shadow-2xl relative overflow-hidden group">
             <div className="absolute top-0 right-0 p-8 opacity-10 scale-150 rotate-12 group-hover:scale-175 transition-transform duration-700">
-              <Sparkles size={120} />
+              {/* <Sparkles size={120} /> */}
+              <Image
+                src="/trademark.png"
+                alt="trademark"
+                width={300}
+                height={300}
+              />
             </div>
             <div className="relative z-10 space-y-6">
               <div>

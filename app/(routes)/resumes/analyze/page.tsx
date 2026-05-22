@@ -163,7 +163,7 @@ const AnalyzeResumePage = () => {
         toast.success("Resume processed and saved successfully!");
         setCurrentView("analysis");
       } else {
-        throw new Error(response.error || "Generation pipeline error.");
+        toast.error(response.error || "Generation pipeline error.");
       }
     } catch (error: any) {
       console.error("CRITICAL PIPELINE CRASH:", error);

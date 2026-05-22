@@ -20,26 +20,21 @@ export default function AnalyzeResumeButton({ resumeId }: AnalyzeButtonProps) {
     if (isAnalyzing) return;
 
     setIsAnalyzing(true);
-    const toastId = toast.loading(
-      "Invoking AI engine to build audit data grids...",
-    );
 
     try {
       const response = await analyzeExistingResumeAction(resumeId);
 
       if (response.success) {
-        toast.success("AI Analysis compiled successfully!", { id: toastId });
+        toast.success("AI Analysis compiled successfully!");
 
         // Tells Next.js to re-run the server query context and re-render page fields with fresh data
         router.refresh();
       } else {
-        throw new Error(response.error || "Internal evaluation error.");
+        toast.error(response.error || "Internal evaluation error.");
       }
     } catch (error: any) {
       console.error(error);
-      toast.error(error.message || "Pipeline execution failed.", {
-        id: toastId,
-      });
+      toast.error(error.message || "Pipeline execution failed.");
     } finally {
       setIsAnalyzing(false);
     }
