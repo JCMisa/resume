@@ -94,7 +94,7 @@ export default async function ResumeDetailsPage({ params }: PageProps) {
 
   if (!result.success || !result.data) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center text-center p-6 space-y-4">
+      <div className="min-h-screen w-full flex flex-col items-center justify-center text-center p-6 space-y-4">
         <AlertTriangle className="h-12 w-12 text-destructive" />
         <h2 className="text-xl font-bold">Resume Profile Not Found</h2>
         <p className="text-muted-foreground max-w-sm">

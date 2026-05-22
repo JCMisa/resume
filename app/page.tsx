@@ -1,9 +1,19 @@
-import SamplePage from "@/components/custom/SamplePage";
+"use client";
+
+import Features from "@/components/custom/landing-page/Features";
+import Hero from "@/components/custom/landing-page/Hero";
+import HomeNavbar from "@/components/custom/landing-page/HomeNavbar";
 
 export default function Home() {
   return (
-    <div className="min-h-screen bg-background text-foreground">
-      <SamplePage />
-    </div>
+    <main className="flex min-h-screen flex-col items-center relative pb-[10px]">
+      <HomeNavbar />
+
+      {/* hero section */}
+      <Hero />
+
+      {/* feature section */}
+      <Features />
+    </main>
   );
 }
