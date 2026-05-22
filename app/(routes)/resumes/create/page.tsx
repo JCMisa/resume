@@ -155,7 +155,7 @@ export default function CreateResumePage() {
   };
 
   return (
-    <div className="min-h-screen bg-background text-foreground overflow-x-hidden w-full overflow-y-auto no-scrollbar flex flex-col">
+    <div className="min-h-screen bg-background text-foreground overflow-x-hidden max-w-[1400px] mx-auto overflow-y-auto no-scrollbar flex flex-col">
       {/* GLOBAL WORKSPACE NAV BAR */}
       <nav className="border-b bg-background/80 backdrop-blur-md sticky top-0 z-50 w-[calc(100%-20px)]">
         <div className="w-full px-6 h-16 flex items-center justify-between">

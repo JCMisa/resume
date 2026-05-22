@@ -6,7 +6,7 @@ import { auth } from "@clerk/nextjs/server";
 import { db } from "@/config/db";
 import { resumes } from "@/config/schema";
 import { and, eq } from "drizzle-orm";
-import arcjet, { shield, tokenBucket, request } from "@arcjet/next"; // 🚀 1. Import Arcjet
+import arcjet, { shield, tokenBucket, request, detectBot } from "@arcjet/next"; // 🚀 1. Import Arcjet
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
@@ -16,6 +16,11 @@ const aj = arcjet({
   characteristics: ["userId"], // Unique identifier rate-limiting fingerprint
   rules: [
     shield({ mode: "LIVE" }),
+    detectBot({
+      mode: "LIVE",
+      // Restrict bots from hitting your private API evaluation routes
+      deny: ["CATEGORY:AI", "CURL"],
+    }),
     tokenBucket({
       mode: "LIVE",
       refillRate: 1, // Refill 1 token

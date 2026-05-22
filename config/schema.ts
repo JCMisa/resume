@@ -124,18 +124,14 @@ export const interviews = pgTable("interviews", {
   userId: text("user_id")
     .references(() => users.id, { onDelete: "cascade" })
     .notNull(),
-  resumeId: uuid("resume_id").references(() => resumes.id, {
-    onDelete: "set null",
-  }),
 
-  vapiCallId: text("vapi_call_id").unique(),
+  // Job Meta parameters requested by user forms
+  jobRole: text("job_role").notNull(),
+  jobDescription: text("job_description"),
+  resumeText: text("resume_text").notNull(), // Stores raw text strings extracted locally
+
   status: interviewStatusEnum("status").default("in-progress"),
-
-  // Metadata from Vapi end-of-call report
-  transcript: text("transcript"),
-  recordingUrl: text("recording_url"),
-  durationSeconds: integer("duration_seconds"),
-
+  transcript: text("transcript"), // Aggregated text lines appended upon completion
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
@@ -145,21 +141,14 @@ export const interviewResults = pgTable("interview_results", {
   interviewId: uuid("interview_id")
     .references(() => interviews.id, { onDelete: "cascade" })
     .unique(),
-
   overallScore: integer("overall_score"),
   feedback: text("feedback"),
-
-  suggestions: jsonb("suggestions").$type<
-    {
-      category: string;
-      score: number;
-      tip: string;
-    }[]
-  >(),
-
+  suggestions:
+    jsonb("suggestions").$type<
+      { category: string; score: number; tip: string }[]
+    >(),
   strengths: text("strengths").array(),
   weaknesses: text("weaknesses").array(),
-
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
@@ -173,22 +162,12 @@ export const usersRelations = relations(users, ({ many }) => ({
 }));
 
 export const resumesRelations = relations(resumes, ({ one, many }) => ({
-  user: one(users, {
-    fields: [resumes.userId],
-    references: [users.id],
-  }),
+  user: one(users, { fields: [resumes.userId], references: [users.id] }),
   interviews: many(interviews),
 }));
 
 export const interviewsRelations = relations(interviews, ({ one }) => ({
-  user: one(users, {
-    fields: [interviews.userId],
-    references: [users.id],
-  }),
-  resume: one(resumes, {
-    fields: [interviews.resumeId],
-    references: [resumes.id],
-  }),
+  user: one(users, { fields: [interviews.userId], references: [users.id] }),
   result: one(interviewResults, {
     fields: [interviews.id],
     references: [interviewResults.interviewId],
