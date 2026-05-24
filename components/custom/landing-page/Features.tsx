@@ -4,7 +4,7 @@ import React from "react";
 
 const Features = () => {
   return (
-    <section className="overflow-hidden w-[calc(100vw-50px)] mx-[25px] space-y-10 py-12 ">
+    <section className="overflow-hidden w-[calc(100vw-40px)] mx-[20px] space-y-10 py-12 ">
       {/* Proprietary Heading Layer */}
       <div className="text-center max-w-2xl mx-auto space-y-3 px-4">
         <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-stone-100 dark:bg-stone-900 border border-stone-200/60 dark:border-stone-800">

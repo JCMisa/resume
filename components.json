@@ -24,6 +24,7 @@
   "registries": {
     "@magicui": "https://magicui.design/r/{name}",
     "@react-bits": "https://reactbits.dev/r/{name}.json",
-    "@aceternity": "https://ui.aceternity.com/registry/{name}.json"
+    "@aceternity": "https://ui.aceternity.com/registry/{name}.json",
+    "@uilora": "https://www.uilora.com/r/{name}.json"
   }
 }

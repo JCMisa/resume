@@ -13,7 +13,7 @@ import Link from "next/link";
 
 const Hero = () => {
   return (
-    <section className="relative min-h-[900px] lg:h-[calc(100vh-40px)] w-[calc(100%-20px)] m-[10px] rounded-[30px] shadow-2xl bg-stone-100/40 dark:bg-stone-900/40 border border-stone-200/50 dark:border-stone-800/50 text-foreground overflow-hidden flex items-center justify-center p-6 md:p-12 lg:p-20 z-0">
+    <section className="relative min-h-[900px] lg:h-[calc(100vh-40px)] w-[calc(100vw-40px)] mx-[20px] my-[10px] rounded-[30px] shadow-2xl bg-stone-100/40 dark:bg-stone-900/40 border border-stone-200/50 dark:border-stone-800/50 text-foreground overflow-hidden flex items-center justify-center p-6 md:p-12 lg:p-20 z-0">
       <LightPillar
         topColor="#82B02C"
         bottomColor="#9ae600"
