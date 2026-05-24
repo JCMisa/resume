@@ -130,6 +130,11 @@ const fragmentShader = `
       float endTransition = (progress - 0.95) / 0.05;
       newImg = mix(newImg, pureNewImg, endTransition);
     }
+
+    // 🚀 STEP 1: Apply a dark multiplier overlay to both images directly in the glass effect loop
+    currentImg.rgb *= 0.4;
+    newImg.rgb *= 0.4;
+
     return mix(currentImg, newImg, inside);
   }
 
@@ -143,6 +148,11 @@ const fragmentShader = `
      ) * dist * 0.1;
      vec4 t1 = texture2D(uTexture1, uv1 + disp * (1.0-progress));
      vec4 t2 = texture2D(uTexture2, uv2 + disp * progress);
+
+     // 🚀 STEP 2: Apply a dark multiplier overlay to both images directly in the fallback transition loop
+     t1.rgb *= 0.4;
+     t2.rgb *= 0.4;
+
      return mix(t1, t2, smoothstep(0.0, 1.0, progress));
   }
 
