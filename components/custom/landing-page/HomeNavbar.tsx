@@ -17,6 +17,7 @@ import { useState } from "react";
 import { Button } from "../../ui/button";
 import Image from "next/image";
 import Link from "next/link";
+import { ArrowRightIcon } from "lucide-react";
 
 export default function HomeNavbar() {
   const { user } = useUser();
@@ -29,12 +30,16 @@ export default function HomeNavbar() {
       link: "#features",
     },
     {
-      name: "Pricing",
-      link: "#pricing",
+      name: "How it Works",
+      link: "#how-it-works",
     },
     {
-      name: "Contact",
-      link: "#contact",
+      name: "Reviews",
+      link: "#reviews",
+    },
+    {
+      name: "Pricing",
+      link: "#pricing",
     },
   ];
 
@@ -55,8 +60,8 @@ export default function HomeNavbar() {
               asChild
             >
               <Link href={"/dashboard"}>
-                <Image src={"/logo.svg"} alt="logo" width={30} height={30} />
                 <p className="text-sm tracking-wider">Get Started</p>
+                <ArrowRightIcon className="size-4" />
               </Link>
             </Button>
           ) : (

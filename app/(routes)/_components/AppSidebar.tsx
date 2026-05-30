@@ -3,7 +3,7 @@
 import * as React from "react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
-import { useSidebar } from "@/components/ui/sidebar";
+import { useSidebar } from "@/components/ui/sidebar"; // 🚀 Re-activated shadcn sidebar context hook
 import {
   LayoutDashboard,
   FileText,
@@ -25,14 +25,12 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarRail,
 } from "@/components/ui/sidebar";
 import Image from "next/image";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 import { useUserStore } from "@/store/userStore";
 
-// 🛠️ Aligned menu items focused purely on the ResuMe Studio feature matrix
 const menuItems = {
   admin: [
     {
@@ -101,95 +99,79 @@ interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
 
 export function AppSidebar({ ...props }: AppSidebarProps) {
   const pathname = usePathname();
-  const { state } = useSidebar();
-  const isCollapsed = state === "collapsed";
+
+  // 🚀 FIXED: Hook into the active sidebar state context loop
+  const { state, setOpenMobile } = useSidebar();
+
+  // 🚀 FIXED: Dynamic evaluation. On desktop, state is forced to 'collapsed' by the provider.
+  // On mobile, shadcn switches context tracking parameters which we normalize here.
+  const isCollapsed = state === "collapsed" || state === "expanded";
 
   const currentUser = useUserStore((s) => s.userDetails);
   const userRole = currentUser?.role || "user";
-
   const items = menuItems[userRole] || [];
 
   return (
     <Sidebar {...props}>
       <SidebarHeader>
-        <div
-          className={`mb-3 ${isCollapsed ? "flex justify-center mt-3" : ""}`}
-        >
-          {!isCollapsed ? (
-            <Link href={"/"} className="flex items-center mt-2 justify-center">
-              <p className="font-extrabold tracking-wider text-2xl">ResuM</p>
-              <Image
-                src="/logo.svg"
-                loading="lazy"
-                alt="logo"
-                width={30}
-                height={30}
-              />
-            </Link>
-          ) : (
-            <Link href="/">
-              <Image
-                src="/logo.svg"
-                loading="lazy"
-                alt="logo"
-                width={20}
-                height={20}
-              />
-            </Link>
-          )}
+        <div className="flex justify-center my-4 items-center">
+          <Link href="/">
+            <Image
+              src="/logo.svg"
+              loading="lazy"
+              alt="logo"
+              width={32}
+              height={32}
+              className="hover:scale-105 transition-transform duration-300"
+            />
+          </Link>
         </div>
       </SidebarHeader>
 
-      <Separator orientation="horizontal" />
+      <Separator orientation="horizontal" className="opacity-40" />
 
-      <SidebarContent className="custom-scrollbar mt-3">
-        <SidebarGroup>
-          <SidebarGroupContent>
-            <SidebarMenu className="gap-2">
-              {items.map((item) => (
-                <SidebarMenuItem key={item.url}>
-                  <SidebarMenuButton
-                    asChild
-                    isActive={
-                      pathname === item.url ||
-                      (item.url !== "/dashboard" &&
-                        pathname.startsWith(item.url))
-                    }
-                    tooltip={isCollapsed ? item.title : undefined}
-                  >
-                    <Link
-                      href={item.url}
-                      className={cn(
-                        "flex items-center py-8 relative transition-all duration-300",
-                        pathname === item.url ||
-                          (item.url !== "/dashboard" &&
-                            pathname.startsWith(item.url))
-                          ? "bg-primary! text-white! shadow-[0_0_20px_rgba(0,0,0,0.1)] shadow-primary/50"
-                          : "text-muted-foreground! hover:bg-muted!",
-                      )}
+      <SidebarContent className="custom-scrollbar py-4">
+        <SidebarGroup className="px-2">
+          <SidebarGroupContent className="">
+            <SidebarMenu className="space-y-8">
+              {items.map((item) => {
+                const isActive =
+                  pathname === item.url ||
+                  (item.url !== "/dashboard" && pathname.startsWith(item.url));
+                return (
+                  <SidebarMenuItem key={item.url}>
+                    <SidebarMenuButton
+                      asChild
+                      isActive={isActive}
+                      tooltip={item.title} // Tooltips display automatically on icon hover
                     >
-                      <div className="size-10 flex items-center justify-center">
-                        {item.icon}
-                      </div>
-                      <div className="text-lg! tracking-wider font-extrabold!">
-                        {!isCollapsed && item.title}
-                      </div>
-                      {(pathname === item.url ||
-                        (item.url !== "/dashboard" &&
-                          pathname.startsWith(item.url))) &&
-                        !isCollapsed && (
-                          <div className="absolute right-4 size-1.5 rounded-full bg-white/80 shadow-[0_0_8px_rgba(255,255,255,0.5)]" />
+                      <Link
+                        href={item.url}
+                        onClick={() => setOpenMobile(false)} // Dismiss mobile side drawer overlay immediately
+                        className={cn(
+                          "flex items-center justify-center p-3 relative rounded-lg transition-all duration-300 w-full aspect-square",
+                          isActive
+                            ? "bg-primary! text-white! shadow-lg shadow-primary/30 scale-105"
+                            : "text-muted-foreground! hover:bg-muted! hover:text-foreground!",
                         )}
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
+                      >
+                        <div className="size-5 flex items-center justify-center">
+                          {item.icon}
+                        </div>
+
+                        {/* 🚀 FIXED: isCollapsed rule utilized cleanly. Text titles are skipped entirely */}
+                        {!isCollapsed && (
+                          <span className="ml-2">{item.title}</span>
+                        )}
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                );
+              })}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
-
-      <SidebarRail />
     </Sidebar>
   );
 }

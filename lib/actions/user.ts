@@ -20,3 +20,18 @@ export const getCurrentUser = async () => {
     data: data,
   };
 };
+
+export const getAllUsersAction = async () => {
+  const { userId } = await auth();
+
+  if (!userId) {
+    return { success: false, data: null, error: "Unauthorized access." };
+  }
+
+  const data = await db.select().from(users);
+
+  return {
+    success: true,
+    data: data,
+  };
+};

@@ -11,7 +11,11 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-export function ThemeToggler() {
+export function ThemeToggler({
+  align = "end",
+}: {
+  align?: "start" | "center" | "end";
+}) {
   const { setTheme } = useTheme();
 
   return (
@@ -23,7 +27,7 @@ export function ThemeToggler() {
           <span className="sr-only">Toggle theme</span>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
+      <DropdownMenuContent align={align}>
         <DropdownMenuItem onClick={() => setTheme("light")}>
           Light
         </DropdownMenuItem>

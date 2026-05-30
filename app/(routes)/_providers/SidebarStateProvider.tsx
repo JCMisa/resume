@@ -1,4 +1,3 @@
-import { cookies } from "next/headers";
 import { SidebarProvider } from "@/components/ui/sidebar";
 
 export async function SidebarStateProvider({
@@ -6,16 +5,15 @@ export async function SidebarStateProvider({
 }: {
   children: React.ReactNode;
 }) {
-  const cookieStore = await cookies();
-  const defaultOpen = cookieStore.get("sidebar_state")?.value === "true";
-
   return (
     <SidebarProvider
-      defaultOpen={defaultOpen}
+      defaultOpen={false}
+      open={false} // 🚀 FIXED: Locks desktop context state securely to collapsed mode
       style={
         {
-          "--sidebar-width": "20rem",
-          "--sidebar-width-mobile": "20rem",
+          // 🚀 FIXED: Enforces matching thin-column architectures for all screen targets
+          "--sidebar-width": "4.5rem",
+          "--sidebar-width-mobile": "4.5rem",
         } as Record<string, string>
       }
     >
