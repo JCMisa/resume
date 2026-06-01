@@ -9,6 +9,8 @@ import AIAnalysisSection from "./_components/AIAnalysisSection";
 import StepIndicator from "./_components/StepIndicator";
 import { analyzeAndStoreResumeAction } from "@/lib/actions/resume";
 import { useCloudinaryUpload } from "@/hooks/useCloudinaryUpload";
+import { getUserBillingStatus } from "@/lib/actions/billing";
+import UpgradeModal from "@/components/custom/UpgradeModal";
 
 export type ProcessStage =
   | "idle"
@@ -24,13 +26,12 @@ const AnalyzeResumePage = () => {
   const [currentView, setCurrentView] = useState<ViewStep>("upload");
   const [isDragging, setIsDragging] = useState(false);
   const [file, setFile] = useState<File | null>(null);
-
   const [stage, setStage] = useState<ProcessStage>("idle");
   const [progress, setProgress] = useState(0);
   const [statusMessage, setStatusMessage] = useState("");
   const [extractedText, setExtractedText] = useState("");
-
   const [analysisResult, setAnalysisResult] = useState<any>(null);
+  const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState(false);
 
   // Initialize Cloudinary custom client-side hook
   const { uploadDocument, progress: uploadProgress } = useCloudinaryUpload();
@@ -51,7 +52,7 @@ const AnalyzeResumePage = () => {
     setIsDragging(false);
     const droppedFile = e.dataTransfer.files[0];
     if (droppedFile && droppedFile.type === "application/pdf") {
-      processPDFFile(droppedFile);
+      processPDFWithTierCheck(droppedFile);
     } else {
       toast.warning("Please upload a PDF file only.");
     }
@@ -59,7 +60,18 @@ const AnalyzeResumePage = () => {
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
-    if (selectedFile) processPDFFile(selectedFile);
+    if (selectedFile) processPDFWithTierCheck(selectedFile);
+  };
+
+  // 🚀 TIER CHECK LAYER: Verifies access BEFORE kicking off pdf parsing engines
+  const processPDFWithTierCheck = async (targetFile: File) => {
+    const billing = await getUserBillingStatus();
+    if (!billing || !billing.allowed) return;
+    if (!billing.allowed.analyze) {
+      setIsUpgradeModalOpen(true);
+      return;
+    }
+    processPDFFile(targetFile);
   };
 
   const processPDFFile = async (targetFile: File) => {
@@ -93,7 +105,6 @@ const AnalyzeResumePage = () => {
         const textContent = await page.getTextContent();
         const pageStrings = textContent.items.map((item: any) => item.str);
         textBuffer += pageStrings.join(" ") + "\n";
-
         setProgress(Math.floor(70 + (i / totalPages) * 20));
       }
 
@@ -112,12 +123,12 @@ const AnalyzeResumePage = () => {
 
   // Orchestrates dual cloud storage upload and Gemini text evaluation
   const handleAIAnalysisInference = async () => {
-    // Debug log checks to find exactly what state is missing
-    console.log("Analyzing validation:", {
-      hasText: !!extractedText,
-      textLength: extractedText?.length,
-      hasFile: !!file,
-    });
+    // Double check constraints once more before invoking remote AI server credits
+    const billing = await getUserBillingStatus();
+    if (!billing || !billing.allowed || !billing.allowed.analyze) {
+      setIsUpgradeModalOpen(true);
+      return;
+    }
 
     if (!extractedText || !file) {
       toast.error(
@@ -211,6 +222,14 @@ const AnalyzeResumePage = () => {
           )}
         </AnimatePresence>
       </section>
+
+      {/* 🚀 Upgrade Modal Interceptor Activation Row */}
+      <UpgradeModal
+        isOpen={isUpgradeModalOpen}
+        onClose={() => setIsUpgradeModalOpen(false)}
+        title="AI Optimization Limit Reached"
+        description="Free plans include a lifetime allotment of 3 AI resume analyses. Upgrade to Pro for infinite resume auditing and optimization reporting tools!"
+      />
     </div>
   );
 };

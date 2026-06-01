@@ -1,33 +1,39 @@
 import { Suspense } from "react";
-import { SidebarInset } from "@/components/ui/sidebar";
-import SidebarFallback from "./_components/SidebarFallback";
+import { SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
 import { SidebarStateProvider } from "./_providers/SidebarStateProvider";
 import { AppSidebar } from "./_components/AppSidebar";
 import Greeting from "./_components/Greeting";
 import { ThemeToggler } from "@/components/custom/ThemeToggler";
 import { SearchIcon } from "lucide-react";
-import { UsersSidebar } from "./_components/UsersSidebar";
-import {
-  LeftSidebarTrigger,
-  RightSidebarTrigger,
-} from "./_components/CustomSidebarTriggers"; // 🚀 Custom triggers we will create in Step 2
+import { getCurrentUser } from "@/lib/actions/user";
+import { SidebarFallback } from "./_components/SidebarFallback";
 
-const RoutesLayout = ({
+const RoutesLayout = async ({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) => {
+  const user = await getCurrentUser();
+
+  if (!user || !user.data || !user.success) {
+    return <SidebarFallback />;
+  }
+
   return (
     <Suspense fallback={<SidebarFallback />}>
       <SidebarStateProvider>
         {/* Left Side App Navigation Channel */}
-        <AppSidebar variant="floating" collapsible="icon" id="left-sidebar" />
+        <AppSidebar
+          variant="floating"
+          collapsible="icon"
+          id="left-sidebar"
+          userRole={user.data.role}
+        />
 
         <SidebarInset className="h-svh flex flex-col overflow-hidden">
           <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4 justify-between bg-background">
             <div className="flex items-center gap-4">
-              {/* 🚀 FIXED: Custom Left Navigation Sidebar control hook */}
-              <LeftSidebarTrigger />
+              <SidebarTrigger />
               <Greeting />
             </div>
 
@@ -44,8 +50,6 @@ const RoutesLayout = ({
 
               <div className="flex items-center gap-3">
                 <ThemeToggler />
-                {/* 🚀 FIXED: Custom Right Profiles Sidebar control hook */}
-                <RightSidebarTrigger />
               </div>
             </div>
           </header>
@@ -56,14 +60,6 @@ const RoutesLayout = ({
             </div>
           </main>
         </SidebarInset>
-
-        {/* Right Side Active Profiles Feed Channel */}
-        <UsersSidebar
-          variant="floating"
-          collapsible="icon"
-          side="right"
-          id="right-sidebar"
-        />
       </SidebarStateProvider>
     </Suspense>
   );

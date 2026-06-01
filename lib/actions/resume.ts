@@ -7,6 +7,7 @@ import { db } from "@/config/db";
 import { resumes } from "@/config/schema";
 import { and, eq } from "drizzle-orm";
 import arcjet, { shield, tokenBucket, request, detectBot } from "@arcjet/next"; // 🚀 1. Import Arcjet
+import { getUserBillingStatus } from "./billing";
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
@@ -178,6 +179,14 @@ export async function analyzeExistingResumeAction(resumeId: string) {
   try {
     const { userId } = await auth();
     if (!userId) throw new Error("Unauthorized access configuration.");
+
+    // 🚀 EXTRA SECURE FALLBACK: Check relational counts on the server runtime layer
+    const billing = await getUserBillingStatus();
+    if (!billing || !billing.allowed || !billing.allowed.analyze) {
+      throw new Error(
+        "Your account tier limit has been met. Please update your subscription package.",
+      );
+    }
 
     // 🚀 4. Apply identical structural protection block here
     const decision = await aj.protect(await request(), {

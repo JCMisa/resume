@@ -1343,7 +1343,7 @@ function Pricing() {
               ))}
             </div>
             <Link
-              href="/sign-up"
+              href="/dashboard"
               className="block w-full py-3 text-center rounded-xl text-sm font-bold border border-stone-200 dark:border-stone-700 text-stone-700 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors"
             >
               Get started free
@@ -1390,10 +1390,10 @@ function Pricing() {
                 ))}
               </div>
               <Link
-                href="/sign-up?plan=pro"
+                href="/settings?tab=billing"
                 className="block w-full py-3 text-center rounded-xl text-sm font-black bg-[#9ae600] text-[#1e3800] hover:bg-[#a8f000] transition-colors shadow-lg shadow-[#9ae600]/20"
               >
-                Start Pro free trial
+                Start Pro Subscription
               </Link>
             </motion.div>
           </ElectricBorder>

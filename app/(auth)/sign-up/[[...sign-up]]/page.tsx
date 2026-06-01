@@ -5,10 +5,26 @@ import Image from "next/image";
 import { ShieldCheck, FileText, BrainCircuit } from "lucide-react";
 import Link from "next/link";
 import { Suspense } from "react";
+import LightPillar from "@/components/custom/LightPillar";
 
 export default function SignUpPage() {
   return (
-    <div className="grid min-h-screen grid-cols-1 lg:grid-cols-2">
+    <div className="grid min-h-screen grid-cols-1 lg:grid-cols-2 relative">
+      <LightPillar
+        topColor="#82B02C"
+        bottomColor="#9ae600"
+        intensity={1}
+        rotationSpeed={0.3}
+        glowAmount={0.002}
+        pillarWidth={3}
+        pillarHeight={0.4}
+        noiseIntensity={0.5}
+        pillarRotation={0}
+        interactive={false}
+        mixBlendMode="screen"
+        quality="high"
+      />
+
       <Suspense
         fallback={
           <div className="h-screen w-full flex items-center justify-center">
@@ -71,9 +87,7 @@ export default function SignUpPage() {
       </Suspense>
 
       {/* Branding Side (Features) */}
-      <div className="relative hidden flex-col bg-stone-100 dark:bg-stone-950 p-10 lg:flex order-1 lg:order-2">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,var(--tw-gradient-stops))] from-primary/10 via-transparent to-transparent" />
-
+      <div className=" hidden flex-col bg-stone-100 dark:bg-stone-950 p-10 lg:flex order-1 lg:order-2">
         {/* Logo Section */}
         <div className="relative z-20 flex items-center gap-3">
           <Image

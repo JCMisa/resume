@@ -114,7 +114,6 @@ export default function HomeNavbar() {
                 size={"lg"}
               >
                 <Link href={"/dashboard"}>
-                  <Image src={"/logo.svg"} alt="logo" width={30} height={30} />
                   <p className="text-sm tracking-wider">Get Started</p>
                 </Link>
               </Button>

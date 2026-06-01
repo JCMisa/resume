@@ -7,6 +7,8 @@ import { SparklesIcon, Loader2 } from "lucide-react";
 import { analyzeExistingResumeAction } from "@/lib/actions/resume";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { getUserBillingStatus } from "@/lib/actions/billing";
+import UpgradeModal from "@/components/custom/UpgradeModal";
 
 interface AnalyzeButtonProps {
   resumeId: string;
@@ -16,8 +18,18 @@ export default function AnalyzeResumeButton({ resumeId }: AnalyzeButtonProps) {
   const router = useRouter();
   const [isAnalyzing, setIsAnalyzing] = useState(false);
 
+  // 🚀 Local state to trigger the global plan upgrade modal
+  const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState(false);
+
   const handleInPlaceAnalysis = async () => {
     if (isAnalyzing) return;
+
+    // 🚀 TIER CHECK LAYER: Verify AI token limits are valid before executing the compilation pipeline
+    const billing = await getUserBillingStatus();
+    if (!billing || !billing.allowed || !billing.allowed.analyze) {
+      setIsUpgradeModalOpen(true);
+      return;
+    }
 
     setIsAnalyzing(true);
 
@@ -41,22 +53,32 @@ export default function AnalyzeResumeButton({ resumeId }: AnalyzeButtonProps) {
   };
 
   return (
-    <Button
-      onClick={handleInPlaceAnalysis}
-      disabled={isAnalyzing}
-      className="w-full mt-2 py-4 font-bold rounded-lg"
-    >
-      {isAnalyzing ? (
-        <>
-          <Loader2 className="h-4 w-4 mr-2 animate-spin text-primary-foreground" />
-          Processing Portfolio Metrics...
-        </>
-      ) : (
-        <>
-          <SparklesIcon className="h-4 w-4 mr-2 text-primary-foreground" />
-          Analyze your Resume
-        </>
-      )}
-    </Button>
+    <>
+      <Button
+        onClick={handleInPlaceAnalysis}
+        disabled={isAnalyzing}
+        className="w-full mt-2 py-4 font-bold rounded-lg"
+      >
+        {isAnalyzing ? (
+          <>
+            <Loader2 className="h-4 w-4 mr-2 animate-spin text-primary-foreground" />
+            Processing Portfolio Metrics...
+          </>
+        ) : (
+          <>
+            <SparklesIcon className="h-4 w-4 mr-2 text-primary-foreground" />
+            Analyze your Resume
+          </>
+        )}
+      </Button>
+
+      {/* 🚀 FIXED: Gated prompt overlay blocks free-tier spammers instantly */}
+      <UpgradeModal
+        isOpen={isUpgradeModalOpen}
+        onClose={() => setIsUpgradeModalOpen(false)}
+        title="AI Evaluation Quota Exhausted"
+        description="Free plans contain a strict allocation of 3 total AI resume evaluations. Upgrade your workspace to Pro to unlock unlimited document debugging and ATS auditing!"
+      />
+    </>
   );
 }

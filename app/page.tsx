@@ -1,4 +1,4 @@
-import LandingPage from "@/components/custom/landing-page/SampleLandingPage2";
+import LandingPage from "@/components/custom/landing-page/LandingPage";
 import { ThemeToggler } from "@/components/custom/ThemeToggler";
 
 export default function Home() {
