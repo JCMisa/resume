@@ -20,13 +20,6 @@ export async function getUserBillingStatus() {
 
   // 🚀 RULE 1: Admin override or Clerk Pro plan entitlement bypasses all checks
   const hasProPlan = has({ plan: "pro" }) || has({ feature: "pro" });
-  if (userRole === "admin" || hasProPlan) {
-    return {
-      isPro: true,
-      limits: { analyses: "∞", interviews: "∞", resumes: "∞" },
-      allowed: { analyze: true, interview: true, create_resume: true },
-    };
-  }
 
   // 2. Setup date boundaries for monthly items (AI Analyses reset monthly)
   const firstDayOfMonth = new Date();
@@ -66,6 +59,18 @@ export async function getUserBillingStatus() {
     .from(interviews)
     .where(eq(interviews.userId, userId));
   const currentInterviewsCount = interviewsQuery?.value || 0;
+
+  if (userRole === "admin" || hasProPlan) {
+    return {
+      isPro: true,
+      limits: {
+        analyses: currentAnalysesCount,
+        interviews: currentInterviewsCount,
+        resumes: currentResumesCount,
+      },
+      allowed: { analyze: true, interview: true, create_resume: true },
+    };
+  }
 
   return {
     isPro: false,

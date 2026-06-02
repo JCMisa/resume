@@ -1,5 +1,5 @@
 /* eslint-disable react-hooks/set-state-in-effect */
-// app/dashboard/settings/SettingsClientLayout.tsx
+
 "use client";
 
 import {
