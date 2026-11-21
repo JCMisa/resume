@@ -29,7 +29,9 @@ const noopSubscribe = () => () => {};
 
 /** Clerk API errors carry a readable longMessage; fall back to a generic one. */
 function clerkErrorMessage(error: unknown, fallback: string) {
-  const err = error as { errors?: { longMessage?: string; message?: string }[] };
+  const err = error as {
+    errors?: { longMessage?: string; message?: string }[];
+  };
   return err?.errors?.[0]?.longMessage || err?.errors?.[0]?.message || fallback;
 }
 
@@ -228,7 +230,7 @@ export default function ProfilePersonalization() {
                     value={firstName}
                     onChange={(e) => setFirstName(e.target.value)}
                     maxLength={64}
-                    className="rounded-xl"
+                    className="rounded-md py-4"
                   />
                 </label>
                 <label className="space-y-1.5">
@@ -239,7 +241,7 @@ export default function ProfilePersonalization() {
                     value={lastName}
                     onChange={(e) => setLastName(e.target.value)}
                     maxLength={64}
-                    className="rounded-xl"
+                    className="rounded-md py-4"
                   />
                 </label>
               </div>
@@ -264,7 +266,7 @@ export default function ProfilePersonalization() {
                 <Button
                   type="submit"
                   disabled={!nameChanged || savingName}
-                  className="rounded-xl font-bold gap-1.5"
+                  className="rounded-lg py-4 px-8 cursor-pointer font-bold gap-1.5"
                 >
                   {savingName && <Loader2 className="size-3.5 animate-spin" />}
                   Save changes
@@ -301,7 +303,9 @@ function AppearanceSection() {
     if (id === accent) return;
     const res = await setAccent(id);
     if (!res.success) {
-      toast.error("Applied on this device, but couldn't save it to your account.");
+      toast.error(
+        "Applied on this device, but couldn't save it to your account.",
+      );
     }
   }
 

@@ -469,9 +469,7 @@ export default function SettingsClientLayout({
                 transition={{ duration: 0.25 }}
               >
                 {activeTab === "profile" ? (
-                  <div className="max-w-4xl">
-                    <ProfilePersonalization />
-                  </div>
+                  <ProfilePersonalization />
                 ) : activeTab === "billing" ? (
                   <div className="rounded-2xl border border-stone-100 dark:border-stone-800 bg-white dark:bg-stone-900 shadow-sm p-6 space-y-6">
                     <div className="flex items-start gap-4 pb-6 border-b border-stone-100 dark:border-stone-800">

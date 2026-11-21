@@ -6,6 +6,7 @@ import { auth } from "@clerk/nextjs/server";
 import { db } from "@/config/db";
 import { resumes, interviews, interviewResults } from "@/config/schema";
 import { eq, desc } from "drizzle-orm";
+import { unstable_rethrow } from "next/navigation";
 
 export async function getDashboardTelemetryAction() {
   try {
@@ -124,6 +125,9 @@ export async function getDashboardTelemetryAction() {
       },
     };
   } catch (error: any) {
+    // Let Next.js handle its own control-flow errors (e.g. the dynamic-rendering
+    // bailout from auth()/headers() during build) instead of logging them as failures
+    unstable_rethrow(error);
     console.error("Dashboard calculation pipeline failure:", error);
     return {
       success: false,
