@@ -4,6 +4,11 @@ import { useEffect } from "react";
 import axios from "axios";
 import { useUser } from "@clerk/nextjs";
 import { useUserStore } from "@/store/userStore";
+import { applyAccent } from "@/components/custom/AccentProvider";
+import { DEFAULT_ACCENT, isAccentId } from "@/lib/accents";
+
+const readCurrentAccent = () =>
+  document.documentElement.getAttribute("data-accent") ?? DEFAULT_ACCENT;
 
 export const UserStoreWatcher = () => {
   const { user, isLoaded } = useUser();
@@ -18,6 +23,12 @@ export const UserStoreWatcher = () => {
         setIsLoading(true);
         const result = await axios.get("/api/users");
         setUserDetails(result.data);
+        // Cross-device sync: the accent saved on the account wins over this
+        // device's local choice.
+        const saved = result.data?.themeAccent;
+        if (isAccentId(saved) && saved !== readCurrentAccent()) {
+          applyAccent(saved);
+        }
       } catch (error) {
         console.error("Failed to fetch user:", error);
       } finally {

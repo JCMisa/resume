@@ -5,10 +5,10 @@
 import {
   SignOutButton,
   UserButton,
-  UserProfile,
   PricingTable,
 } from "@clerk/nextjs";
-import { Suspense, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
+import ProfilePersonalization from "./ProfilePersonalization";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   User,
@@ -77,8 +77,8 @@ function StatCard({
 }) {
   return (
     <div className="flex items-center gap-3 p-3.5 rounded-xl bg-stone-50 dark:bg-stone-800/50 border border-stone-100 dark:border-stone-700/50">
-      <div className="w-8 h-8 rounded-lg bg-[#9ae600]/10 flex items-center justify-center flex-shrink-0">
-        <Icon className="w-4 h-4 text-[#5a8800] dark:text-[#9ae600]" />
+      <div className="w-8 h-8 rounded-lg bg-brand/10 flex items-center justify-center flex-shrink-0">
+        <Icon className="w-4 h-4 text-brand-strong dark:text-brand" />
       </div>
       <div className="min-w-0">
         <p className="text-[10px] font-bold text-stone-400 uppercase tracking-wider leading-none mb-0.5">
@@ -113,8 +113,8 @@ function PlaceholderPanel({
   return (
     <div className="space-y-6">
       <div className="flex items-start gap-4 pb-6 border-b border-stone-100 dark:border-stone-800">
-        <div className="w-10 h-10 rounded-xl bg-[#9ae600]/10 border border-[#9ae600]/15 flex items-center justify-center flex-shrink-0">
-          <Icon className="w-5 h-5 text-[#5a8800] dark:text-[#9ae600]" />
+        <div className="w-10 h-10 rounded-xl bg-brand/10 border border-brand/15 flex items-center justify-center flex-shrink-0">
+          <Icon className="w-5 h-5 text-brand-strong dark:text-brand" />
         </div>
         <div>
           <h2 className="text-lg font-black text-stone-900 dark:text-stone-100 mb-0.5 tracking-tight">
@@ -145,7 +145,7 @@ function PlaceholderPanel({
                 }
                 className={`relative w-10 h-5.5 rounded-full transition-colors flex-shrink-0 ${
                   toggles[item.label]
-                    ? "bg-[#9ae600]"
+                    ? "bg-brand"
                     : "bg-stone-200 dark:bg-stone-700"
                 }`}
                 style={{ height: "22px", width: "40px" }}
@@ -204,7 +204,7 @@ export default function SettingsClientLayout({
       id: "profile",
       label: "Profile",
       icon: User,
-      description: "Manage your account identity",
+      description: "Photo, name & appearance",
     },
     {
       id: "security",
@@ -310,7 +310,6 @@ export default function SettingsClientLayout({
           <div className="flex items-center gap-3">
             <UserButton
               appearance={{
-                variables: { colorPrimary: "#9ae600" },
                 elements: { avatarBox: "w-8 h-8" },
               }}
             />
@@ -333,7 +332,7 @@ export default function SettingsClientLayout({
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}
             >
-              <p className="text-[10px] font-black uppercase tracking-[0.15em] text-[#5a8800] dark:text-[#9ae600] mb-1.5">
+              <p className="text-[10px] font-black uppercase tracking-[0.15em] text-brand-strong dark:text-brand mb-1.5">
                 Account
               </p>
               <h1 className="text-2xl font-black tracking-tight text-stone-900 dark:text-stone-50">
@@ -395,14 +394,14 @@ export default function SettingsClientLayout({
                     {active && (
                       <motion.span
                         layoutId="activeBar"
-                        className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 bg-[#9ae600] rounded-full"
+                        className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 bg-brand rounded-full"
                       />
                     )}
                     <div
-                      className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 transition-colors ${active ? "bg-[#9ae600]/10" : "bg-stone-100 dark:bg-stone-700/50 group-hover:bg-[#9ae600]/8"}`}
+                      className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 transition-colors ${active ? "bg-brand/10" : "bg-stone-100 dark:bg-stone-700/50 group-hover:bg-brand/8"}`}
                     >
                       <item.icon
-                        className={`w-4 h-4 ${active ? "text-[#5a8800] dark:text-[#9ae600]" : "text-stone-400 dark:text-stone-500 group-hover:text-[#9ae600]"}`}
+                        className={`w-4 h-4 ${active ? "text-brand-strong dark:text-brand" : "text-stone-400 dark:text-stone-500 group-hover:text-brand"}`}
                       />
                     </div>
                     <div className="min-w-0">
@@ -470,60 +469,14 @@ export default function SettingsClientLayout({
                 transition={{ duration: 0.25 }}
               >
                 {activeTab === "profile" ? (
-                  <div className="rounded-2xl overflow-hidden border max-w-4xl border-stone-100 dark:border-stone-800 bg-white dark:bg-stone-900 shadow-sm">
-                    <div className="px-6 pt-6 pb-5 border-b border-stone-50 dark:border-stone-800">
-                      <div className="flex items-start gap-4">
-                        <div className="w-10 h-10 rounded-xl bg-[#9ae600]/10 border border-[#9ae600]/15 flex items-center justify-center flex-shrink-0">
-                          <User className="w-5 h-5 text-[#5a8800] dark:text-[#9ae600]" />
-                        </div>
-                        <div>
-                          <h2 className="text-lg font-black text-stone-900 dark:text-stone-100 mb-0.5 tracking-tight">
-                            Profile
-                          </h2>
-                          <p className="text-sm text-stone-500 dark:text-stone-400">
-                            Manage your name, email, avatar, and connected
-                            accounts.
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="clerk-settings-wrapper flex items-center justify-center py-2">
-                      <Suspense
-                        fallback={
-                          <div className="p-8 h-32 w-full bg-muted rounded-xl animate-pulse" />
-                        }
-                      >
-                        <UserProfile
-                          path="/settings"
-                          appearance={{
-                            variables: {
-                              colorPrimary: "#9ae600",
-                              colorBackground: "transparent",
-                              borderRadius: "0.75rem",
-                            },
-                            elements: {
-                              card: "shadow-none border-none bg-transparent p-0 rounded-none",
-                              navbar: "hidden",
-                              navbarMobileMenuButton: "hidden",
-                              pageScrollBox: "p-6 pt-4",
-                              headerTitle: "hidden",
-                              headerSubtitle: "hidden",
-                              formButtonPrimary:
-                                "bg-[#9ae600] text-[#1e3800] hover:bg-[#a8f000] font-bold shadow-none rounded-xl text-sm",
-                              formFieldInput:
-                                "rounded-xl border-stone-200 dark:border-stone-700 bg-stone-50 dark:bg-stone-800 text-sm",
-                              avatarBox: "rounded-2xl",
-                            },
-                          }}
-                        />
-                      </Suspense>
-                    </div>
+                  <div className="max-w-4xl">
+                    <ProfilePersonalization />
                   </div>
                 ) : activeTab === "billing" ? (
                   <div className="rounded-2xl border border-stone-100 dark:border-stone-800 bg-white dark:bg-stone-900 shadow-sm p-6 space-y-6">
                     <div className="flex items-start gap-4 pb-6 border-b border-stone-100 dark:border-stone-800">
-                      <div className="w-10 h-10 rounded-xl bg-[#9ae600]/10 border border-[#9ae600]/15 flex items-center justify-center flex-shrink-0">
-                        <CreditCard className="w-5 h-5 text-[#5a8800] dark:text-[#9ae600]" />
+                      <div className="w-10 h-10 rounded-xl bg-brand/10 border border-brand/15 flex items-center justify-center flex-shrink-0">
+                        <CreditCard className="w-5 h-5 text-brand-strong dark:text-brand" />
                       </div>
                       <div>
                         <h2 className="text-lg font-black text-stone-900 dark:text-stone-100 mb-0.5 tracking-tight">
@@ -531,7 +484,7 @@ export default function SettingsClientLayout({
                         </h2>
                         <p className="text-sm text-stone-500 dark:text-stone-400">
                           Current Subscription Tier:{" "}
-                          <span className="font-extrabold text-[#5a8800] dark:text-[#9ae600] uppercase">
+                          <span className="font-extrabold text-brand-strong dark:text-brand uppercase">
                             {isPro ? "Pro" : "Free"}
                           </span>
                         </p>

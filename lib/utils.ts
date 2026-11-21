@@ -1,6 +1,7 @@
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 import confetti from "canvas-confetti";
+import { ACCENTS, DEFAULT_ACCENT, isAccentId } from "@/lib/accents";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -10,7 +11,10 @@ export function showConfetti() {
   const duration = 3 * 1000;
   const animationEnd = Date.now() + duration;
   const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 0 };
-  const colors = ["#9ae600", "#e12afb", "#9ae600", "#e12afb"];
+  // Current accent theme color (from <html data-accent>) + the magenta accent
+  const accent = document.documentElement.getAttribute("data-accent");
+  const brand = ACCENTS[isAccentId(accent) ? accent : DEFAULT_ACCENT].brand;
+  const colors = [brand, "#e12afb", brand, "#e12afb"];
 
   const randomInRange = (min: number, max: number) =>
     Math.random() * (max - min) + min;

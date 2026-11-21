@@ -2,6 +2,7 @@
 /* eslint-disable react-hooks/set-state-in-effect */
 import React, { useRef, useEffect, useState } from "react";
 import * as THREE from "three";
+import { useResolvedColor } from "@/components/custom/AccentProvider";
 
 interface LightPillarProps {
   topColor?: string;
@@ -20,8 +21,8 @@ interface LightPillarProps {
 }
 
 const LightPillar: React.FC<LightPillarProps> = ({
-  topColor = "#5227FF",
-  bottomColor = "#FF9FFC",
+  topColor: topColorProp = "#5227FF",
+  bottomColor: bottomColorProp = "#FF9FFC",
   intensity = 1.0,
   rotationSpeed = 0.3,
   interactive = false,
@@ -34,6 +35,9 @@ const LightPillar: React.FC<LightPillarProps> = ({
   pillarRotation = 0,
   quality = "high",
 }) => {
+  // Accept brand tokens ("brand", "brand-light", ...) so the pillar follows the accent theme
+  const topColor = useResolvedColor(topColorProp);
+  const bottomColor = useResolvedColor(bottomColorProp);
   const containerRef = useRef<HTMLDivElement>(null);
   const rafRef = useRef<number | null>(null);
   const rendererRef = useRef<THREE.WebGLRenderer | null>(null);

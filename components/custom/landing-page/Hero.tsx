@@ -16,7 +16,7 @@ const Hero = () => {
     <section className="relative min-h-[900px] lg:h-[calc(100vh-40px)] w-[calc(100vw-40px)] mx-[20px] my-[10px] rounded-[30px] shadow-2xl bg-stone-100/40 dark:bg-stone-900/40 border border-stone-200/50 dark:border-stone-800/50 text-foreground overflow-hidden flex items-center justify-center p-6 md:p-12 lg:p-20 z-0">
       <LightPillar
         topColor="#82B02C"
-        bottomColor="#9ae600"
+        bottomColor="brand"
         intensity={1}
         rotationSpeed={0.3}
         glowAmount={0.002}
@@ -44,7 +44,7 @@ const Hero = () => {
           <div className="space-y-4">
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-black tracking-tighter leading-[0.95] text-stone-900 dark:text-stone-50">
               Build resumes that pass the{" "}
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#82B02C] to-[#9ae600]">
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#82B02C] to-brand">
                 ATS Gatekeepers.
               </span>
             </h1>
@@ -62,7 +62,7 @@ const Hero = () => {
               href="/resumes/create"
               className={cn(
                 buttonVariants({ size: "lg" }),
-                "bg-[#82B02C] hover:bg-[#9ae600] text-white font-black rounded-xl tracking-wide gap-2 text-sm px-8 py-6 shadow-lg shadow-[#82B02C]/20 transform transition-all hover:scale-[1.02] active:scale-[0.98]",
+                "bg-[#82B02C] hover:bg-brand text-white font-black rounded-xl tracking-wide gap-2 text-sm px-8 py-6 shadow-lg shadow-[#82B02C]/20 transform transition-all hover:scale-[1.02] active:scale-[0.98]",
               )}
             >
               Build Your Resume

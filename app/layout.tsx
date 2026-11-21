@@ -8,6 +8,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { ClerkProvider } from "@clerk/nextjs";
 import { shadcn } from "@clerk/ui/themes";
 import { UserStoreWatcher } from "@/providers/UserStoreWatcher";
+import { accentBootScript, accentCss } from "@/lib/accents";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
 
@@ -53,13 +54,15 @@ export default function RootLayout({
         inter.variable,
       )}
     >
+      <head>
+        {/* Accent color themes: CSS variables for every palette, and a tiny
+            script that applies the saved one before first paint (no flash). */}
+        <style dangerouslySetInnerHTML={{ __html: accentCss() }} />
+        <script dangerouslySetInnerHTML={{ __html: accentBootScript() }} />
+      </head>
       <body className="min-h-full flex flex-col">
-        <ClerkProvider
-          appearance={{
-            theme: shadcn,
-            variables: { colorPrimary: "#9ae600" },
-          }}
-        >
+        {/* Clerk's shadcn theme reads var(--primary), which follows the accent */}
+        <ClerkProvider appearance={{ theme: shadcn }}>
           <ThemeProvider
             attribute="class"
             defaultTheme="dark"

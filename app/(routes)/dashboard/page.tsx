@@ -20,7 +20,7 @@ function SummaryStatCard({
 }) {
   return (
     <div className="bg-white dark:bg-stone-900 border border-stone-100 dark:border-stone-800/80 p-5 rounded-3xl shadow-sm flex items-center gap-4 group hover:border-primary/20 transition-all">
-      <div className="size-11 rounded-2xl bg-stone-50 dark:bg-stone-800 border flex items-center justify-center text-muted-foreground group-hover:bg-[#9ae600]/8 group-hover:text-primary transition-colors shrink-0">
+      <div className="size-11 rounded-2xl bg-stone-50 dark:bg-stone-800 border flex items-center justify-center text-muted-foreground group-hover:bg-brand/8 group-hover:text-primary transition-colors shrink-0">
         <Icon className="size-5 stroke-[2]" />
       </div>
       <div className="min-w-0 text-left">

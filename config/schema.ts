@@ -31,6 +31,8 @@ export const users = pgTable("users", {
   name: text("name"),
   imageUrl: text("image_url"),
   role: roleEnum("role").default("user"),
+  // App accent color theme (see lib/accents.ts); null = default
+  themeAccent: text("theme_accent"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });

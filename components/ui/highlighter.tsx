@@ -4,6 +4,7 @@ import { useLayoutEffect, useRef } from "react"
 import type React from "react"
 import { useInView } from "motion/react"
 import { annotate } from "rough-notation"
+import { useResolvedColor } from "@/components/custom/AccentProvider"
 import { type RoughAnnotation } from "rough-notation/lib/model"
 
 type AnnotationAction =
@@ -30,7 +31,7 @@ interface HighlighterProps {
 export function Highlighter({
   children,
   action = "highlight",
-  color = "#ffd1dc",
+  color: colorProp = "#ffd1dc",
   strokeWidth = 1.5,
   animationDuration = 600,
   iterations = 2,
@@ -38,6 +39,8 @@ export function Highlighter({
   multiline = true,
   isView = false,
 }: HighlighterProps) {
+  // Accept brand tokens ("brand", ...) so the annotation follows the accent theme
+  const color = useResolvedColor(colorProp)
   const elementRef = useRef<HTMLSpanElement>(null)
 
   const isInView = useInView(elementRef, {

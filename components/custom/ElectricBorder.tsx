@@ -1,3 +1,4 @@
+import { useResolvedColor } from "@/components/custom/AccentProvider";
 import React, {
   useEffect,
   useRef,
@@ -34,13 +35,15 @@ interface ElectricBorderProps {
 
 const ElectricBorder: React.FC<ElectricBorderProps> = ({
   children,
-  color = "#5227FF",
+  color: colorProp = "#5227FF",
   speed = 1,
   chaos = 0.12,
   borderRadius = 24,
   className,
   style,
 }) => {
+  // Accept brand tokens ("brand", ...) so the border follows the accent theme
+  const color = useResolvedColor(colorProp);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const animationRef = useRef<number | null>(null);

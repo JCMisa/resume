@@ -12,7 +12,7 @@ export default function SignUpPage() {
     <div className="grid min-h-screen grid-cols-1 lg:grid-cols-2 relative">
       <LightPillar
         topColor="#82B02C"
-        bottomColor="#9ae600"
+        bottomColor="brand"
         intensity={1}
         rotationSpeed={0.3}
         glowAmount={0.002}

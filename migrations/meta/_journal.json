@@ -64,6 +64,13 @@
       "when": 1795237411967,
       "tag": "0008_wealthy_rage",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1795245548359,
+      "tag": "0009_chilly_old_lace",
+      "breakpoints": true
     }
   ]
 }

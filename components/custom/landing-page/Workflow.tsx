@@ -9,7 +9,7 @@ const Workflow = () => {
       <div className="absolute inset-0 rounded-[30px] overflow-hidden pointer-events-none z-0">
         <LightPillar
           topColor="#82B02C"
-          bottomColor="#9ae600"
+          bottomColor="brand"
           intensity={0.5}
           rotationSpeed={0.15}
           glowAmount={0.002}

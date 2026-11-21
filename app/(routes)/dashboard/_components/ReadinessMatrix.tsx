@@ -9,11 +9,11 @@ export default function ReadinessMatrix({ score }: { score: number }) {
 
   return (
     <div className="bg-white dark:bg-stone-900 border border-stone-100 dark:border-stone-800/80 rounded-3xl p-6 shadow-sm flex flex-col justify-between h-[360px] relative overflow-hidden group">
-      <div className="absolute -top-10 -right-10 size-40 bg-[#9ae600]/5 rounded-full blur-2xl group-hover:scale-120 transition-transform duration-700" />
+      <div className="absolute -top-10 -right-10 size-40 bg-brand/5 rounded-full blur-2xl group-hover:scale-120 transition-transform duration-700" />
 
       <div className="flex items-center justify-between">
         <div>
-          <span className="text-[10px] font-black uppercase tracking-widest text-[#5a8800] dark:text-[#9ae600] bg-[#9ae600]/8 px-2.5 py-1 rounded-full">
+          <span className="text-[10px] font-black uppercase tracking-widest text-brand-strong dark:text-brand bg-brand/8 px-2.5 py-1 rounded-full">
             ResuMe Composite Score
           </span>
           <h3 className="text-lg font-black tracking-tight mt-2">
@@ -69,7 +69,7 @@ export default function ReadinessMatrix({ score }: { score: number }) {
       </div>
 
       <div className="p-3 rounded-xl bg-stone-50 dark:bg-stone-800/40 border flex items-start gap-2.5">
-        <Sparkles className="size-4 text-[#5a8800] dark:text-[#9ae600] shrink-0 mt-0.5" />
+        <Sparkles className="size-4 text-brand-strong dark:text-brand shrink-0 mt-0.5" />
         <p className="text-[11px] text-muted-foreground leading-normal font-medium">
           {score >= 80
             ? "Excellent matching parameters! Your profile layers are optimized to cross top ATS checkpoints easily."

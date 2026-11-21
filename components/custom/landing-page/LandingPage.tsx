@@ -118,7 +118,7 @@ function GridDots() {
       className="absolute inset-0 pointer-events-none opacity-[0.04] dark:opacity-[0.07]"
       style={{
         backgroundImage:
-          "radial-gradient(circle, #9ae600 1px, transparent 1px)",
+          "radial-gradient(circle, var(--brand) 1px, transparent 1px)",
         backgroundSize: "28px 28px",
       }}
     />
@@ -145,7 +145,7 @@ function ATSRing({ score, label }: { score: number; label: string }) {
           cx="40"
           cy="40"
           r="32"
-          stroke="#9ae600"
+          style={{ stroke: "var(--brand)" }}
           strokeWidth="6"
           fill="none"
           strokeLinecap="round"
@@ -156,7 +156,7 @@ function ATSRing({ score, label }: { score: number; label: string }) {
         />
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center">
-        <span className="text-lg font-black text-[#9ae600]">{score}</span>
+        <span className="text-lg font-black text-brand">{score}</span>
         <span className="text-[8px] font-medium text-stone-400 leading-tight text-center">
           {label}
         </span>
@@ -183,8 +183,8 @@ function Hero() {
       <GridDots />
 
       {/* Ambient glow blobs */}
-      <div className="absolute top-[-10%] right-[-5%] w-[600px] h-[600px] rounded-full bg-[#9ae600]/8 dark:bg-[#9ae600]/4 blur-[100px] pointer-events-none" />
-      <div className="absolute bottom-[-5%] left-[-5%] w-[400px] h-[400px] rounded-full bg-[#9ae600]/5 dark:bg-[#9ae600]/3 blur-[80px] pointer-events-none" />
+      <div className="absolute top-[-10%] right-[-5%] w-[600px] h-[600px] rounded-full bg-brand/8 dark:bg-brand/4 blur-[100px] pointer-events-none" />
+      <div className="absolute bottom-[-5%] left-[-5%] w-[400px] h-[400px] rounded-full bg-brand/5 dark:bg-brand/3 blur-[80px] pointer-events-none" />
 
       <motion.div
         style={{ y, opacity }}
@@ -197,7 +197,7 @@ function Hero() {
           transition={{ duration: 0.6, delay: 0.05 }}
           className="flex justify-center mb-7"
         >
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#9ae600]/10 border border-[#9ae600]/20 text-[#4d7000] dark:text-[#9ae600] text-[11px] font-black uppercase tracking-[0.15em]">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-brand/10 border border-brand/20 text-brand-strong dark:text-brand text-[11px] font-black uppercase tracking-[0.15em]">
             <Sparkles className="w-3 h-3" />
             Powered by Google Gemini AI & VAPI Voice
           </div>
@@ -216,12 +216,12 @@ function Hero() {
           </span>
           <span className="block text-[clamp(2.6rem,7vw,5.5rem)] font-black tracking-[-0.03em] leading-[1.05]">
             <span className="relative inline-block">
-              <Highlighter action="underline" color="#9ae600">
+              <Highlighter action="underline" color="brand">
                 <span className="text-primary">precision-built</span>
               </Highlighter>
               {/* Underline accent */}
               <motion.span
-                className="absolute -bottom-1 left-0 h-[3px] bg-[#9ae600]/40 rounded-full"
+                className="absolute -bottom-1 left-0 h-[3px] bg-brand/40 rounded-full"
                 initial={{ width: 0 }}
                 animate={{ width: "100%" }}
                 transition={{
@@ -254,7 +254,7 @@ function Hero() {
         >
           <MagneticButton
             href="/resumes/analyze"
-            className="group relative flex items-center gap-2 px-7 py-3.5 rounded-2xl text-base font-black bg-[#9ae600] text-[#1e3800] hover:bg-[#a8f000] transition-all duration-200 shadow-lg shadow-[#9ae600]/25 hover:shadow-xl hover:shadow-[#9ae600]/35 hover:-translate-y-0.5"
+            className="group relative flex items-center gap-2 px-7 py-3.5 rounded-2xl text-base font-black bg-brand text-brand-foreground hover:bg-brand-hover transition-all duration-200 shadow-lg shadow-brand/25 hover:shadow-xl hover:shadow-brand/35 hover:-translate-y-0.5"
           >
             <Sparkles className="w-4 h-4" />
             Analyze My Resume — Free
@@ -288,7 +288,7 @@ function Hero() {
         >
           <div className="flex items-center gap-2">
             <div className="flex -space-x-2">
-              {["#9ae600", "#7acc00", "#5ab000", "#3a9400"].map((c, i) => (
+              {["var(--brand)", "color-mix(in oklch, var(--brand) 82%, black)", "color-mix(in oklch, var(--brand) 66%, black)", "color-mix(in oklch, var(--brand) 50%, black)"].map((c, i) => (
                 <div
                   key={i}
                   className="w-6 h-6 rounded-full border-2 border-stone-50 dark:border-stone-950 flex items-center justify-center text-[8px] font-black text-white"
@@ -305,14 +305,14 @@ function Hero() {
               {[0, 1, 2, 3, 4].map((i) => (
                 <Star
                   key={i}
-                  className="w-3 h-3 fill-[#9ae600] text-[#9ae600]"
+                  className="w-3 h-3 fill-brand text-brand"
                 />
               ))}
             </div>
             <span className="font-medium">4.9 rating</span>
           </div>
           <div className="flex items-center gap-1.5">
-            <CheckCircle2 className="w-3.5 h-3.5 text-[#9ae600]" />
+            <CheckCircle2 className="w-3.5 h-3.5 text-brand" />
             <span className="font-medium">No credit card needed</span>
           </div>
         </motion.div>
@@ -332,15 +332,15 @@ function Hero() {
             className="absolute -left-8 sm:-left-16 top-8 z-20 hidden sm:block"
           >
             <div className="bg-white dark:bg-stone-900 rounded-2xl px-4 py-3 border border-stone-200 dark:border-stone-700 shadow-xl flex items-center gap-3">
-              <div className="w-9 h-9 rounded-xl bg-[#9ae600]/10 flex items-center justify-center">
-                <TrendingUp className="w-4 h-4 text-[#9ae600]" />
+              <div className="w-9 h-9 rounded-xl bg-brand/10 flex items-center justify-center">
+                <TrendingUp className="w-4 h-4 text-brand" />
               </div>
               <div>
                 <p className="text-[10px] font-bold text-stone-400 uppercase tracking-wide">
                   ATS Score
                 </p>
                 <p className="text-sm font-black text-stone-900 dark:text-stone-100">
-                  42 → <span className="text-[#9ae600]">91</span>
+                  42 → <span className="text-brand">91</span>
                 </p>
               </div>
             </div>
@@ -353,7 +353,7 @@ function Hero() {
             className="absolute -right-8 sm:-right-16 bottom-12 z-20 hidden sm:block"
           >
             <div className="bg-white dark:bg-stone-900 rounded-2xl px-4 py-3 border border-stone-200 dark:border-stone-700 shadow-xl flex items-center gap-3">
-              <div className="w-2 h-2 rounded-full bg-[#9ae600] animate-pulse" />
+              <div className="w-2 h-2 rounded-full bg-brand animate-pulse" />
               <div>
                 <p className="text-[10px] font-bold text-stone-400 uppercase tracking-wide">
                   Interview Live
@@ -372,7 +372,7 @@ function Hero() {
               <div className="flex gap-1.5">
                 <div className="w-3 h-3 rounded-full bg-red-400/80" />
                 <div className="w-3 h-3 rounded-full bg-amber-400/80" />
-                <div className="w-3 h-3 rounded-full bg-[#9ae600]/80" />
+                <div className="w-3 h-3 rounded-full bg-brand/80" />
               </div>
               <div className="flex-1 h-5 rounded-md bg-stone-200 dark:bg-stone-700 flex items-center px-3">
                 <span className="text-[10px] font-mono text-stone-400">
@@ -384,8 +384,8 @@ function Hero() {
             {/* Dashboard content */}
             <div className="p-5 sm:p-6">
               <div className="flex items-center gap-2 mb-5">
-                <div className="w-2 h-2 rounded-full bg-[#9ae600] animate-pulse" />
-                <span className="text-[11px] font-mono font-bold text-[#9ae600] uppercase tracking-widest">
+                <div className="w-2 h-2 rounded-full bg-brand animate-pulse" />
+                <span className="text-[11px] font-mono font-bold text-brand uppercase tracking-widest">
                   Analysis Complete
                 </span>
                 <span className="ml-auto text-[10px] text-stone-400 font-mono">
@@ -397,7 +397,7 @@ function Hero() {
                 {/* Score ring */}
                 <div className="col-span-1 flex flex-col items-center justify-center bg-stone-50 dark:bg-stone-800/50 rounded-2xl p-3 gap-2">
                   <ATSRing score={91} label="ATS" />
-                  <span className="text-[9px] font-bold text-[#9ae600] uppercase tracking-wide">
+                  <span className="text-[9px] font-bold text-brand uppercase tracking-wide">
                     Excellent
                   </span>
                 </div>
@@ -416,7 +416,7 @@ function Hero() {
                       </span>
                       <div className="flex-1 h-1.5 rounded-full bg-stone-100 dark:bg-stone-700 overflow-hidden">
                         <motion.div
-                          className="h-full rounded-full bg-[#9ae600]"
+                          className="h-full rounded-full bg-brand"
                           initial={{ width: 0 }}
                           animate={{ width: `${item.score}%` }}
                           transition={{
@@ -435,9 +435,9 @@ function Hero() {
               </div>
 
               {/* AI tip */}
-              <div className="mt-4 p-3 rounded-xl bg-[#9ae600]/6 dark:bg-[#9ae600]/5 border border-[#9ae600]/15">
+              <div className="mt-4 p-3 rounded-xl bg-brand/6 dark:bg-brand/5 border border-brand/15">
                 <p className="text-[10px] sm:text-[11px] text-stone-600 dark:text-stone-300 leading-relaxed">
-                  <span className="font-black text-[#4d7000] dark:text-[#9ae600]">
+                  <span className="font-black text-brand-strong dark:text-brand">
                     Gemini AI:{" "}
                   </span>
                   Add 3 quantified achievements to Work Experience.
@@ -448,7 +448,7 @@ function Hero() {
           </div>
 
           {/* Glow */}
-          <div className="absolute -bottom-6 left-1/4 right-1/4 h-10 bg-[#9ae600]/15 blur-2xl pointer-events-none rounded-full" />
+          <div className="absolute -bottom-6 left-1/4 right-1/4 h-10 bg-brand/15 blur-2xl pointer-events-none rounded-full" />
         </motion.div>
       </motion.div>
 
@@ -486,7 +486,7 @@ function StatsStrip() {
     <section className="bg-white dark:bg-stone-900 border-y border-stone-100 dark:border-stone-800 relative">
       <LightPillar
         topColor="#82B02C"
-        bottomColor="#9ae600"
+        bottomColor="brand"
         intensity={1}
         rotationSpeed={0.3}
         glowAmount={0.002}
@@ -510,7 +510,7 @@ function StatsStrip() {
             className="text-center"
           >
             <p
-              className="text-3xl sm:text-4xl font-black text-[#9ae600] tabular-nums mb-1"
+              className="text-3xl sm:text-4xl font-black text-brand tabular-nums mb-1"
               style={{ fontFamily: "'Sora', sans-serif" }}
             >
               <Counter to={s.value} suffix={s.suffix} />
@@ -579,7 +579,7 @@ function Features() {
             initial={{ opacity: 0, y: 12 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="text-[11px] font-black uppercase tracking-[0.15em] text-[#9ae600] mb-4"
+            className="text-[11px] font-black uppercase tracking-[0.15em] text-brand mb-4"
           >
             Everything you need
           </motion.p>
@@ -593,7 +593,7 @@ function Features() {
               style={{ fontFamily: "'Sora', sans-serif" }}
             >
               Your{" "}
-              <Highlighter action="underline" color="#9ae600">
+              <Highlighter action="underline" color="brand">
                 <span className="text-primary">complete</span>
               </Highlighter>{" "}
               career toolkit.
@@ -627,12 +627,12 @@ function Features() {
               className={`group relative p-6 rounded-2xl border transition-all duration-300 hover:-translate-y-1 ${
                 feat.accent
                   ? "bg-stone-900 dark:bg-stone-800 border-stone-700 dark:border-stone-600"
-                  : "bg-white dark:bg-stone-900 border-stone-100 dark:border-stone-800 hover:border-[#9ae600]/30"
+                  : "bg-white dark:bg-stone-900 border-stone-100 dark:border-stone-800 hover:border-brand/30"
               } hover:shadow-lg hover:shadow-stone-900/6 dark:hover:shadow-black/30`}
             >
               {feat.accent && (
                 <ShineBorder
-                  shineColor={["#9ae600", "#c8f400", "#6aaa00"]}
+                  shineColor={["var(--brand)", "var(--brand-light)", "var(--brand-strong)"]}
                   duration={8}
                   borderWidth={1}
                 />
@@ -640,12 +640,12 @@ function Features() {
               <div
                 className={`mb-4 w-10 h-10 rounded-xl flex items-center justify-center ${
                   feat.accent
-                    ? "bg-[#9ae600]/15"
-                    : "bg-stone-50 dark:bg-stone-800 group-hover:bg-[#9ae600]/10 transition-colors"
+                    ? "bg-brand/15"
+                    : "bg-stone-50 dark:bg-stone-800 group-hover:bg-brand/10 transition-colors"
                 }`}
               >
                 <feat.icon
-                  className={`w-5 h-5 ${feat.accent ? "text-[#9ae600]" : "text-stone-400 dark:text-stone-500 group-hover:text-[#9ae600] transition-colors"}`}
+                  className={`w-5 h-5 ${feat.accent ? "text-brand" : "text-stone-400 dark:text-stone-500 group-hover:text-brand transition-colors"}`}
                 />
               </div>
               <h3
@@ -699,7 +699,7 @@ function HowItWorks() {
     >
       <LightPillar
         topColor="#82B02C"
-        bottomColor="#9ae600"
+        bottomColor="brand"
         intensity={1}
         rotationSpeed={0.3}
         glowAmount={0.002}
@@ -720,7 +720,7 @@ function HowItWorks() {
               initial={{ opacity: 0, y: 12 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              className="text-[11px] font-black uppercase tracking-[0.15em] text-[#9ae600] mb-4"
+              className="text-[11px] font-black uppercase tracking-[0.15em] text-brand mb-4"
             >
               Simple process
             </motion.p>
@@ -733,7 +733,7 @@ function HowItWorks() {
               style={{ fontFamily: "'Sora', sans-serif" }}
             >
               From upload to{" "}
-              <Highlighter action="underline" color="#9ae600">
+              <Highlighter action="underline" color="brand">
                 <span className="text-primary">interview-ready.</span>
               </Highlighter>
             </motion.h2>
@@ -765,16 +765,16 @@ function HowItWorks() {
                 >
                   {/* Number + connector */}
                   <div className="flex flex-col items-center">
-                    <div className="w-12 h-12 rounded-2xl bg-[#9ae600] flex items-center justify-center shadow-md shadow-[#9ae600]/20 flex-shrink-0">
-                      <step.icon className="w-5 h-5 text-[#1e3800]" />
+                    <div className="w-12 h-12 rounded-2xl bg-brand flex items-center justify-center shadow-md shadow-brand/20 flex-shrink-0">
+                      <step.icon className="w-5 h-5 text-brand-foreground" />
                     </div>
                     {i < steps.length - 1 && (
-                      <div className="w-px flex-1 mt-3 bg-gradient-to-b from-[#9ae600]/30 to-transparent min-h-[2rem]" />
+                      <div className="w-px flex-1 mt-3 bg-gradient-to-b from-brand/30 to-transparent min-h-[2rem]" />
                     )}
                   </div>
                   <div className="pt-2 pb-2">
                     <div className="flex items-center gap-2 mb-1.5">
-                      <span className="text-[10px] font-mono font-black text-[#9ae600] tracking-widest">
+                      <span className="text-[10px] font-mono font-black text-brand tracking-widest">
                         STEP {step.num}
                       </span>
                     </div>
@@ -800,13 +800,13 @@ function HowItWorks() {
           >
             <div className="relative rounded-2xl overflow-hidden bg-stone-950 border border-stone-800 shadow-2xl p-6">
               {/* Ambient glow */}
-              <div className="absolute top-0 right-0 w-48 h-48 bg-[#9ae600]/8 blur-3xl rounded-full pointer-events-none" />
+              <div className="absolute top-0 right-0 w-48 h-48 bg-brand/8 blur-3xl rounded-full pointer-events-none" />
 
               <div className="relative z-10">
                 <div className="flex items-center justify-between mb-5">
                   <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 rounded-full bg-[#9ae600] animate-pulse" />
-                    <span className="text-[10px] font-mono font-black text-[#9ae600] uppercase tracking-widest">
+                    <div className="w-2 h-2 rounded-full bg-brand animate-pulse" />
+                    <span className="text-[10px] font-mono font-black text-brand uppercase tracking-widest">
                       Live Session
                     </span>
                   </div>
@@ -844,11 +844,11 @@ function HowItWorks() {
                       className={`p-3 rounded-xl text-xs leading-relaxed ${
                         msg.ai
                           ? "bg-stone-800/80 text-stone-300 border border-stone-700/50"
-                          : "bg-[#9ae600]/8 text-stone-200 border border-[#9ae600]/15 ml-5"
+                          : "bg-brand/8 text-stone-200 border border-brand/15 ml-5"
                       }`}
                     >
                       <span
-                        className={`block text-[9px] font-black uppercase tracking-widest mb-1 ${msg.ai ? "text-stone-600" : "text-[#9ae600]"}`}
+                        className={`block text-[9px] font-black uppercase tracking-widest mb-1 ${msg.ai ? "text-stone-600" : "text-brand"}`}
                       >
                         {msg.role}
                       </span>
@@ -860,10 +860,10 @@ function HowItWorks() {
                 {/* Voice orb */}
                 <div className="flex items-center justify-center py-4">
                   <div className="relative">
-                    <div className="w-16 h-16 rounded-full bg-[#9ae600] flex items-center justify-center shadow-lg shadow-[#9ae600]/30">
-                      <Mic className="w-7 h-7 text-[#1e3800]" />
+                    <div className="w-16 h-16 rounded-full bg-brand flex items-center justify-center shadow-lg shadow-brand/30">
+                      <Mic className="w-7 h-7 text-brand-foreground" />
                     </div>
-                    <div className="absolute inset-0 rounded-full bg-[#9ae600]/20 animate-ping" />
+                    <div className="absolute inset-0 rounded-full bg-brand/20 animate-ping" />
                   </div>
                 </div>
                 <p className="text-center text-[10px] text-stone-600 font-mono">
@@ -880,8 +880,8 @@ function HowItWorks() {
               transition={{ delay: 1, type: "spring", stiffness: 200 }}
               className="absolute -bottom-5 -left-5 sm:-left-8 bg-white dark:bg-stone-800 rounded-2xl p-3.5 shadow-xl border border-stone-100 dark:border-stone-700 flex items-center gap-3"
             >
-              <div className="w-10 h-10 rounded-xl bg-[#9ae600]/15 flex items-center justify-center">
-                <Award className="w-5 h-5 text-[#9ae600]" />
+              <div className="w-10 h-10 rounded-xl bg-brand/15 flex items-center justify-center">
+                <Award className="w-5 h-5 text-brand" />
               </div>
               <div>
                 <p className="text-[10px] text-stone-400 font-medium">
@@ -916,7 +916,7 @@ function Capabilities() {
             style={{ fontFamily: "'Sora', sans-serif" }}
           >
             Built for{" "}
-            <Highlighter action="underline" color="#9ae600">
+            <Highlighter action="underline" color="brand">
               <span className="text-primary">serious</span>
             </Highlighter>{" "}
             job seekers.
@@ -942,13 +942,13 @@ function Capabilities() {
             className="relative rounded-2xl p-7 bg-white dark:bg-stone-900 border border-stone-100 dark:border-stone-800 overflow-hidden group hover:shadow-lg hover:shadow-stone-900/5 transition-all"
           >
             <ShineBorder
-              shineColor={["#9ae600", "#6aaa00", "#c8f400"]}
+              shineColor={["var(--brand)", "var(--brand-strong)", "var(--brand-light)"]}
               duration={7}
               borderWidth={1.5}
             />
             <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 rounded-xl bg-[#9ae600] flex items-center justify-center shadow-sm shadow-[#9ae600]/30">
-                <BarChart3 className="w-5 h-5 text-[#1e3800]" />
+              <div className="w-10 h-10 rounded-xl bg-brand flex items-center justify-center shadow-sm shadow-brand/30">
+                <BarChart3 className="w-5 h-5 text-brand-foreground" />
               </div>
               <div>
                 <h3 className="font-bold text-stone-900 dark:text-stone-100 text-base">
@@ -975,7 +975,7 @@ function Capabilities() {
               ].map((tag) => (
                 <span
                   key={tag}
-                  className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-[#9ae600]/8 text-[#3d6000] dark:text-[#9ae600] border border-[#9ae600]/15"
+                  className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-brand/8 text-[#3d6000] dark:text-brand border border-brand/15"
                 >
                   {tag}
                 </span>
@@ -992,8 +992,8 @@ function Capabilities() {
             className="rounded-2xl p-7 bg-white dark:bg-stone-900 border border-stone-100 dark:border-stone-800 group hover:shadow-lg hover:shadow-stone-900/5 transition-all"
           >
             <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 rounded-xl bg-stone-100 dark:bg-stone-800 flex items-center justify-center group-hover:bg-[#9ae600]/10 transition-colors">
-                <Layout className="w-5 h-5 text-stone-500 dark:text-stone-400 group-hover:text-[#9ae600] transition-colors" />
+              <div className="w-10 h-10 rounded-xl bg-stone-100 dark:bg-stone-800 flex items-center justify-center group-hover:bg-brand/10 transition-colors">
+                <Layout className="w-5 h-5 text-stone-500 dark:text-stone-400 group-hover:text-brand transition-colors" />
               </div>
               <div>
                 <h3 className="font-bold text-stone-900 dark:text-stone-100 text-base">
@@ -1018,7 +1018,7 @@ function Capabilities() {
                 "High-fidelity PDF export",
               ].map((item) => (
                 <div key={item} className="flex items-start gap-2.5">
-                  <CheckCircle2 className="w-4 h-4 text-[#9ae600] flex-shrink-0 mt-0.5" />
+                  <CheckCircle2 className="w-4 h-4 text-brand flex-shrink-0 mt-0.5" />
                   <span className="text-sm text-stone-600 dark:text-stone-400">
                     {item}
                   </span>
@@ -1036,14 +1036,14 @@ function Capabilities() {
             className="md:col-span-2 rounded-2xl overflow-hidden bg-stone-950 dark:bg-black border border-stone-800 relative"
           >
             {/* Glow */}
-            <div className="absolute top-0 right-0 w-80 h-80 bg-[#9ae600]/6 blur-3xl rounded-full pointer-events-none" />
-            <div className="absolute bottom-0 left-0 w-64 h-64 bg-[#9ae600]/4 blur-3xl rounded-full pointer-events-none" />
+            <div className="absolute top-0 right-0 w-80 h-80 bg-brand/6 blur-3xl rounded-full pointer-events-none" />
+            <div className="absolute bottom-0 left-0 w-64 h-64 bg-brand/4 blur-3xl rounded-full pointer-events-none" />
 
             <div className="relative z-10 p-7 grid md:grid-cols-2 gap-8 items-center">
               <div>
                 <div className="flex items-center gap-3 mb-4">
-                  <div className="w-10 h-10 rounded-xl bg-[#9ae600]/10 border border-[#9ae600]/15 flex items-center justify-center">
-                    <Mic className="w-5 h-5 text-[#9ae600]" />
+                  <div className="w-10 h-10 rounded-xl bg-brand/10 border border-brand/15 flex items-center justify-center">
+                    <Mic className="w-5 h-5 text-brand" />
                   </div>
                   <div>
                     <h3 className="font-bold text-stone-100 text-base">
@@ -1080,7 +1080,7 @@ function Capabilities() {
               {/* Session results mini */}
               <div className="bg-stone-900/70 rounded-2xl border border-stone-700/50 p-5">
                 <div className="flex items-center justify-between mb-4">
-                  <span className="text-[10px] font-mono font-black text-[#9ae600] uppercase tracking-widest">
+                  <span className="text-[10px] font-mono font-black text-brand uppercase tracking-widest">
                     Session Results
                   </span>
                   <span className="text-[10px] text-stone-600 font-mono">
@@ -1102,7 +1102,7 @@ function Capabilities() {
                     </span>
                     <div className="flex-1 h-1 rounded-full bg-stone-800">
                       <motion.div
-                        className="h-full rounded-full bg-[#9ae600]"
+                        className="h-full rounded-full bg-brand"
                         initial={{ width: 0 }}
                         whileInView={{ width: `${s.score}%` }}
                         viewport={{ once: true }}
@@ -1181,7 +1181,7 @@ function Testimonials() {
     >
       <LightPillar
         topColor="#82B02C"
-        bottomColor="#9ae600"
+        bottomColor="brand"
         intensity={1}
         rotationSpeed={0.3}
         glowAmount={0.002}
@@ -1200,7 +1200,7 @@ function Testimonials() {
             initial={{ opacity: 0, y: 12 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="text-[11px] font-black uppercase tracking-[0.15em] text-[#9ae600] mb-4"
+            className="text-[11px] font-black uppercase tracking-[0.15em] text-brand mb-4"
           >
             Real results
           </motion.p>
@@ -1212,7 +1212,7 @@ function Testimonials() {
             className="text-3xl sm:text-4xl md:text-5xl font-black tracking-tight text-stone-900 dark:text-stone-50 relative"
             style={{ fontFamily: "'Sora', sans-serif" }}
           >
-            <Highlighter action="underline" color="#9ae600">
+            <Highlighter action="underline" color="brand">
               <span className="text-primary">Loved</span>
             </Highlighter>{" "}
             by job seekers worldwide.
@@ -1237,7 +1237,7 @@ function Testimonials() {
                 {Array.from({ length: r.stars }).map((_, j) => (
                   <Star
                     key={j}
-                    className="w-3.5 h-3.5 fill-[#9ae600] text-[#9ae600]"
+                    className="w-3.5 h-3.5 fill-brand text-brand"
                   />
                 ))}
               </div>
@@ -1245,7 +1245,7 @@ function Testimonials() {
                 &ldquo;{r.quote}&rdquo;
               </p>
               <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#9ae600]/60 to-[#6aaa00]/40 flex items-center justify-center text-[11px] font-black text-[#1e3800]">
+                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-brand/60 to-brand-strong/40 flex items-center justify-center text-[11px] font-black text-brand-foreground">
                   {r.name[0]}
                 </div>
                 <div>
@@ -1280,7 +1280,7 @@ function Pricing() {
             initial={{ opacity: 0, y: 12 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="text-[11px] font-black uppercase tracking-[0.15em] text-[#9ae600] mb-4"
+            className="text-[11px] font-black uppercase tracking-[0.15em] text-brand mb-4"
           >
             Simple pricing
           </motion.p>
@@ -1293,7 +1293,7 @@ function Pricing() {
             style={{ fontFamily: "'Sora', sans-serif" }}
           >
             Start free.{" "}
-            <Highlighter action="underline" color="#9ae600">
+            <Highlighter action="underline" color="brand">
               <span className="text-primary">Upgrade</span>
             </Highlighter>{" "}
             anytime.
@@ -1341,7 +1341,7 @@ function Pricing() {
 
           {/* Pro */}
           <ElectricBorder
-            color="#9ae600"
+            color="brand"
             speed={0.7}
             chaos={0.12}
             style={{ borderRadius: 7.2 }}
@@ -1354,11 +1354,11 @@ function Pricing() {
               className=" rounded-2xl p-7 "
             >
               <div className="absolute top-5 right-5">
-                <span className="px-2.5 py-1 rounded-full text-[9px] font-black bg-[#9ae600] text-[#1e3800] uppercase tracking-wider">
+                <span className="px-2.5 py-1 rounded-full text-[9px] font-black bg-brand text-brand-foreground uppercase tracking-wider">
                   Popular
                 </span>
               </div>
-              <p className="text-[10px] font-black uppercase tracking-[0.15em] text-[#9ae600] mb-3">
+              <p className="text-[10px] font-black uppercase tracking-[0.15em] text-brand mb-3">
                 Pro
               </p>
               <div className="flex items-baseline gap-1 mb-6">
@@ -1373,14 +1373,14 @@ function Pricing() {
               <div className="space-y-3 mb-7">
                 {pro.map((item) => (
                   <div key={item} className="flex items-center gap-2.5">
-                    <CheckCircle2 className="w-4 h-4 text-[#9ae600] flex-shrink-0" />
+                    <CheckCircle2 className="w-4 h-4 text-brand flex-shrink-0" />
                     <span className="text-sm text-stone-400">{item}</span>
                   </div>
                 ))}
               </div>
               <Link
                 href="/settings?tab=billing"
-                className="block w-full py-3 text-center rounded-xl text-sm font-black bg-[#9ae600] text-[#1e3800] hover:bg-[#a8f000] transition-colors shadow-lg shadow-[#9ae600]/20"
+                className="block w-full py-3 text-center rounded-xl text-sm font-black bg-brand text-brand-foreground hover:bg-brand-hover transition-colors shadow-lg shadow-brand/20"
               >
                 Start Pro Subscription
               </Link>
@@ -1398,7 +1398,7 @@ function CTABanner() {
     <section className="py-16 sm:py-24 px-5 sm:px-8 bg-stone-100/50 dark:bg-stone-900/30 relative">
       <LightPillar
         topColor="#82B02C"
-        bottomColor="#9ae600"
+        bottomColor="brand"
         intensity={1}
         rotationSpeed={0.3}
         glowAmount={0.002}
@@ -1420,11 +1420,11 @@ function CTABanner() {
           className="relative rounded-3xl overflow-hidden bg-stone-950 dark:bg-black border border-stone-800 p-10 sm:p-16 text-center"
         >
           {/* Glow */}
-          <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 h-80 rounded-full bg-[#9ae600]/10 blur-3xl pointer-events-none" />
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 h-80 rounded-full bg-brand/10 blur-3xl pointer-events-none" />
           <GridDots />
 
           <div className="relative z-10">
-            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#9ae600]/10 border border-[#9ae600]/20 text-[#9ae600] text-[10px] font-black uppercase tracking-[0.15em] mb-6">
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-brand/10 border border-brand/20 text-brand text-[10px] font-black uppercase tracking-[0.15em] mb-6">
               <Zap className="w-3 h-3" />
               Ready in 30 seconds
             </div>
@@ -1440,7 +1440,7 @@ function CTABanner() {
             </p>
             <MagneticButton
               href="/resumes/analyze"
-              className="inline-flex items-center gap-2 px-8 py-4 rounded-2xl text-base font-black bg-[#9ae600] text-[#1e3800] hover:bg-[#a8f000] transition-all duration-200 shadow-xl shadow-[#9ae600]/25 hover:shadow-2xl hover:shadow-[#9ae600]/35 hover:-translate-y-0.5"
+              className="inline-flex items-center gap-2 px-8 py-4 rounded-2xl text-base font-black bg-brand text-brand-foreground hover:bg-brand-hover transition-all duration-200 shadow-xl shadow-brand/25 hover:shadow-2xl hover:shadow-brand/35 hover:-translate-y-0.5"
             >
               <Sparkles className="w-4 h-4" />
               Analyze My Resume — Free
@@ -1469,7 +1469,7 @@ function Footer() {
                 className="font-black text-lg tracking-tight text-stone-900 dark:text-stone-50"
                 style={{ fontFamily: "'Sora', sans-serif" }}
               >
-                Resu<span className="text-[#9ae600]">Me</span>
+                Resu<span className="text-brand">Me</span>
               </span>
             </Link>
             <p className="text-sm text-stone-400 leading-relaxed">

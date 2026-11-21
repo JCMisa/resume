@@ -31,7 +31,7 @@ export default function UpgradeModal({
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="sm:max-w-md border border-stone-200 dark:border-stone-800">
         <DialogHeader className="flex flex-col items-center text-center space-y-3">
-          <div className="p-3 bg-[#9ae600]/10 text-[#5a8800] dark:text-[#9ae600] rounded-full border border-[#9ae600]/20 animate-pulse">
+          <div className="p-3 bg-brand/10 text-brand-strong dark:text-brand rounded-full border border-brand/20 animate-pulse">
             <Zap className="h-6 w-6 fill-current" />
           </div>
           <DialogTitle className="text-xl font-black tracking-tight">
