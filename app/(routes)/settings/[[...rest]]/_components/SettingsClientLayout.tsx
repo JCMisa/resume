@@ -23,6 +23,11 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
+import {
+  FREE_LIMITS,
+  LIMIT_PERIOD,
+  type MeteredFeature,
+} from "@/lib/plans";
 
 type TabId = "profile" | "security" | "notifications" | "billing";
 
@@ -178,6 +183,12 @@ export default function SettingsClientLayout({
   }, [searchParams]);
 
   const isPro = billingData.isPro; // Derived safely from server context rules
+  const usageSub = (feature: MeteredFeature) =>
+    isPro
+      ? "Pro Subscription Active"
+      : LIMIT_PERIOD[feature] === "monthly"
+        ? "Resets Monthly"
+        : "Lifetime Limit";
 
   const navItems: NavItem[] = [
     {
@@ -373,22 +384,22 @@ export default function SettingsClientLayout({
               <StatCard
                 icon={FilePlus}
                 label="Manual Creation"
-                value={`${billingData.limits.resumes} / ${isPro ? "∞" : "5"}`}
-                sub={isPro ? "Pro Subscription Active" : "Resets Monthly"}
+                value={`${billingData.limits.resumes} / ${isPro ? "∞" : FREE_LIMITS.create_resume}`}
+                sub={usageSub("create_resume")}
               />
 
               <StatCard
                 icon={FileText}
                 label="AI Analyses"
-                value={`${billingData.limits.analyses} / ${isPro ? "∞" : "3"}`}
-                sub={isPro ? "Pro Subscription Active" : "Lifetime Limit"}
+                value={`${billingData.limits.analyses} / ${isPro ? "∞" : FREE_LIMITS.analyze}`}
+                sub={usageSub("analyze")}
               />
 
               <StatCard
                 icon={Mic}
                 label="Mock Interviews"
-                value={`${billingData.limits.interviews} / ${isPro ? "∞" : "2"}`}
-                sub={isPro ? "Pro Subscription Active" : "Lifetime Limit"}
+                value={isPro ? `${billingData.limits.interviews} / ∞` : "Pro only"}
+                sub={isPro ? "Pro Subscription Active" : "Upgrade to unlock"}
               />
             </div>
           </aside>

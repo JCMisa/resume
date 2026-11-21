@@ -7,6 +7,7 @@ import {
   jsonb,
   pgEnum,
   boolean,
+  index,
 } from "drizzle-orm/pg-core";
 import {
   relations,
@@ -21,6 +22,7 @@ export const interviewStatusEnum = pgEnum("interview_status", [
   "failed",
 ]);
 export const resumeStatusEnum = pgEnum("resume_status", ["parsed", "created"]);
+export const usageKindEnum = pgEnum("usage_kind", ["resume_analysis"]);
 
 // USERS
 export const users = pgTable("users", {
@@ -152,6 +154,24 @@ export const interviewResults = pgTable("interview_results", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+// USAGE EVENTS (append-only log of metered actions, used for plan limits)
+// Rows survive resume deletion (resumeId -> null) so usage can't be reset by deleting.
+export const usageEvents = pgTable(
+  "usage_events",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: text("user_id")
+      .references(() => users.id, { onDelete: "cascade" })
+      .notNull(),
+    kind: usageKindEnum("kind").notNull(),
+    resumeId: uuid("resume_id").references(() => resumes.id, {
+      onDelete: "set null",
+    }),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (t) => [index("usage_events_user_kind_idx").on(t.userId, t.kind, t.createdAt)],
+);
+
 /**
  * RELATIONSHIPS
  */
@@ -193,3 +213,6 @@ export type NewInterview = InferInsertModel<typeof interviews>;
 
 export type InterviewResult = InferSelectModel<typeof interviewResults>;
 export type NewInterviewResult = InferInsertModel<typeof interviewResults>;
+
+export type UsageEvent = InferSelectModel<typeof usageEvents>;
+export type NewUsageEvent = InferInsertModel<typeof usageEvents>;

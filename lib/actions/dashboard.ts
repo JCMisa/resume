@@ -78,7 +78,10 @@ export async function getDashboardTelemetryAction() {
 
     // 4. Calculate high-level metrics safely
     const totalResumesBuilt = userResumes.length;
-    const totalInterviewsDone = userInterviews.length;
+    // Only graded sessions (excludes cancelled "failed" and abandoned "in-progress" ones)
+    const totalInterviewsDone = userInterviews.filter(
+      (i) => i.status === "completed",
+    ).length;
 
     const validScores = userResumes
       .filter((r) => r.analysis?.overallScore)

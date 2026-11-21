@@ -5,16 +5,13 @@ import { useUser } from "@clerk/nextjs";
 import { Video } from "lucide-react";
 import InterviewSetupForm from "./_components/InterviewSetupForm";
 import Agent from "./_components/Agent";
+import InterviewProTeaser from "./_components/InterviewProTeaser";
 import { getUserBillingStatus } from "@/lib/actions/billing";
-import { Button } from "@/components/ui/button";
-import { LockIcon, ZapIcon } from "lucide-react";
-import Link from "next/link";
 
 export default function InterviewsPage() {
   const { user } = useUser();
 
   const [sessionMeta, setSessionMeta] = useState<{
-    id: string; // id of the interview being created
     text: string; // extracted text from upload pdf resume
     role: string; // job role typed by user
     desc: string; // optional job desc typed by user
@@ -26,11 +23,7 @@ export default function InterviewsPage() {
   useEffect(() => {
     const checkAccess = async () => {
       const billing = await getUserBillingStatus();
-      if (!billing || !billing.allowed || !billing.allowed.interview) {
-        setHasAccess(false);
-        return;
-      }
-      setHasAccess(billing.allowed.interview);
+      setHasAccess(Boolean(billing?.allowed?.interview));
     };
     checkAccess();
   }, [sessionMeta]);
@@ -58,34 +51,13 @@ export default function InterviewsPage() {
         </div>
       </header>
 
-      {/* 🚀 FIXED: Block form initialization if free allotment limits are hit */}
+      {/* Interviews are Pro-only: Free users see what they'd get */}
       {!hasAccess ? (
-        <div className="flex flex-col items-center justify-center p-8 border rounded-3xl bg-muted/10 space-y-4 max-w-md mx-auto text-center border-dashed mt-8 animate-in fade-in zoom-in-95">
-          <div className="p-4 bg-amber-500/10 text-amber-500 rounded-full border border-amber-500/20">
-            <LockIcon className="h-6 w-6" />
-          </div>
-          <h3 className="text-base font-black tracking-tight">
-            Interview Sessions Exhausted
-          </h3>
-          <p className="text-xs text-muted-foreground leading-relaxed">
-            Free accounts include up to 2 high-fidelity live audio simulations.
-            Upgrade to a premium membership to unlock unlimited real-time
-            speaking reviews!
-          </p>
-          <Button
-            asChild
-            className="rounded-xl font-black text-xs !py-5 gap-1.5 w-full shadow-lg shadow-primary/20 bg-primary text-primary-foreground"
-          >
-            <Link href="/settings?tab=billing">
-              <ZapIcon className="size-3.5 fill-current" />
-              Unlock Unlimited Practice
-            </Link>
-          </Button>
-        </div>
+        <InterviewProTeaser />
       ) : !sessionMeta ? (
         <InterviewSetupForm
-          onSetupComplete={(id, text, role, desc) =>
-            setSessionMeta({ id, text, role, desc })
+          onSetupComplete={(text, role, desc) =>
+            setSessionMeta({ text, role, desc })
           }
         />
       ) : (
@@ -93,6 +65,7 @@ export default function InterviewsPage() {
           <Agent
             userName={user?.firstName || "Candidate"}
             sessionMeta={sessionMeta}
+            onLimitReached={() => setHasAccess(false)}
           />
         </div>
       )}

@@ -7,10 +7,15 @@ import { toast } from "sonner";
 import UploadSection from "./_components/UploadSection";
 import AIAnalysisSection from "./_components/AIAnalysisSection";
 import StepIndicator from "./_components/StepIndicator";
-import { analyzeAndStoreResumeAction } from "@/lib/actions/resume";
+import {
+  analyzeAndStoreResumeAction,
+  updateResumeFileUrlAction,
+} from "@/lib/actions/resume";
 import { useCloudinaryUpload } from "@/hooks/useCloudinaryUpload";
 import { getUserBillingStatus } from "@/lib/actions/billing";
 import UpgradeModal from "@/components/custom/UpgradeModal";
+import type { Resume } from "@/config/schema";
+import { describeFreeLimit, isLimitReached } from "@/lib/plans";
 
 export type ProcessStage =
   | "idle"
@@ -144,38 +149,56 @@ const AnalyzeResumePage = () => {
       return;
     }
 
-    let secureFileUrl = "";
-
     try {
-      setStage("uploading_to_cloud");
-      setStatusMessage(
-        "Archiving resume document securely in cloud storage...",
-      );
-
-      console.log("Initiating Cloudinary upload...");
-      const cloudUpload = await uploadDocument(file);
-      secureFileUrl = cloudUpload.secure_url;
-      console.log("Cloudinary upload successful! URL:", secureFileUrl);
-
+      // 1. AI analysis first: if it's rejected (plan limit / rate limit) or fails,
+      //    nothing has been uploaded yet, so no orphaned files in Cloudinary.
       setStage("ai_processing");
-      setProgress(95);
+      setProgress(92);
       setStatusMessage("AI is reviewing layout structure and keywords...");
 
-      console.log("Invoking Gemini server analysis action pipeline...");
       const response = await analyzeAndStoreResumeAction(
         extractedText,
         file.name,
-        secureFileUrl,
       );
 
-      if (response.success && response.data) {
-        setProgress(100);
-        setAnalysisResult(response.data);
-        toast.success("Resume processed and saved successfully!");
-        setCurrentView("analysis");
-      } else {
-        toast.error(response.error || "Generation pipeline error.");
+      if (!response.success) {
+        setStage("success"); // keep the extracted text so they can retry
+        if (isLimitReached(response)) {
+          setIsUpgradeModalOpen(true);
+        } else {
+          toast.error(response.error || "Generation pipeline error.");
+        }
+        return;
       }
+
+      // 2. Archive the original PDF and attach it to the saved resume.
+      //    A failure here is non-fatal: the analysis is already saved, and the
+      //    file can be attached later from the resume's detail page.
+      let savedResume: Resume = response.data;
+      try {
+        setStage("uploading_to_cloud");
+        setStatusMessage(
+          "Archiving resume document securely in cloud storage...",
+        );
+        const cloudUpload = await uploadDocument(file);
+        const attached = await updateResumeFileUrlAction(
+          savedResume.id,
+          cloudUpload.secure_url,
+        );
+        if (!attached.success) throw new Error(attached.error);
+        if (attached.data) savedResume = attached.data;
+      } catch (uploadError) {
+        console.error("PDF archive failed:", uploadError);
+        toast.warning("Analysis saved, but the PDF couldn't be archived.", {
+          description:
+            "You can attach the file later from the resume's page.",
+        });
+      }
+
+      setProgress(100);
+      setAnalysisResult(savedResume);
+      toast.success("Resume processed and saved successfully!");
+      setCurrentView("analysis");
     } catch (error: any) {
       console.error("CRITICAL PIPELINE CRASH:", error);
       setStage("error");
@@ -184,9 +207,11 @@ const AnalyzeResumePage = () => {
     }
   };
 
-  // Track if progress reflects local text mapping or remote cloud file uploading percentages
+  // The upload now runs after the AI step, so map its 0-100% into the last stretch of the bar
   const currentProgress =
-    stage === "uploading_to_cloud" ? uploadProgress : progress;
+    stage === "uploading_to_cloud"
+      ? 92 + Math.round(uploadProgress * 0.08)
+      : progress;
 
   return (
     <div className="min-h-screen bg-background transition-colors duration-500 overflow-x-hidden overflow-y-auto no-scrollbar max-w-7xl mx-auto">
@@ -228,7 +253,7 @@ const AnalyzeResumePage = () => {
         isOpen={isUpgradeModalOpen}
         onClose={() => setIsUpgradeModalOpen(false)}
         title="AI Optimization Limit Reached"
-        description="Free plans include a lifetime allotment of 3 AI resume analyses. Upgrade to Pro for infinite resume auditing and optimization reporting tools!"
+        description={`Free plans include ${describeFreeLimit("analyze")}. Upgrade to Pro for unlimited resume auditing and optimization reports!`}
       />
     </div>
   );

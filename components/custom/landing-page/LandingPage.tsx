@@ -1267,7 +1267,6 @@ function Pricing() {
   const free = [
     "3 resume analyses / month",
     "1 resume in the builder",
-    "2 mock interview sessions",
     "Basic ATS scoring",
   ];
   const pro = [

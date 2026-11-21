@@ -47,6 +47,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { getUserBillingStatus } from "@/lib/actions/billing";
 import UpgradeModal from "@/components/custom/UpgradeModal";
+import { describeFreeLimit, isLimitReached } from "@/lib/plans";
 
 export type FormSections =
   | "personal"
@@ -152,11 +153,14 @@ export default function CreateResumePage() {
         content: resumeState,
       });
 
-      if (response.success && response.data) {
+      if (response.success) {
         toast.success("Resume asset saved safely to your collection!", {
           id: toastId,
         });
         router.push(`/resumes/${response.data.id}`);
+      } else if (isLimitReached(response)) {
+        toast.dismiss(toastId);
+        setIsUpgradeModalOpen(true);
       } else {
         throw new Error(response.error || "Storage pipeline rejection.");
       }
@@ -472,7 +476,7 @@ export default function CreateResumePage() {
         isOpen={isUpgradeModalOpen}
         onClose={() => setIsUpgradeModalOpen(false)}
         title="Resume Workspace Limit Reached"
-        description="Free accounts are allocated 5 manual document generation workspaces. Unlock Pro to build, edit, and export an infinite number of customized resumes!"
+        description={`Free plans include ${describeFreeLimit("create_resume")}. Unlock Pro to build, edit, and export unlimited customized resumes!`}
       />
     </div>
   );

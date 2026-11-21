@@ -9,6 +9,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { getUserBillingStatus } from "@/lib/actions/billing";
 import UpgradeModal from "@/components/custom/UpgradeModal";
+import { describeFreeLimit, isLimitReached } from "@/lib/plans";
 
 interface AnalyzeButtonProps {
   resumeId: string;
@@ -41,6 +42,8 @@ export default function AnalyzeResumeButton({ resumeId }: AnalyzeButtonProps) {
 
         // Tells Next.js to re-run the server query context and re-render page fields with fresh data
         router.refresh();
+      } else if (isLimitReached(response)) {
+        setIsUpgradeModalOpen(true);
       } else {
         toast.error(response.error || "Internal evaluation error.");
       }
@@ -77,7 +80,7 @@ export default function AnalyzeResumeButton({ resumeId }: AnalyzeButtonProps) {
         isOpen={isUpgradeModalOpen}
         onClose={() => setIsUpgradeModalOpen(false)}
         title="AI Evaluation Quota Exhausted"
-        description="Free plans contain a strict allocation of 3 total AI resume evaluations. Upgrade your workspace to Pro to unlock unlimited document debugging and ATS auditing!"
+        description={`Free plans include ${describeFreeLimit("analyze")}. Upgrade to Pro to unlock unlimited resume analyses and ATS auditing!`}
       />
     </>
   );

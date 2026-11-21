@@ -4,10 +4,10 @@
 import { GoogleGenAI } from "@google/genai";
 import { auth } from "@clerk/nextjs/server";
 import { db } from "@/config/db";
-import { resumes } from "@/config/schema";
+import { resumes, usageEvents } from "@/config/schema";
 import { and, eq } from "drizzle-orm";
 import arcjet, { shield, tokenBucket, request, detectBot } from "@arcjet/next"; // 🚀 1. Import Arcjet
-import { getUserBillingStatus } from "./billing";
+import { assertAllowed, toActionError } from "@/lib/billing-guard";
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
@@ -31,14 +31,18 @@ const aj = arcjet({
   ],
 });
 
+// The original PDF is uploaded by the client only AFTER this succeeds, then attached
+// with updateResumeFileUrlAction, so rejected/failed analyses leave no orphaned files.
 export async function analyzeAndStoreResumeAction(
   rawText: string,
   fileName: string,
-  fileUrl: string,
 ) {
   try {
     const { userId } = await auth();
     if (!userId) throw new Error("Unauthorized access configuration.");
+
+    // Plan limit first, so blocked requests don't consume rate-limit tokens
+    await assertAllowed("analyze");
 
     // 🚀 3. Intercept and evaluate rate limits
     const decision = await aj.protect(await request(), {
@@ -151,27 +155,30 @@ export async function analyzeAndStoreResumeAction(
       "certificates",
     ];
 
-    // Drizzle Insertion
-    const [insertedResume] = await db
-      .insert(resumes)
-      .values({
-        userId: userId,
-        title: fileName.replace(".pdf", "") + " (AI Analyzed)",
-        category: "General",
-        fileUrl: fileUrl,
-        status: "parsed", // Explicitly tag this row as an AI incoming file upload asset
-        content: content,
-        analysis: parsedData.analysis,
-      })
-      .returning();
+    // Insert the resume and log the metered analysis atomically
+    const resumeId = globalThis.crypto.randomUUID();
+    const [[insertedResume]] = await db.batch([
+      db
+        .insert(resumes)
+        .values({
+          id: resumeId,
+          userId: userId,
+          title: fileName.replace(".pdf", "") + " (AI Analyzed)",
+          category: "General",
+          status: "parsed", // Explicitly tag this row as an AI incoming file upload asset
+          content: content,
+          analysis: parsedData.analysis,
+        })
+        .returning(),
+      db
+        .insert(usageEvents)
+        .values({ userId, kind: "resume_analysis", resumeId }),
+    ]);
 
-    return { success: true, data: insertedResume };
-  } catch (error: any) {
+    return { success: true as const, data: insertedResume };
+  } catch (error) {
     console.error("Gemini/Drizzle Pipeline Failure:", error);
-    return {
-      success: false,
-      error: error.message || "Pipeline processing failure.",
-    };
+    return toActionError(error, "Pipeline processing failure.");
   }
 }
 
@@ -180,13 +187,8 @@ export async function analyzeExistingResumeAction(resumeId: string) {
     const { userId } = await auth();
     if (!userId) throw new Error("Unauthorized access configuration.");
 
-    // 🚀 EXTRA SECURE FALLBACK: Check relational counts on the server runtime layer
-    const billing = await getUserBillingStatus();
-    if (!billing || !billing.allowed || !billing.allowed.analyze) {
-      throw new Error(
-        "Your account tier limit has been met. Please update your subscription package.",
-      );
-    }
+    // Plan limit first, so blocked requests don't consume rate-limit tokens
+    await assertAllowed("analyze");
 
     // 🚀 4. Apply identical structural protection block here
     const decision = await aj.protect(await request(), {
@@ -251,23 +253,28 @@ export async function analyzeExistingResumeAction(resumeId: string) {
 
     const parsedPayload = JSON.parse(resultText);
 
-    // 4. Perform an in-place update on the target row using Drizzle
-    const [updatedResume] = await db
-      .update(resumes)
-      .set({
-        analysis: parsedPayload.analysis,
-        updatedAt: new Date(),
-      })
-      .where(and(eq(resumes.id, resumeId), eq(resumes.userId, userId)))
-      .returning();
+    // 4. Update the row in place and log the metered re-analysis atomically
+    const [[updatedResume]] = await db.batch([
+      db
+        .update(resumes)
+        .set({
+          analysis: parsedPayload.analysis,
+          updatedAt: new Date(),
+        })
+        .where(and(eq(resumes.id, resumeId), eq(resumes.userId, userId)))
+        .returning(),
+      db
+        .insert(usageEvents)
+        .values({ userId, kind: "resume_analysis", resumeId }),
+    ]);
 
-    return { success: true, data: updatedResume };
-  } catch (error: any) {
+    return { success: true as const, data: updatedResume };
+  } catch (error) {
     console.error("Direct Optimization Pipeline Failure:", error);
-    return {
-      success: false,
-      error: error.message || "Failed to complete internal audit calculations.",
-    };
+    return toActionError(
+      error,
+      "Failed to complete internal audit calculations.",
+    );
   }
 }
 
@@ -314,6 +321,8 @@ export async function createManualResumeAction(payload: {
     const { userId } = await auth();
     if (!userId) throw new Error("Unauthorized access profile configuration.");
 
+    await assertAllowed("create_resume");
+
     const [newRecord] = await db
       .insert(resumes)
       .values({
@@ -327,13 +336,13 @@ export async function createManualResumeAction(payload: {
       })
       .returning();
 
-    return { success: true, data: newRecord };
-  } catch (error: any) {
+    return { success: true as const, data: newRecord };
+  } catch (error) {
     console.error("Studio Creation Pipeline failure:", error);
-    return {
-      success: false,
-      error: error.message || "Failed to catalog manual resume data records.",
-    };
+    return toActionError(
+      error,
+      "Failed to catalog manual resume data records.",
+    );
   }
 }
 
@@ -358,7 +367,7 @@ export async function updateResumeFileUrlAction(
     if (!updatedRecord)
       throw new Error("Resume record not found or write permissions denied.");
 
-    return { success: true, data: updatedRecord };
+    return { success: true as const, data: updatedRecord };
   } catch (error: any) {
     console.error("File URL Attachment Failure:", error);
     return {

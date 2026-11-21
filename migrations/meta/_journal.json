@@ -57,6 +57,13 @@
       "when": 1780300809058,
       "tag": "0007_bitter_millenium_guard",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1795237411967,
+      "tag": "0008_wealthy_rage",
+      "breakpoints": true
     }
   ]
 }

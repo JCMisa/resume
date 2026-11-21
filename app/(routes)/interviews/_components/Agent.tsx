@@ -11,16 +11,28 @@ import { configureAssistant } from "@/lib/vapi.config";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
-import { compileInterviewEvaluationAction } from "@/lib/actions/interview";
+import {
+  cancelInterviewSessionAction,
+  compileInterviewEvaluationAction,
+  createInterviewSessionAction,
+} from "@/lib/actions/interview";
+import { isLimitReached } from "@/lib/plans";
+import { hasCandidateAnswers } from "@/lib/interview";
 
 interface AgentProps {
   userName: string;
-  sessionMeta: { id: string; text: string; role: string; desc: string };
+  sessionMeta: { text: string; role: string; desc: string };
+  /** Called when the server rejects a new session because of a plan limit. */
+  onLimitReached?: () => void;
 }
 
 type StageStatus = "idle" | "connecting" | "active" | "processing_results";
 
-export default function Agent({ userName, sessionMeta }: AgentProps) {
+export default function Agent({
+  userName,
+  sessionMeta,
+  onLimitReached,
+}: AgentProps) {
   const router = useRouter();
   const [status, setStatus] = useState<StageStatus>("idle");
   const [isMicOn, setIsMicOn] = useState(true);
@@ -34,25 +46,65 @@ export default function Agent({ userName, sessionMeta }: AgentProps) {
   // Accumulate raw script changes securely across state scopes
   const transcriptTimelineRef = useRef<string>("");
 
+  // The live DB session id. Created when the call starts; handlers "claim" it by
+  // nulling it out, so call-end / call-start-failed / unmount can't double-handle.
+  const sessionIdRef = useRef<string | null>(null);
+
+  function claimSession() {
+    const id = sessionIdRef.current;
+    sessionIdRef.current = null;
+    return id;
+  }
+
+  function resetCallUi() {
+    setStatus("idle");
+    setSecondsActive(0);
+    setVolumeLevel(0);
+    transcriptTimelineRef.current = "";
+    setTranscript("Ready to establish communication...");
+  }
+
+  // Close a session that never really happened. Within the server's refund window
+  // it's marked "failed" and doesn't count toward the user's plan limits.
+  async function cancelSession(reason: "connection" | "no_answers") {
+    const id = claimSession();
+    resetCallUi();
+    if (!id) return;
+
+    const res = await cancelInterviewSessionAction(id);
+    const what =
+      reason === "connection"
+        ? "The voice call couldn't connect."
+        : "No answers were recorded.";
+    if (res.success && res.refunded) {
+      toast.info(`${what} This session wasn't counted, so you can try again.`);
+    } else {
+      toast.warning(`${what} This session still counts toward your plan.`);
+    }
+  }
+
   // 🚀 STEP 1: PHYSICALLY ALIGNED TO THE TOP BEFORE ANY CALL LOOPS EXECUTE
   async function handleFinalizeTelemetryCompilation() {
+    const finalLog = transcriptTimelineRef.current.trim();
+    if (!hasCandidateAnswers(finalLog)) {
+      await cancelSession("no_answers");
+      return;
+    }
+
+    const sessionId = claimSession();
+    if (!sessionId) return; // already handled by another lifecycle event
+
     setStatus("processing_results");
     setStatusMessage(
       "AI is reviewing conversational responses and generating feedback reports...",
     );
 
     try {
-      const finalLog =
-        transcriptTimelineRef.current.trim() ||
-        "[No verbal data logs captured during session]";
-      const res = await compileInterviewEvaluationAction(
-        sessionMeta.id,
-        finalLog, // the final transcript log of the session
-      );
+      const res = await compileInterviewEvaluationAction(sessionId, finalLog);
 
       if (res.success) {
         toast.success("Evaluation compiled safely!");
-        router.push(`/interviews/results/${sessionMeta.id}`);
+        router.push(`/interviews/results/${sessionId}`);
       } else {
         throw new Error(res.error);
       }
@@ -85,14 +137,23 @@ export default function Agent({ userName, sessionMeta }: AgentProps) {
 
     const onVolumeLevel = (volume: number) => setVolumeLevel(volume);
 
+    const onCallStartFailed = () => {
+      cancelSession("connection");
+    };
+
     vapi.on("call-start", onCallStart);
     vapi.on("call-end", onCallEnd);
     vapi.on("message", onMessage);
     vapi.on("volume-level", onVolumeLevel);
+    vapi.on("call-start-failed", onCallStartFailed);
 
     return () => {
-      vapi.stop();
+      // Detach first so stopping the call doesn't trigger grading on an unmounted view
       vapi.removeAllListeners();
+      vapi.stop();
+      // Leaving mid-session: cancel it (only refunded if within the server's window)
+      const id = claimSession();
+      if (id) void cancelInterviewSessionAction(id);
     };
   }, []);
 
@@ -105,7 +166,26 @@ export default function Agent({ userName, sessionMeta }: AgentProps) {
   }, [status]);
 
   const startCall = async () => {
+    if (status !== "idle") return;
     setStatus("connecting");
+
+    // Create (and plan-check) the session only now, right before connecting
+    const res = await createInterviewSessionAction({
+      jobRole: sessionMeta.role,
+      jobDescription: sessionMeta.desc,
+      resumeText: sessionMeta.text,
+    });
+
+    if (!res.success) {
+      setStatus("idle");
+      if (isLimitReached(res)) onLimitReached?.();
+      else toast.error(res.error || "Couldn't start the interview session.");
+      return;
+    }
+
+    sessionIdRef.current = res.id;
+    transcriptTimelineRef.current = "";
+
     try {
       const config = configureAssistant(
         userName,
@@ -113,11 +193,11 @@ export default function Agent({ userName, sessionMeta }: AgentProps) {
         sessionMeta.desc,
         sessionMeta.text,
       );
-      await vapi.start(config);
+      const call = await vapi.start(config);
+      if (!call) await cancelSession("connection"); // start() resolves null on failure
     } catch (e) {
-      console.log("Error on vapi connection: ", e);
-      toast.error("Vapi connection failed.");
-      setStatus("idle");
+      console.error("Error on vapi connection: ", e);
+      await cancelSession("connection");
     }
   };
 

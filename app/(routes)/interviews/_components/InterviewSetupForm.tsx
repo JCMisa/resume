@@ -7,15 +7,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Briefcase, FileText, Loader2, Play } from "lucide-react";
 import { toast } from "sonner";
-import { createInterviewSessionAction } from "@/lib/actions/interview";
 
 interface SetupProps {
-  onSetupComplete: (
-    sessionId: string,
-    text: string,
-    role: string,
-    desc: string,
-  ) => void;
+  // The interview session itself is created when the call starts (see Agent.tsx),
+  // so a session is only counted once the user actually clicks Start.
+  onSetupComplete: (text: string, role: string, desc: string) => void;
 }
 
 export default function InterviewSetupForm({ onSetupComplete }: SetupProps) {
@@ -58,7 +54,7 @@ export default function InterviewSetupForm({ onSetupComplete }: SetupProps) {
     }
   };
 
-  const handleInitialize = async (e: React.FormEvent) => {
+  const handleInitialize = (e: React.FormEvent) => {
     e.preventDefault();
     if (!role || !extractedText) {
       toast.error(
@@ -66,26 +62,7 @@ export default function InterviewSetupForm({ onSetupComplete }: SetupProps) {
       );
       return;
     }
-
-    setLoading(true);
-    try {
-      const res = await createInterviewSessionAction({
-        jobRole: role,
-        jobDescription: desc,
-        resumeText: extractedText,
-      });
-
-      if (res.success && res.id) {
-        onSetupComplete(res.id, extractedText, role, desc);
-        toast.success("Interview session initialized successfully!");
-      } else {
-        throw new Error(res.error);
-      }
-    } catch (error: any) {
-      toast.error(error.message || "Initialization failure.");
-    } finally {
-      setLoading(false);
-    }
+    onSetupComplete(extractedText, role, desc);
   };
 
   return (

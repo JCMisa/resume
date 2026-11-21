@@ -5,8 +5,11 @@ import { auth } from "@clerk/nextjs/server";
 import { db } from "@/config/db";
 import { interviews, interviewResults } from "@/config/schema";
 import { GoogleGenAI } from "@google/genai";
-import { eq, and } from "drizzle-orm";
+import { eq, and, gte } from "drizzle-orm";
 import arcjet, { shield, tokenBucket, request, detectBot } from "@arcjet/next";
+import { assertAllowed, toActionError } from "@/lib/billing-guard";
+import { INTERVIEW_REFUND_WINDOW_SECONDS } from "@/lib/plans";
+import { hasCandidateAnswers } from "@/lib/interview";
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
@@ -39,6 +42,9 @@ export async function createInterviewSessionAction(payload: {
     const { userId } = await auth();
     if (!userId) throw new Error("Unauthorized access.");
 
+    // Plan limit first, so blocked requests don't consume rate-limit tokens
+    await assertAllowed("interview");
+
     const decision = await aj.protect(await request(), {
       userId,
       requested: 1,
@@ -64,9 +70,10 @@ export async function createInterviewSessionAction(payload: {
       })
       .returning();
 
-    return { success: true, id: newSession.id };
-  } catch (error: any) {
-    return { success: false, error: error.message };
+    return { success: true as const, id: newSession.id };
+  } catch (error) {
+    console.error("Interview Session Creation Failure:", error);
+    return toActionError(error, "Failed to start the interview session.");
   }
 }
 
@@ -86,6 +93,14 @@ export async function compileInterviewEvaluationAction(
       .where(and(eq(interviews.id, sessionId), eq(interviews.userId, userId)));
 
     if (!session) throw new Error("Session logs missing.");
+    // Only grade a live session once (prevents duplicate Gemini calls / result rows)
+    if (session.status !== "in-progress") {
+      throw new Error("This interview session has already been closed.");
+    }
+    // Don't spend a Gemini call grading silence
+    if (!hasCandidateAnswers(finalTranscript)) {
+      throw new Error("No answers were recorded in this session.");
+    }
 
     const analyticsPrompt = `
       You are an expert technical recruiter. Analyze the following transcript from a live AI mock interview session.
@@ -113,34 +128,67 @@ export async function compileInterviewEvaluationAction(
       config: { responseMimeType: "application/json" },
     });
 
-    const parsedResults = JSON.parse(response.text || "{}");
+    if (!response.text) throw new Error("Empty evaluation returned from Gemini.");
+    const parsedResults = JSON.parse(response.text);
 
-    // Step A: Update the target session's core metrics and flag it complete
-    await db
-      .update(interviews)
-      .set({
-        status: "completed",
-        transcript: finalTranscript,
-      })
-      .where(eq(interviews.id, sessionId));
+    // Flag the session complete and store its results atomically
+    await db.batch([
+      db
+        .update(interviews)
+        .set({
+          status: "completed",
+          transcript: finalTranscript,
+        })
+        .where(and(eq(interviews.id, sessionId), eq(interviews.userId, userId))),
+      db.insert(interviewResults).values({
+        interviewId: sessionId,
+        overallScore: parsedResults.overallScore,
+        feedback: parsedResults.feedback,
+        strengths: parsedResults.strengths,
+        weaknesses: parsedResults.weaknesses,
+        suggestions: parsedResults.suggestions,
+      }),
+    ]);
 
-    // Step B: Formulate and log the compiled results row
-    await db.insert(interviewResults).values({
-      interviewId: sessionId,
-      overallScore: parsedResults.overallScore,
-      feedback: parsedResults.feedback,
-      strengths: parsedResults.strengths,
-      weaknesses: parsedResults.weaknesses,
-      suggestions: parsedResults.suggestions,
-    });
-
-    return { success: true };
+    return { success: true as const };
   } catch (error: any) {
     console.error("Evaluation Compiler Failed:", error);
     return {
       success: false,
       error: error.message || "Failed to catalog evaluation records.",
     };
+  }
+}
+
+// 3. Cancel a session that never really happened (connection failure, no answers,
+// user left before starting). Within the refund window it's marked "failed" and
+// stops counting toward plan limits; after that it stays counted.
+export async function cancelInterviewSessionAction(sessionId: string) {
+  try {
+    const { userId } = await auth();
+    if (!userId) throw new Error("Unauthorized.");
+
+    const windowStart = new Date(
+      Date.now() - INTERVIEW_REFUND_WINDOW_SECONDS * 1000,
+    );
+
+    const cancelled = await db
+      .update(interviews)
+      .set({ status: "failed" })
+      .where(
+        and(
+          eq(interviews.id, sessionId),
+          eq(interviews.userId, userId),
+          eq(interviews.status, "in-progress"),
+          gte(interviews.createdAt, windowStart),
+        ),
+      )
+      .returning({ id: interviews.id });
+
+    return { success: true as const, refunded: cancelled.length > 0 };
+  } catch (error) {
+    console.error("Interview Cancel Failure:", error);
+    return toActionError(error, "Failed to cancel the interview session.");
   }
 }
 
