@@ -6,6 +6,7 @@ import { Video } from "lucide-react";
 import InterviewSetupForm from "./_components/InterviewSetupForm";
 import Agent from "./_components/Agent";
 import InterviewProTeaser from "./_components/InterviewProTeaser";
+import InterviewCapReached from "./_components/InterviewCapReached";
 import { getUserBillingStatus } from "@/lib/actions/billing";
 
 export default function InterviewsPage() {
@@ -17,18 +18,35 @@ export default function InterviewsPage() {
     desc: string; // optional job desc typed by user
   } | null>(null);
 
-  // 🚀 Local states managing tier limits
-  const [hasAccess, setHasAccess] = useState<boolean | null>(null);
+  // Interview access: Free users see the Pro teaser; Pro users who used their
+  // monthly allowance see when it resets.
+  const [access, setAccess] = useState<{
+    allowed: boolean;
+    isPro: boolean;
+  } | null>(null);
+
+  const loadAccess = async () => {
+    const billing = await getUserBillingStatus();
+    return {
+      allowed: Boolean(billing?.allowed?.interview),
+      isPro: Boolean(billing?.isPro),
+    };
+  };
+  const refreshAccess = () => {
+    loadAccess().then(setAccess);
+  };
 
   useEffect(() => {
-    const checkAccess = async () => {
-      const billing = await getUserBillingStatus();
-      setHasAccess(Boolean(billing?.allowed?.interview));
+    let cancelled = false;
+    loadAccess().then((next) => {
+      if (!cancelled) setAccess(next);
+    });
+    return () => {
+      cancelled = true;
     };
-    checkAccess();
   }, [sessionMeta]);
 
-  if (hasAccess === null) {
+  if (access === null) {
     return (
       <div className="p-12 h-64 w-full bg-muted rounded-2xl animate-pulse" />
     );
@@ -52,8 +70,12 @@ export default function InterviewsPage() {
       </header>
 
       {/* Interviews are Pro-only: Free users see what they'd get */}
-      {!hasAccess ? (
-        <InterviewProTeaser />
+      {!access.allowed ? (
+        access.isPro ? (
+          <InterviewCapReached />
+        ) : (
+          <InterviewProTeaser />
+        )
       ) : !sessionMeta ? (
         <InterviewSetupForm
           onSetupComplete={(text, role, desc) =>
@@ -65,7 +87,7 @@ export default function InterviewsPage() {
           <Agent
             userName={user?.firstName || "Candidate"}
             sessionMeta={sessionMeta}
-            onLimitReached={() => setHasAccess(false)}
+            onLimitReached={refreshAccess}
           />
         </div>
       )}

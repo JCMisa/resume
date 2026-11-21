@@ -26,6 +26,8 @@ import { useRouter, useSearchParams } from "next/navigation";
 import {
   FREE_LIMITS,
   LIMIT_PERIOD,
+  PRO_LIMITS,
+  formatResetDate,
   type MeteredFeature,
 } from "@/lib/plans";
 
@@ -42,6 +44,7 @@ interface NavItem {
 interface SettingsClientLayoutProps {
   billingData: {
     isPro: boolean;
+    isAdmin?: boolean;
     limits: {
       analyses: number | string;
       interviews: number | string;
@@ -187,7 +190,7 @@ export default function SettingsClientLayout({
     isPro
       ? "Pro Subscription Active"
       : LIMIT_PERIOD[feature] === "monthly"
-        ? "Resets Monthly"
+        ? `This month · resets ${formatResetDate()}`
         : "Lifetime Limit";
 
   const navItems: NavItem[] = [
@@ -398,8 +401,18 @@ export default function SettingsClientLayout({
               <StatCard
                 icon={Mic}
                 label="Mock Interviews"
-                value={isPro ? `${billingData.limits.interviews} / ∞` : "Pro only"}
-                sub={isPro ? "Pro Subscription Active" : "Upgrade to unlock"}
+                value={
+                  !isPro
+                    ? "Pro only"
+                    : `${billingData.limits.interviews} / ${billingData.isAdmin ? "∞" : PRO_LIMITS.interview}`
+                }
+                sub={
+                  !isPro
+                    ? "Upgrade to unlock"
+                    : billingData.isAdmin
+                      ? "Admin: no cap"
+                      : `This month · resets ${formatResetDate()}`
+                }
               />
             </div>
           </aside>

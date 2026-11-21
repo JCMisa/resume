@@ -34,6 +34,7 @@ import LightPillar from "../LightPillar";
 import ElectricBorder from "../ElectricBorder";
 import { Highlighter } from "@/components/ui/highlighter";
 import Image from "next/image";
+import { PLAN_HIGHLIGHTS, PRO_PRICE_MONTHLY_USD } from "@/lib/plans";
 
 // ── Animated Number Counter ───────────────────────────────────────────────────
 function Counter({ to, suffix = "" }: { to: number; suffix?: string }) {
@@ -550,7 +551,7 @@ function Features() {
       icon: Mic,
       title: "Voice Mock Interviews",
       description:
-        "VAPI-powered voice sessions generate questions from your resume and target role. The AI speaks first — then you respond, naturally.",
+        "VAPI-powered voice sessions generate questions from your resume and target role. The AI speaks first — then you respond, naturally. Included with Pro.",
     },
     {
       icon: FileText,
@@ -1264,20 +1265,9 @@ function Testimonials() {
 
 // ── Pricing ───────────────────────────────────────────────────────────────────
 function Pricing() {
-  const free = [
-    "3 resume analyses / month",
-    "1 resume in the builder",
-    "Basic ATS scoring",
-  ];
-  const pro = [
-    "Unlimited resume analyses",
-    "Unlimited resume builder",
-    "Unlimited mock interviews",
-    "Advanced ATS scoring",
-    "Priority AI processing",
-    "Saved interview history",
-    "PDF export & import",
-  ];
+  // Generated from lib/plans.ts so the pricing card always matches what the app enforces
+  const free = PLAN_HIGHLIGHTS.free;
+  const pro = PLAN_HIGHLIGHTS.pro;
 
   return (
     <section
@@ -1376,7 +1366,7 @@ function Pricing() {
                   className="text-4xl font-black dark:text-stone-100 text-stone-900"
                   style={{ fontFamily: "'Sora', sans-serif" }}
                 >
-                  $12
+                  ${PRO_PRICE_MONTHLY_USD}
                 </span>
                 <span className="text-stone-500 text-sm">/month</span>
               </div>

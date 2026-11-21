@@ -4,7 +4,12 @@ import { auth } from "@clerk/nextjs/server";
 import { users, resumes, interviews, usageEvents } from "@/config/schema";
 import { eq, and, gte, count, ne, or, isNull } from "drizzle-orm";
 import { db } from "@/config/db";
-import { FREE_LIMITS, LIMIT_PERIOD, PRO_PLAN_KEY } from "@/lib/plans";
+import {
+  FREE_LIMITS,
+  LIMIT_PERIOD,
+  PRO_LIMITS,
+  PRO_PLAN_KEY,
+} from "@/lib/plans";
 
 function startOfMonth() {
   const d = new Date();
@@ -16,6 +21,7 @@ export async function getUserBillingStatus() {
   if (!userId)
     return {
       isPro: false,
+      isAdmin: false,
       limits: { analyses: 0, interviews: 0, resumes: 0 },
       allowed: { analyze: false, interview: false, create_resume: false },
     };
@@ -56,7 +62,7 @@ export async function getUserBillingStatus() {
             resumeSince ? gte(resumes.createdAt, resumeSince) : undefined,
           ),
         ),
-      // Interviews are Pro-only; counted for display (and a future Pro fair-use cap).
+      // Interviews this month, for the Pro fair-use cap.
       db
         .select({ value: count() })
         .from(interviews)
@@ -65,6 +71,7 @@ export async function getUserBillingStatus() {
             eq(interviews.userId, userId),
             // Cancelled sessions (failed to connect / no answers) don't count
             or(isNull(interviews.status), ne(interviews.status, "failed")),
+            gte(interviews.createdAt, monthStart),
           ),
         ),
     ]);
@@ -75,21 +82,28 @@ export async function getUserBillingStatus() {
     resumes: resumesRow?.value ?? 0,
   };
 
-  // Admins and Clerk Billing "pro" subscribers bypass all limits and unlock
-  // Pro-only features. Checked by plan key (not a Clerk feature) so it stays
-  // correct even if a feature is accidentally attached to the Free plan.
-  const isPro = userRecord?.role === "admin" || has({ plan: PRO_PLAN_KEY });
+  // Pro is checked by Clerk plan key (not a Clerk feature) so it stays correct
+  // even if a feature is accidentally attached to the Free plan.
+  // Admins get everything Pro gets, without the fair-use caps.
+  const isAdmin = userRecord?.role === "admin";
+  const isPro = isAdmin || has({ plan: PRO_PLAN_KEY });
 
   if (isPro) {
     return {
       isPro: true,
+      isAdmin,
       limits: usage,
-      allowed: { analyze: true, interview: true, create_resume: true },
+      allowed: {
+        analyze: true,
+        interview: isAdmin || usage.interviews < PRO_LIMITS.interview,
+        create_resume: true,
+      },
     };
   }
 
   return {
     isPro: false,
+    isAdmin: false,
     limits: usage,
     allowed: {
       analyze: usage.analyses < FREE_LIMITS.analyze,
