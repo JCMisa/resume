@@ -7,6 +7,7 @@ import { ThemeToggler } from "@/components/custom/ThemeToggler";
 import { SearchIcon } from "lucide-react";
 import { getCurrentUser } from "@/lib/actions/user";
 import { SidebarFallback } from "./_components/SidebarFallback";
+import UserButtonClient from "./_components/UserButtonClient";
 
 const RoutesLayout = async ({
   children,
@@ -50,6 +51,8 @@ const RoutesLayout = async ({
 
               <div className="flex items-center gap-3">
                 <ThemeToggler />
+                {/* Profile, billing shortcut and sign out */}
+                <UserButtonClient />
               </div>
             </div>
           </header>
