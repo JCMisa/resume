@@ -7,10 +7,17 @@ import InterviewSetupForm from "./_components/InterviewSetupForm";
 import Agent from "./_components/Agent";
 import InterviewProTeaser from "./_components/InterviewProTeaser";
 import InterviewCapReached from "./_components/InterviewCapReached";
+import PastInterviewsList, {
+  useInterviewHistory,
+} from "./_components/PastInterviewsList";
+import InterviewProgressCard from "./_components/InterviewProgressCard";
+import InterviewPrepCard from "./_components/InterviewPrepCard";
 import { getUserBillingStatus } from "@/lib/actions/billing";
 
 export default function InterviewsPage() {
   const { user } = useUser();
+  // Loaded once; shared by the history panel and the progress card
+  const history = useInterviewHistory();
 
   const [sessionMeta, setSessionMeta] = useState<{
     text: string; // extracted text from upload pdf resume
@@ -46,15 +53,9 @@ export default function InterviewsPage() {
     };
   }, [sessionMeta]);
 
-  if (access === null) {
-    return (
-      <div className="p-12 h-64 w-full bg-muted rounded-2xl animate-pulse" />
-    );
-  }
-
   return (
-    <div className="min-h-screen bg-background p-6 lg:p-12 max-w-5xl mx-auto space-y-8 animate-in fade-in duration-500">
-      <header className="flex items-center gap-3 border-b pb-6">
+    <div className="w-full space-y-6 animate-in fade-in duration-500">
+      <header className="flex items-center gap-3 border-b pb-5">
         <div className="p-3 bg-primary/10 text-primary rounded-2xl border">
           <Video className="h-6 w-6" />
         </div>
@@ -63,34 +64,61 @@ export default function InterviewsPage() {
             AI Voice Interview Simulator
           </h1>
           <p className="text-sm text-muted-foreground mt-0.5">
-            Validate your target role competencies in an interactive real-time
-            oral simulation.
+            Practice out loud with an AI interviewer tailored to your resume and
+            target role.
           </p>
         </div>
       </header>
 
-      {/* Interviews are Pro-only: Free users see what they'd get */}
-      {!access.allowed ? (
-        access.isPro ? (
-          <InterviewCapReached />
-        ) : (
-          <InterviewProTeaser />
-        )
-      ) : !sessionMeta ? (
-        <InterviewSetupForm
-          onSetupComplete={(text, role, desc) =>
-            setSessionMeta({ text, role, desc })
-          }
-        />
-      ) : (
-        <div className="space-y-4 animate-in slide-in-from-bottom-4 duration-300">
-          <Agent
-            userName={user?.firstName || "Candidate"}
-            sessionMeta={sessionMeta}
-            onLimitReached={refreshAccess}
-          />
+      {/* Main area (setup / live call / upsell) + interview history side panel */}
+      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_380px] items-start">
+        <div className="min-w-0 space-y-6">
+          {access === null ? (
+            <div className="h-96 w-full bg-muted rounded-3xl animate-pulse" />
+          ) : !access.allowed ? (
+            // Interviews are Pro-only: Free users see what they'd get
+            access.isPro ? (
+              <InterviewCapReached />
+            ) : (
+              <InterviewProTeaser />
+            )
+          ) : !sessionMeta ? (
+            <InterviewSetupForm
+              onSetupComplete={(text, role, desc) =>
+                setSessionMeta({ text, role, desc })
+              }
+            />
+          ) : (
+            <div className="animate-in slide-in-from-bottom-4 duration-300">
+              <Agent
+                userName={user?.firstName || "Candidate"}
+                sessionMeta={sessionMeta}
+                onLimitReached={refreshAccess}
+              />
+            </div>
+          )}
+
+          {/* Below the main area: progress + prep (mic check). The mic test is
+              only useful before a call, so it's hidden during one. */}
+          {access?.allowed && (
+            <div
+              className={`grid gap-6 items-stretch ${sessionMeta ? "" : "lg:grid-cols-2"}`}
+            >
+              <InterviewProgressCard items={history.items} />
+              {!sessionMeta && <InterviewPrepCard />}
+            </div>
+          )}
         </div>
-      )}
+
+        {/* On xl the panel is taken out of flow (absolute), so the row height
+            comes from the left column only; the panel then grows with its
+            content up to that height and scrolls beyond it. */}
+        <aside className="relative xl:self-stretch">
+          <div className="xl:absolute xl:inset-x-0 xl:top-0 xl:max-h-full flex flex-col">
+            <PastInterviewsList items={history.items} failed={history.failed} />
+          </div>
+        </aside>
+      </div>
     </div>
   );
 }

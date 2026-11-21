@@ -230,7 +230,7 @@ export default function Agent({
   };
 
   return (
-    <div className="border bg-card p-12 text-center space-y-8 rounded-3xl max-w-xl mx-auto shadow-2xl relative overflow-hidden">
+    <div className="w-full border bg-card p-8 sm:p-12 text-center space-y-8 rounded-3xl shadow-sm relative overflow-hidden">
       <div className="flex justify-between items-center">
         <div className="flex items-center gap-2">
           <div

@@ -5,7 +5,7 @@ import { auth } from "@clerk/nextjs/server";
 import { db } from "@/config/db";
 import { interviews, interviewResults } from "@/config/schema";
 import { GoogleGenAI } from "@google/genai";
-import { eq, and, gte } from "drizzle-orm";
+import { eq, and, gte, desc, isNull, ne, or } from "drizzle-orm";
 import { enforceRateLimit, RateLimitError } from "@/lib/arcjet";
 import { AI_MODELS } from "@/lib/ai-models";
 import { mintVapiWebToken } from "@/lib/vapi-token";
@@ -299,6 +299,63 @@ export async function cancelInterviewSessionAction(sessionId: string) {
   } catch (error) {
     console.error("Interview Cancel Failure:", error);
     return toActionError(error, "Failed to cancel the interview session.");
+  }
+}
+
+export type InterviewHistoryItem = {
+  id: string;
+  jobRole: string;
+  createdAt: Date;
+  overallScore: number | null;
+  /** graded: has a report · needs_grading: answers saved, grading failed · incomplete: ended with no saved answers */
+  state: "graded" | "needs_grading" | "incomplete";
+};
+
+// 4. The user's past interviews for the history list (newest first).
+// Cancelled ("failed") sessions are hidden since they never really happened.
+export async function listInterviewHistoryAction(limit = 20) {
+  try {
+    const { userId } = await auth();
+    if (!userId) throw new Error("Unauthorized.");
+
+    const rows = await db
+      .select({
+        id: interviews.id,
+        jobRole: interviews.jobRole,
+        status: interviews.status,
+        transcript: interviews.transcript,
+        createdAt: interviews.createdAt,
+        overallScore: interviewResults.overallScore,
+        resultId: interviewResults.id,
+      })
+      .from(interviews)
+      .leftJoin(interviewResults, eq(interviewResults.interviewId, interviews.id))
+      .where(
+        and(
+          eq(interviews.userId, userId),
+          or(isNull(interviews.status), ne(interviews.status, "failed")),
+        ),
+      )
+      .orderBy(desc(interviews.createdAt))
+      .limit(Math.min(Math.max(limit, 1), 50));
+
+    // Don't send transcripts to the list; just derive the state from them
+    const data: InterviewHistoryItem[] = rows.map((r) => ({
+      id: r.id,
+      jobRole: r.jobRole,
+      createdAt: r.createdAt,
+      overallScore: r.overallScore,
+      state: r.resultId
+        ? "graded"
+        : hasCandidateAnswers(r.transcript)
+          ? "needs_grading"
+          : "incomplete",
+    }));
+
+    return { success: true as const, data };
+  } catch (error) {
+    console.error("Interview History Failure:", error);
+    return { success: false as const, error: "Failed to load past interviews." };
   }
 }
 
