@@ -6,31 +6,13 @@ import { db } from "@/config/db";
 import { interviews, interviewResults } from "@/config/schema";
 import { GoogleGenAI } from "@google/genai";
 import { eq, and, gte } from "drizzle-orm";
-import arcjet, { shield, tokenBucket, request, detectBot } from "@arcjet/next";
+import { enforceRateLimit } from "@/lib/arcjet";
+import { mintVapiWebToken } from "@/lib/vapi-token";
 import { assertAllowed, toActionError } from "@/lib/billing-guard";
 import { INTERVIEW_REFUND_WINDOW_SECONDS } from "@/lib/plans";
 import { hasCandidateAnswers } from "@/lib/interview";
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
-
-const aj = arcjet({
-  key: process.env.ARCJET_KEY!,
-  characteristics: ["userId"], // Unique identifier rate-limiting fingerprint
-  rules: [
-    shield({ mode: "LIVE" }),
-    detectBot({
-      mode: "LIVE",
-      // Restrict bots from hitting your private API evaluation routes
-      deny: ["CATEGORY:AI", "CURL"],
-    }),
-    tokenBucket({
-      mode: "LIVE",
-      refillRate: 1, // Refill 1 token
-      interval: "1h", // Every hour
-      capacity: 1, // Maximum burst size capacity is 1 request
-    }),
-  ],
-});
 
 // 1. Initial Launch Registration
 export async function createInterviewSessionAction(payload: {
@@ -43,21 +25,15 @@ export async function createInterviewSessionAction(payload: {
     if (!userId) throw new Error("Unauthorized access.");
 
     // Plan limit first, so blocked requests don't consume rate-limit tokens
-    await assertAllowed("interview");
+    const billing = await assertAllowed("interview");
 
-    const decision = await aj.protect(await request(), {
-      userId,
-      requested: 1,
-    });
+    // Burst protection: plan-sized token bucket + shield + bot detection
+    await enforceRateLimit("interview", userId, billing.isPro);
 
-    if (decision.isDenied()) {
-      if (decision.reason.isRateLimit()) {
-        throw new Error(
-          `Rate limit exceeded. You can have a new session again after an hour. Remaining tokens: 0`,
-        );
-      }
-      throw new Error("Request rejected by security gate.");
-    }
+    // Short-lived Vapi credential, only issued to users who passed the checks
+    // above. Minted before the insert so a misconfigured server can't create
+    // (and count) sessions that can never connect.
+    const vapiToken = mintVapiWebToken();
 
     const [newSession] = await db
       .insert(interviews)
@@ -70,7 +46,7 @@ export async function createInterviewSessionAction(payload: {
       })
       .returning();
 
-    return { success: true as const, id: newSession.id };
+    return { success: true as const, id: newSession.id, vapiToken };
   } catch (error) {
     console.error("Interview Session Creation Failure:", error);
     return toActionError(error, "Failed to start the interview session.");

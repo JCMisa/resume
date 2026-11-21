@@ -1,4 +1,3 @@
-/* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
@@ -6,7 +5,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { Mic, MicOff, PhoneOff, Loader2, Activity } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
-import { vapi } from "@/lib/vapi.sdk";
+import Vapi from "@vapi-ai/web";
 import { configureAssistant } from "@/lib/vapi.config";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
@@ -114,44 +113,59 @@ export default function Agent({
     }
   }
 
-  // 🚀 STEP 2: MOUNT LIFECYCLE LISTENERS ARE DECLARED SECURELY AFTERWARD
-  useEffect(() => {
-    const onCallStart = () => {
+  // 🚀 STEP 2: A fresh Vapi client per call, authenticated with the short-lived
+  // token the server minted for this session (Vapi's recommended JWT flow).
+  const vapiRef = useRef<Vapi | null>(null);
+
+  function disposeClient() {
+    const client = vapiRef.current;
+    vapiRef.current = null;
+    if (!client) return;
+    // Detach first so stopping doesn't re-trigger our call-end handling
+    client.removeAllListeners();
+    client.stop();
+  }
+
+  function createClient(token: string) {
+    disposeClient();
+    const client = new Vapi(token);
+
+    client.on("call-start", () => {
       setStatus("active");
       setSecondsActive(0);
       toast.success("Live secure voice line connected!");
-    };
+    });
 
-    const onCallEnd = () => {
+    client.on("call-end", () => {
+      disposeClient();
       handleFinalizeTelemetryCompilation();
-    };
+    });
 
-    const onMessage = (message: any) => {
+    client.on("message", (message: any) => {
       if (message.type === "transcript") {
         setTranscript(message.transcript);
         if (message.transcriptType === "final") {
           transcriptTimelineRef.current += `\n[${message.role.toUpperCase()}]: ${message.transcript}`;
         }
       }
-    };
+    });
 
-    const onVolumeLevel = (volume: number) => setVolumeLevel(volume);
+    client.on("volume-level", (volume: number) => setVolumeLevel(volume));
 
-    const onCallStartFailed = () => {
+    client.on("call-start-failed", () => {
+      disposeClient();
       cancelSession("connection");
-    };
+    });
 
-    vapi.on("call-start", onCallStart);
-    vapi.on("call-end", onCallEnd);
-    vapi.on("message", onMessage);
-    vapi.on("volume-level", onVolumeLevel);
-    vapi.on("call-start-failed", onCallStartFailed);
+    vapiRef.current = client;
+    return client;
+  }
 
+  // Leaving the page mid-session: hang up and cancel it
+  // (only refunded if still within the server's window)
+  useEffect(() => {
     return () => {
-      // Detach first so stopping the call doesn't trigger grading on an unmounted view
-      vapi.removeAllListeners();
-      vapi.stop();
-      // Leaving mid-session: cancel it (only refunded if within the server's window)
+      disposeClient();
       const id = claimSession();
       if (id) void cancelInterviewSessionAction(id);
     };
@@ -193,16 +207,22 @@ export default function Agent({
         sessionMeta.desc,
         sessionMeta.text,
       );
-      const call = await vapi.start(config);
-      if (!call) await cancelSession("connection"); // start() resolves null on failure
+      const client = createClient(res.vapiToken);
+      const call = await client.start(config);
+      if (!call) {
+        // start() resolves null on failure
+        disposeClient();
+        await cancelSession("connection");
+      }
     } catch (e) {
       console.error("Error on vapi connection: ", e);
+      disposeClient();
       await cancelSession("connection");
     }
   };
 
   const endCall = () => {
-    vapi.stop(); // Triggers the onCallEnd lifecycle hook automatically
+    vapiRef.current?.stop(); // Triggers the call-end handler, which grades or cancels
   };
 
   return (
@@ -289,7 +309,7 @@ export default function Agent({
                 <button
                   onClick={() => {
                     setIsMicOn(!isMicOn);
-                    vapi.setMuted(isMicOn);
+                    vapiRef.current?.setMuted(isMicOn);
                   }}
                   className={cn(
                     "border p-3.5 rounded-xl transition-colors",

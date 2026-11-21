@@ -1,6 +1,7 @@
 import "server-only";
 
 import { getUserBillingStatus } from "@/lib/actions/billing";
+import { RateLimitError } from "@/lib/arcjet";
 import {
   LIMIT_REACHED,
   limitReachedMessage,
@@ -28,7 +29,7 @@ export async function assertAllowed(feature: GatedFeature) {
 
 /** Shapes a caught error into the standard action failure result. */
 export function toActionError(error: unknown, fallback: string) {
-  if (error instanceof PlanLimitError) {
+  if (error instanceof PlanLimitError || error instanceof RateLimitError) {
     return { success: false as const, error: error.message, code: error.code };
   }
   return {

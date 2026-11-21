@@ -6,30 +6,10 @@ import { auth } from "@clerk/nextjs/server";
 import { db } from "@/config/db";
 import { resumes, usageEvents } from "@/config/schema";
 import { and, eq } from "drizzle-orm";
-import arcjet, { shield, tokenBucket, request, detectBot } from "@arcjet/next"; // 🚀 1. Import Arcjet
+import { enforceRateLimit } from "@/lib/arcjet";
 import { assertAllowed, toActionError } from "@/lib/billing-guard";
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
-
-// 🚀 2. Initialize the rate-limiting guard config
-const aj = arcjet({
-  key: process.env.ARCJET_KEY!,
-  characteristics: ["userId"], // Unique identifier rate-limiting fingerprint
-  rules: [
-    shield({ mode: "LIVE" }),
-    detectBot({
-      mode: "LIVE",
-      // Restrict bots from hitting your private API evaluation routes
-      deny: ["CATEGORY:AI", "CURL"],
-    }),
-    tokenBucket({
-      mode: "LIVE",
-      refillRate: 1, // Refill 1 token
-      interval: "1h", // Every hour
-      capacity: 1, // Maximum burst size capacity is 1 request
-    }),
-  ],
-});
 
 // The original PDF is uploaded by the client only AFTER this succeeds, then attached
 // with updateResumeFileUrlAction, so rejected/failed analyses leave no orphaned files.
@@ -42,22 +22,10 @@ export async function analyzeAndStoreResumeAction(
     if (!userId) throw new Error("Unauthorized access configuration.");
 
     // Plan limit first, so blocked requests don't consume rate-limit tokens
-    await assertAllowed("analyze");
+    const billing = await assertAllowed("analyze");
 
-    // 🚀 3. Intercept and evaluate rate limits
-    const decision = await aj.protect(await request(), {
-      userId,
-      requested: 1,
-    });
-
-    if (decision.isDenied()) {
-      if (decision.reason.isRateLimit()) {
-        throw new Error(
-          `Rate limit exceeded. You can analyze again in a few moments. Remaining tokens: 0`,
-        );
-      }
-      throw new Error("Request rejected by security gate.");
-    }
+    // Burst protection: plan-sized token bucket + shield + bot detection
+    await enforceRateLimit("analyze", userId, billing.isPro);
 
     // 🚀 ALIGNED PROMPT: Matches the exact object parameters expected by the Form view state layers
     const systemPrompt = `
@@ -188,22 +156,10 @@ export async function analyzeExistingResumeAction(resumeId: string) {
     if (!userId) throw new Error("Unauthorized access configuration.");
 
     // Plan limit first, so blocked requests don't consume rate-limit tokens
-    await assertAllowed("analyze");
+    const billing = await assertAllowed("analyze");
 
-    // 🚀 4. Apply identical structural protection block here
-    const decision = await aj.protect(await request(), {
-      userId,
-      requested: 1,
-    });
-
-    if (decision.isDenied()) {
-      if (decision.reason.isRateLimit()) {
-        throw new Error(
-          "Rate limit hit. Please wait an hour for token bucket refresh.",
-        );
-      }
-      throw new Error("Forbidden access transaction.");
-    }
+    // Burst protection: plan-sized token bucket + shield + bot detection
+    await enforceRateLimit("analyze", userId, billing.isPro);
 
     // 1. Fetch the existing resume directly from Drizzle
     const [existingResume] = await db
