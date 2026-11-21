@@ -75,7 +75,7 @@ export default function PastInterviewsList({
   failed: boolean;
 }) {
   return (
-    <section className="rounded-3xl border bg-card shadow-sm overflow-hidden flex flex-col min-h-0">
+    <section className="rounded-3xl border bg-card shadow-sm overflow-hidden">
       <header className="shrink-0 flex items-center justify-between gap-3 px-5 py-4 border-b">
         <div className="flex items-center gap-2.5">
           <div className="p-2 rounded-xl bg-brand/10 text-brand-strong dark:text-brand border border-brand/15">
@@ -116,7 +116,7 @@ export default function PastInterviewsList({
           </p>
         </div>
       ) : (
-        <ul className="divide-y min-h-0 overflow-y-auto custom-scrollbar max-h-[calc(100vh-16rem)] xl:max-h-none">
+        <ul className="divide-y overflow-y-auto custom-scrollbar max-h-[26rem]">
           {items.map((item) => (
             <li key={item.id}>
               <Link

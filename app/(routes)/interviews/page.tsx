@@ -71,7 +71,7 @@ export default function InterviewsPage() {
       </header>
 
       {/* Main area (setup / live call / upsell) + interview history side panel */}
-      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_380px] items-start">
+      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_440px] items-start">
         <div className="min-w-0 space-y-6">
           {access === null ? (
             <div className="h-96 w-full bg-muted rounded-3xl animate-pulse" />
@@ -98,25 +98,15 @@ export default function InterviewsPage() {
             </div>
           )}
 
-          {/* Below the main area: progress + prep (mic check). The mic test is
-              only useful before a call, so it's hidden during one. */}
-          {access?.allowed && (
-            <div
-              className={`grid gap-6 items-stretch ${sessionMeta ? "" : "lg:grid-cols-2"}`}
-            >
-              <InterviewProgressCard items={history.items} />
-              {!sessionMeta && <InterviewPrepCard />}
-            </div>
-          )}
+          {/* Score trends under the form */}
+          {access?.allowed && <InterviewProgressCard items={history.items} />}
         </div>
 
-        {/* On xl the panel is taken out of flow (absolute), so the row height
-            comes from the left column only; the panel then grows with its
-            content up to that height and scrolls beyond it. */}
-        <aside className="relative xl:self-stretch">
-          <div className="xl:absolute xl:inset-x-0 xl:top-0 xl:max-h-full flex flex-col">
-            <PastInterviewsList items={history.items} failed={history.failed} />
-          </div>
+        {/* Right column: prep (mic check) on top, only useful before a call;
+            then the history list, which scrolls inside a fixed max height. */}
+        <aside className="space-y-6 min-w-0">
+          {access?.allowed && !sessionMeta && <InterviewPrepCard />}
+          <PastInterviewsList items={history.items} failed={history.failed} />
         </aside>
       </div>
     </div>
