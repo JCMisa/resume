@@ -16,7 +16,7 @@ import {
   createInterviewSessionAction,
 } from "@/lib/actions/interview";
 import { isLimitReached } from "@/lib/plans";
-import { hasCandidateAnswers } from "@/lib/interview";
+import { GRADING_FAILED, hasCandidateAnswers } from "@/lib/interview";
 
 interface AgentProps {
   userName: string;
@@ -103,6 +103,10 @@ export default function Agent({
 
       if (res.success) {
         toast.success("Evaluation compiled safely!");
+        router.push(`/interviews/results/${sessionId}`);
+      } else if ("code" in res && res.code === GRADING_FAILED) {
+        // Answers are saved; the results page offers "Retry grading"
+        toast.error(res.error);
         router.push(`/interviews/results/${sessionId}`);
       } else {
         throw new Error(res.error);

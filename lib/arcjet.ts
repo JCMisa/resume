@@ -19,6 +19,11 @@ export const RATE_LIMITS = {
   interview: {
     pro: { capacity: 3, refillRate: 6, interval: "1h" },
   },
+  // Re-grading a saved interview transcript (one cheap Gemini call). Same for
+  // every user; it only guards against hammering the retry button.
+  grading: {
+    pro: { capacity: 3, refillRate: 10, interval: "1h" },
+  },
 } as const;
 
 export type RateLimitedFeature = keyof typeof RATE_LIMITS;
@@ -51,6 +56,9 @@ const limiters = {
   },
   interview: {
     pro: bucket(RATE_LIMITS.interview.pro),
+  },
+  grading: {
+    pro: bucket(RATE_LIMITS.grading.pro),
   },
 };
 

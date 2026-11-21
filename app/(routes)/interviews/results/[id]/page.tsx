@@ -8,11 +8,11 @@ import {
   FileText,
   Briefcase,
   AlertTriangle,
-  Loader2Icon,
 } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import Link from "next/link";
 import { buttonVariants } from "@/components/ui/button";
+import RetryGradingPanel from "./_components/RetryGradingPanel";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -69,7 +69,8 @@ export default async function InterviewResultPage({ params }: PageProps) {
           href="/interviews"
           className={buttonVariants({
             variant: "outline",
-            className: "rounded-xl font-bold text-xs",
+            className:
+              "rounded-lg px-8 py-4 font-bold text-xs hover:bg-muted/10 hover:scale-95 hover:text-foreground transition-all duration-200",
           })}
         >
           Simulate Another Role
@@ -221,16 +222,11 @@ export default async function InterviewResultPage({ params }: PageProps) {
           </div>
         </div>
       ) : (
-        /* PENDING BACKLOG PROCESSING ERROR UI FALLBACK EDGE CASE */
-        <div className="border border-dashed p-12 text-center rounded-3xl bg-muted/10">
-          <Loader2Icon className="h-8 w-8 text-primary animate-spin mx-auto mb-3" />
-          <p className="text-sm font-bold text-foreground">
-            Parsing AI Performance Report Data Grids...
-          </p>
-          <p className="text-xs text-muted-foreground mt-0.5">
-            Please wait a brief moment for the database transactions to settle.
-          </p>
-        </div>
+        /* No report: grading failed (retryable) or there was nothing to grade */
+        <RetryGradingPanel
+          sessionId={session.id}
+          canRetry={response.data.canRetryGrading}
+        />
       )}
     </div>
   );

@@ -1,4 +1,5 @@
 import { CreateAssistantDTO } from "@vapi-ai/web/dist/api";
+import { AI_MODELS } from "@/lib/ai-models";
 
 export const configureAssistant = (
   userName: string,
@@ -21,7 +22,7 @@ export const configureAssistant = (
     maxDurationSeconds: 300,
     model: {
       provider: "google",
-      model: "gemini-2.5-flash",
+      model: AI_MODELS.voiceInterviewer,
       messages: [
         {
           role: "system",

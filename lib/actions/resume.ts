@@ -7,6 +7,7 @@ import { db } from "@/config/db";
 import { resumes, usageEvents } from "@/config/schema";
 import { and, eq } from "drizzle-orm";
 import { enforceRateLimit } from "@/lib/arcjet";
+import { AI_MODELS } from "@/lib/ai-models";
 import { assertAllowed, toActionError } from "@/lib/billing-guard";
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
@@ -68,7 +69,7 @@ export async function analyzeAndStoreResumeAction(
     `;
 
     const response = await ai.models.generateContent({
-      model: "gemini-3.1-flash-lite",
+      model: AI_MODELS.resumeAnalysis,
       contents: systemPrompt,
       config: {
         responseMimeType: "application/json",
@@ -196,7 +197,7 @@ export async function analyzeExistingResumeAction(resumeId: string) {
 
     // 3. Fire the request up to your active Gemini client tier
     const response = await ai.models.generateContent({
-      model: "gemini-3.1-flash-lite",
+      model: AI_MODELS.resumeAnalysis,
       contents: optimizationPrompt,
       config: {
         responseMimeType: "application/json",
