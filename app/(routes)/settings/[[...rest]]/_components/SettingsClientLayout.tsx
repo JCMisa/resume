@@ -24,6 +24,11 @@ import {
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import {
   FREE_LIMITS,
   LIMIT_PERIOD,
   PRO_LIMITS,
@@ -33,11 +38,17 @@ import {
 
 type TabId = "profile" | "security" | "notifications" | "billing";
 
+// Tabs that can actually be opened (incl. via ?tab=). Security and Notifications
+// are placeholder UIs for now, so they're shown disabled with a "Coming soon"
+// tooltip and links to them fall back to Profile.
+const AVAILABLE_TABS: TabId[] = ["profile", "billing"];
+
 interface NavItem {
   id: TabId;
   label: string;
   icon: React.ElementType;
   description: string;
+  comingSoon?: boolean;
 }
 
 // ── Props definition matching billing.ts ──
@@ -164,9 +175,7 @@ export default function SettingsClientLayout({
 
   const queryTab = searchParams.get("tab") as TabId;
   const [activeTab, setActiveTab] = useState<TabId>(
-    ["profile", "security", "notifications", "billing"].includes(queryTab)
-      ? queryTab
-      : "profile",
+    AVAILABLE_TABS.includes(queryTab) ? queryTab : "profile",
   );
 
   const handleTabChange = (tabId: TabId) => {
@@ -177,10 +186,7 @@ export default function SettingsClientLayout({
   // 🚀 FIXED: Handle edge cases where browser back/forward buttons are pressed
   useEffect(() => {
     const currentTab = searchParams.get("tab") as TabId;
-    if (
-      currentTab &&
-      ["profile", "security", "notifications", "billing"].includes(currentTab)
-    ) {
+    if (currentTab && AVAILABLE_TABS.includes(currentTab)) {
       setActiveTab(currentTab);
     }
   }, [searchParams]);
@@ -205,12 +211,14 @@ export default function SettingsClientLayout({
       label: "Security",
       icon: Shield,
       description: "Passwords & 2-factor auth",
+      comingSoon: true, // static placeholder content for now
     },
     {
       id: "notifications",
       label: "Notifications",
       icon: Bell,
       description: "Email & in-app alerts",
+      comingSoon: true, // static placeholder content for now
     },
     {
       id: "billing",
@@ -340,6 +348,40 @@ export default function SettingsClientLayout({
             <nav className="space-y-1">
               {navItems.map((item) => {
                 const active = activeTab === item.id;
+
+                // Placeholder tabs: visible but disabled, with a "Coming soon"
+                // tooltip. aria-disabled (not `disabled`) so hover still fires.
+                if (item.comingSoon) {
+                  return (
+                    <Tooltip key={item.id}>
+                      <TooltipTrigger asChild>
+                        <button
+                          type="button"
+                          aria-disabled="true"
+                          onClick={(e) => e.preventDefault()}
+                          className="w-full flex items-center gap-3 px-3.5 py-3 rounded-xl text-left border border-transparent opacity-50 cursor-not-allowed"
+                        >
+                          <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 bg-stone-100 dark:bg-stone-700/50">
+                            <item.icon className="w-4 h-4 text-stone-400 dark:text-stone-500" />
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <p className="text-sm font-semibold leading-none mb-0.5 text-stone-600 dark:text-stone-400">
+                              {item.label}
+                            </p>
+                            <p className="text-[10px] text-stone-400 leading-none truncate">
+                              {item.description}
+                            </p>
+                          </div>
+                          <span className="shrink-0 rounded-full border border-stone-200 dark:border-stone-700 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-stone-400">
+                            Soon
+                          </span>
+                        </button>
+                      </TooltipTrigger>
+                      <TooltipContent side="right">Coming soon</TooltipContent>
+                    </Tooltip>
+                  );
+                }
+
                 return (
                   <button
                     key={item.id}
