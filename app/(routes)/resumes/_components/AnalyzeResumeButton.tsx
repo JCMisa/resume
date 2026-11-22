@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { SparklesIcon, Loader2 } from "lucide-react";
 import { analyzeExistingResumeAction } from "@/lib/actions/resume";
 import { useRouter } from "next/navigation";
+import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { getUserBillingStatus } from "@/lib/actions/billing";
 import UpgradeModal from "@/components/custom/UpgradeModal";
@@ -13,9 +14,16 @@ import { describeFreeLimit, isLimitReached } from "@/lib/plans";
 
 interface AnalyzeButtonProps {
   resumeId: string;
+  /** Compact variant for cards (default: full-width detail-page button) */
+  compact?: boolean;
+  className?: string;
 }
 
-export default function AnalyzeResumeButton({ resumeId }: AnalyzeButtonProps) {
+export default function AnalyzeResumeButton({
+  resumeId,
+  compact = false,
+  className,
+}: AnalyzeButtonProps) {
   const router = useRouter();
   const [isAnalyzing, setIsAnalyzing] = useState(false);
 
@@ -60,9 +68,22 @@ export default function AnalyzeResumeButton({ resumeId }: AnalyzeButtonProps) {
       <Button
         onClick={handleInPlaceAnalysis}
         disabled={isAnalyzing}
-        className="w-full mt-2 py-4 font-bold rounded-lg"
+        size={compact ? "sm" : "default"}
+        className={cn(
+          compact ? "rounded-lg font-bold gap-1.5" : "w-full mt-2 py-4 font-bold rounded-lg",
+          className,
+        )}
       >
-        {isAnalyzing ? (
+        {compact ? (
+          <>
+            {isAnalyzing ? (
+              <Loader2 className="size-3.5 animate-spin" />
+            ) : (
+              <SparklesIcon className="size-3.5" />
+            )}
+            {isAnalyzing ? "Analyzing…" : "Analyze"}
+          </>
+        ) : isAnalyzing ? (
           <>
             <Loader2 className="h-4 w-4 mr-2 animate-spin text-primary-foreground" />
             Processing Portfolio Metrics...
