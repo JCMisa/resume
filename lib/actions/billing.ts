@@ -17,8 +17,13 @@ export async function getUserBillingStatus() {
     return {
       isPro: false,
       isAdmin: false,
-      limits: { analyses: 0, interviews: 0, resumes: 0 },
-      allowed: { analyze: false, interview: false, create_resume: false },
+      limits: { analyses: 0, interviews: 0, resumes: 0, jobMatches: 0 },
+      allowed: {
+        analyze: false,
+        interview: false,
+        create_resume: false,
+        job_match: false,
+      },
     };
 
   const monthStart = startOfMonthUTC();
@@ -27,8 +32,9 @@ export async function getUserBillingStatus() {
 
   const analyzeSince = since("analyze");
   const resumeSince = since("create_resume");
+  const jobMatchSince = since("job_match");
 
-  const [[userRecord], [analysesRow], [resumesRow], [interviewsRow]] =
+  const [[userRecord], [analysesRow], [resumesRow], [interviewsRow], [jobMatchesRow]] =
     await Promise.all([
       db
         .select({ role: users.role })
@@ -70,12 +76,24 @@ export async function getUserBillingStatus() {
             gte(interviews.createdAt, monthStart),
           ),
         ),
+      // Job description matches (usage log, survives deletion)
+      db
+        .select({ value: count() })
+        .from(usageEvents)
+        .where(
+          and(
+            eq(usageEvents.userId, userId),
+            eq(usageEvents.kind, "job_match"),
+            jobMatchSince ? gte(usageEvents.createdAt, jobMatchSince) : undefined,
+          ),
+        ),
     ]);
 
   const usage = {
     analyses: analysesRow?.value ?? 0,
     interviews: interviewsRow?.value ?? 0,
     resumes: resumesRow?.value ?? 0,
+    jobMatches: jobMatchesRow?.value ?? 0,
   };
 
   // Pro is checked by Clerk plan key (not a Clerk feature) so it stays correct

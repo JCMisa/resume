@@ -22,6 +22,7 @@ const usage = (u: Partial<UsageCounts> = {}): UsageCounts => ({
   analyses: 0,
   interviews: 0,
   resumes: 0,
+  jobMatches: 0,
   ...u,
 });
 const free = (u?: Partial<UsageCounts>) =>
@@ -71,6 +72,12 @@ describe("computeAllowed", () => {
     expect(free({ resumes: FREE_LIMITS.create_resume }).create_resume).toBe(false);
   });
 
+  it("free: job matches allowed until the monthly limit; pro unlimited", () => {
+    expect(free({ jobMatches: FREE_LIMITS.job_match - 1 }).job_match).toBe(true);
+    expect(free({ jobMatches: FREE_LIMITS.job_match }).job_match).toBe(false);
+    expect(pro({ jobMatches: 999 }).job_match).toBe(true);
+  });
+
   it("free: interviews are never allowed (Pro-only)", () => {
     expect(free().interview).toBe(false);
   });
@@ -91,9 +98,9 @@ describe("computeAllowed", () => {
       computeAllowed({
         isPro: false,
         isAdmin: true,
-        usage: usage({ analyses: 999, interviews: 999, resumes: 999 }),
+        usage: usage({ analyses: 999, interviews: 999, resumes: 999, jobMatches: 999 }),
       }),
-    ).toEqual({ analyze: true, interview: true, create_resume: true });
+    ).toEqual({ analyze: true, interview: true, create_resume: true, job_match: true });
   });
 });
 

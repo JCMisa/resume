@@ -10,6 +10,7 @@ import {
   index,
 } from "drizzle-orm/pg-core";
 import type { ResumeAnalysisData } from "../lib/analysis-types";
+import type { JobMatchData } from "../lib/job-match";
 import {
   relations,
   type InferSelectModel,
@@ -26,6 +27,7 @@ export const resumeStatusEnum = pgEnum("resume_status", ["parsed", "created"]);
 export const usageKindEnum = pgEnum("usage_kind", [
   "resume_analysis", // AI analysis (new upload or re-analysis)
   "resume_create", // resume built in the editor
+  "job_match", // resume vs job description match
 ]);
 
 // USERS
@@ -165,6 +167,29 @@ export const usageEvents = pgTable(
   (t) => [index("usage_events_user_kind_idx").on(t.userId, t.kind, t.createdAt)],
 );
 
+// JOB MATCHES (a resume compared against a pasted job description)
+// Deleted with their resume. Usage is logged separately in usage_events, so
+// deleting a match doesn't give the allowance back.
+export const jobMatches = pgTable(
+  "job_matches",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: text("user_id")
+      .references(() => users.id, { onDelete: "cascade" })
+      .notNull(),
+    resumeId: uuid("resume_id")
+      .references(() => resumes.id, { onDelete: "cascade" })
+      .notNull(),
+    jobTitle: text("job_title").notNull().default(""),
+    company: text("company").notNull().default(""),
+    jobDescription: text("job_description").notNull(),
+    matchScore: integer("match_score").notNull(),
+    result: jsonb("result").$type<JobMatchData>().notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (t) => [index("job_matches_resume_idx").on(t.resumeId, t.createdAt)],
+);
+
 /**
  * RELATIONSHIPS
  */
@@ -206,6 +231,9 @@ export type NewInterview = InferInsertModel<typeof interviews>;
 
 export type InterviewResult = InferSelectModel<typeof interviewResults>;
 export type NewInterviewResult = InferInsertModel<typeof interviewResults>;
+
+export type JobMatch = InferSelectModel<typeof jobMatches>;
+export type NewJobMatch = InferInsertModel<typeof jobMatches>;
 
 export type UsageEvent = InferSelectModel<typeof usageEvents>;
 export type NewUsageEvent = InferInsertModel<typeof usageEvents>;

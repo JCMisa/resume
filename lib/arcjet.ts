@@ -15,6 +15,11 @@ export const RATE_LIMITS = {
     free: { capacity: 3, refillRate: 3, interval: "1h" },
     pro: { capacity: 10, refillRate: 10, interval: "1h" },
   },
+  // One Gemini call per match, similar cost to an analysis
+  job_match: {
+    free: { capacity: 3, refillRate: 3, interval: "1h" },
+    pro: { capacity: 10, refillRate: 10, interval: "1h" },
+  },
   // Pro-only feature: Free users are rejected by assertAllowed() before this.
   interview: {
     pro: { capacity: 3, refillRate: 6, interval: "1h" },
@@ -53,6 +58,10 @@ const limiters = {
   analyze: {
     free: bucket(RATE_LIMITS.analyze.free),
     pro: bucket(RATE_LIMITS.analyze.pro),
+  },
+  job_match: {
+    free: bucket(RATE_LIMITS.job_match.free),
+    pro: bucket(RATE_LIMITS.job_match.pro),
   },
   interview: {
     pro: bucket(RATE_LIMITS.interview.pro),

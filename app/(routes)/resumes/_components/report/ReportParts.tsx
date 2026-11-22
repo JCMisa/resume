@@ -226,7 +226,7 @@ const RATING_STYLE: Record<BulletRating, string> = {
   weak: "bg-rose-500/15 text-rose-600 dark:text-rose-400",
 };
 
-function CopyButton({ text }: { text: string }) {
+export function CopyButton({ text, label = "Copy" }: { text: string; label?: string }) {
   const [copied, setCopied] = useState(false);
   return (
     <button
@@ -241,10 +241,10 @@ function CopyButton({ text }: { text: string }) {
         }
       }}
       className="shrink-0 inline-flex items-center gap-1 rounded-lg border px-2 py-1 text-[10px] font-bold text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-      aria-label="Copy rewrite"
+      aria-label={label === "Copy" ? "Copy text" : label}
     >
       {copied ? <Check className="size-3" /> : <Copy className="size-3" />}
-      {copied ? "Copied" : "Copy"}
+      {copied ? "Copied" : label}
     </button>
   );
 }

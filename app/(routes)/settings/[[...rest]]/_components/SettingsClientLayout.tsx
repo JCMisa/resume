@@ -20,6 +20,7 @@ import {
   ChevronRight,
   FileText,
   Mic,
+  Target,
   FilePlus, // 🚀 Added for resume attempts visual styling
 } from "lucide-react";
 import Image from "next/image";
@@ -60,7 +61,8 @@ interface SettingsClientLayoutProps {
     limits: {
       analyses: number | string;
       interviews: number | string;
-      resumes: number | string; // 🚀 Handles your status = 'created' attempts counts!
+      resumes: number | string;
+      jobMatches: number | string;
     };
   };
 }
@@ -424,6 +426,13 @@ export default function SettingsClientLayout({
                 label="AI Analyses"
                 value={`${billingData.limits.analyses} / ${isPro ? "∞" : FREE_LIMITS.analyze}`}
                 sub={usageSub("analyze")}
+              />
+
+              <StatCard
+                icon={Target}
+                label="Job Matches"
+                value={`${billingData.limits.jobMatches} / ${isPro ? "∞" : FREE_LIMITS.job_match}`}
+                sub={usageSub("job_match")}
               />
 
               <StatCard

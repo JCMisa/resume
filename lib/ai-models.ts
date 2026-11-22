@@ -10,6 +10,9 @@ export const AI_MODELS = {
    */
   resumeAnalysis: "gemini-3.1-flash-lite",
 
+  /** Resume vs job description match (same cost profile as an analysis). */
+  jobMatch: "gemini-3.1-flash-lite",
+
   /**
    * Grading a finished mock interview (Pro only, once per interview).
    * Planned upgrade: "gemini-3.8-flash" (stronger feedback, ~1 cent per grade).

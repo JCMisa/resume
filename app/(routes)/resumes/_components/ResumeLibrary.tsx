@@ -17,6 +17,7 @@ import {
   PenLine,
   Search,
   Sparkles,
+  Target,
   Trash2,
   UploadCloud,
   X,
@@ -162,6 +163,11 @@ function ResumeCard({
             <DropdownMenuItem asChild>
               <Link href={`/resumes/${item.id}`}>
                 <FolderOpen className="size-4" /> Open
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              <Link href={`/resumes/${item.id}?tab=match`}>
+                <Target className="size-4" /> Tailor for a job
               </Link>
             </DropdownMenuItem>
             <DropdownMenuItem onSelect={onRename}>

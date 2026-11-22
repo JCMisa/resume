@@ -1,7 +1,7 @@
 import "server-only";
 
-import { GoogleGenAI } from "@google/genai";
 import { AI_MODELS } from "@/lib/ai-models";
+import { generateStructured } from "@/lib/gemini";
 import {
   AI_LIMITS,
   sanitizeAiAnalysis,
@@ -23,8 +23,6 @@ import { buildAnalysis } from "@/lib/resume-checks";
 // flags, career profile with normalized dates, skills, first impression).
 // Everything countable plus the overall score is computed in
 // lib/resume-checks.ts, and temperature 0 keeps the AI part as stable as possible.
-
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
 export type { ResumeAnalysis, ResumeContent };
 
@@ -203,35 +201,9 @@ const CONTENT_SCHEMA = {
   required: ["personalDetails", "professionalSummary", "skills", "experiences", "projects", "educations", "certificates"],
 } as const;
 
-// ── Gemini call with schema + one retry ────────────────────────────────────
-
-async function generateJson<T>(
-  prompt: string,
-  schema: unknown,
-  parse: (json: unknown) => T,
-): Promise<T> {
-  let lastError: unknown;
-  for (let attempt = 1; attempt <= 2; attempt++) {
-    try {
-      const response = await ai.models.generateContent({
-        model: AI_MODELS.resumeAnalysis,
-        contents: prompt,
-        config: {
-          responseMimeType: "application/json",
-          responseJsonSchema: schema,
-          // Same resume -> (nearly) same judgments, so scores and trends are stable
-          temperature: 0,
-        },
-      });
-      if (!response.text) throw new Error("Empty response from Gemini.");
-      return parse(JSON.parse(response.text));
-    } catch (error) {
-      lastError = error;
-      console.warn(`Resume analysis attempt ${attempt} failed:`, error);
-    }
-  }
-  throw lastError;
-}
+// Gemini call (schema + sanitize + one retry, temperature 0): lib/gemini.ts
+const generateJson = <T>(prompt: string, schema: unknown, parse: (json: unknown) => T) =>
+  generateStructured({ model: AI_MODELS.resumeAnalysis, prompt, schema, parse, label: "Resume analysis" });
 
 const AUDIT_INSTRUCTIONS = `
 Write a critical, honest resume audit as an experienced recruiter would.

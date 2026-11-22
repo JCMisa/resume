@@ -15,6 +15,7 @@ import {
   Globe,
   Code,
   FolderGit2,
+  Target,
 } from "lucide-react";
 import Link from "next/link";
 import { getResumeDetailsAction } from "@/lib/actions/resume";
@@ -22,10 +23,14 @@ import ResumeFileViewer from "../_components/ResumeFileViewer";
 import AnalyzeResumeButton from "../_components/AnalyzeResumeButton";
 import ResumeFileUploader from "../_components/ResumeFileUploader";
 import AnalysisReport from "../_components/report/AnalysisReport";
+import JobMatchPanel from "../_components/job-match/JobMatchPanel";
 
 interface PageProps {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ tab?: string }>;
 }
+
+const TABS = ["analysis", "match", "content"] as const;
 
 // Strictly map types according to our updated JSONB column definition
 interface ResumeContent {
@@ -72,8 +77,11 @@ interface ResumeContent {
 }
 
 
-export default async function ResumeDetailsPage({ params }: PageProps) {
+export default async function ResumeDetailsPage({ params, searchParams }: PageProps) {
   const { id: resumeId } = await params;
+  // ?tab=match opens the Job match tab (e.g. from "Tailor for a job")
+  const { tab } = await searchParams;
+  const initialTab = TABS.find((t) => t === tab) ?? "analysis";
   const result = await getResumeDetailsAction(resumeId);
 
   if (!result.success || !result.data) {
@@ -178,23 +186,38 @@ export default async function ResumeDetailsPage({ params }: PageProps) {
 
         {/* RIGHT COLUMN: AI AUDIT AND PARSED SCHEMA TABS */}
         <div className="xl:col-span-7 w-full">
-          <Tabs defaultValue="analysis" className="w-full space-y-6">
-            <TabsList className="grid w-full max-w-md grid-cols-2 !p-1 bg-muted !rounded-2xl !h-12">
+          <Tabs defaultValue={initialTab} className="w-full space-y-6">
+            <TabsList className="grid w-full max-w-xl grid-cols-3 !p-1 bg-muted !rounded-2xl !h-12">
               <TabsTrigger
                 value="analysis"
-                className="!rounded-xl !font-bold !text-sm !gap-2"
+                className="!rounded-xl !font-bold !text-xs sm:!text-sm !gap-2 min-w-0"
               >
-                <Brain className="h-4 w-4" />
-                AI Audit Report
+                <Brain className="h-4 w-4 shrink-0" />
+                <span className="truncate">AI Report</span>
+              </TabsTrigger>
+              <TabsTrigger
+                value="match"
+                className="!rounded-xl !font-bold !text-xs sm:!text-sm !gap-2 min-w-0"
+              >
+                <Target className="h-4 w-4 shrink-0" />
+                <span className="truncate">Job match</span>
               </TabsTrigger>
               <TabsTrigger
                 value="content"
-                className="!rounded-xl !font-bold !text-sm !gap-2"
+                className="!rounded-xl !font-bold !text-xs sm:!text-sm !gap-2 min-w-0"
               >
-                <FileText className="h-4 w-4" />
-                Structured Content
+                <FileText className="h-4 w-4 shrink-0" />
+                <span className="truncate">Content</span>
               </TabsTrigger>
             </TabsList>
+
+            {/* JOB MATCH: compare this resume with a pasted job description */}
+            <TabsContent
+              value="match"
+              className="focus-visible:outline-none animate-in fade-in duration-300"
+            >
+              <JobMatchPanel resumeId={resumeId} />
+            </TabsContent>
 
             {/* TAB 1: AI REPORT (shared with the analyze page) */}
             <TabsContent
