@@ -10,6 +10,7 @@ import {
   LayoutGrid,
   PlusCircle,
   Settings,
+  ShieldCheck,
   Sparkles,
   Video,
 } from "lucide-react";
@@ -36,7 +37,7 @@ import { inSection, isChildActive, parentTone } from "@/lib/nav";
 type NavLink = { title: string; url: string; icon: React.ElementType };
 type NavItem = NavLink & { children?: NavLink[] };
 
-// One list for everyone; admin-only entries can be appended in navFor().
+// One list for everyone; admin-only entries are added in navFor().
 const NAV: NavItem[] = [
   { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
   {
@@ -53,9 +54,13 @@ const NAV: NavItem[] = [
   { title: "Settings", url: "/settings", icon: Settings },
 ];
 
+const ADMIN_ITEM: NavItem = { title: "Admin", url: "/admin", icon: ShieldCheck };
+
+// Hiding the link is UX only: /admin and its actions check the role server-side
 function navFor(role: "admin" | "user" | null | undefined): NavItem[] {
-  void role; // no admin-only entries yet
-  return NAV;
+  if (role !== "admin") return NAV;
+  // Just above Settings
+  return [...NAV.slice(0, -1), ADMIN_ITEM, NAV[NAV.length - 1]];
 }
 
 // Strong highlight (current page) vs soft (section of the current page)
