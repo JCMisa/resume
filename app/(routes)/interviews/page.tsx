@@ -13,6 +13,11 @@ import PastInterviewsList, {
 import InterviewProgressCard from "./_components/InterviewProgressCard";
 import InterviewPrepCard from "./_components/InterviewPrepCard";
 import { getUserBillingStatus } from "@/lib/actions/billing";
+import {
+  PrepCardSkeleton,
+  ProgressCardSkeleton,
+  SetupFormSkeleton,
+} from "./_components/InterviewSkeletons";
 
 export default function InterviewsPage() {
   const { user } = useUser();
@@ -74,7 +79,7 @@ export default function InterviewsPage() {
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_440px] items-start">
         <div className="min-w-0 space-y-6">
           {access === null ? (
-            <div className="h-96 w-full bg-muted rounded-3xl animate-pulse" />
+            <SetupFormSkeleton />
           ) : !access.allowed ? (
             // Interviews are Pro-only: Free users see what they'd get
             access.isPro ? (
@@ -99,13 +104,21 @@ export default function InterviewsPage() {
           )}
 
           {/* Score trends under the form */}
-          {access?.allowed && <InterviewProgressCard items={history.items} />}
+          {access === null ? (
+            <ProgressCardSkeleton />
+          ) : (
+            access.allowed && <InterviewProgressCard items={history.items} />
+          )}
         </div>
 
         {/* Right column: prep (mic check) on top, only useful before a call;
             then the history list, which scrolls inside a fixed max height. */}
         <aside className="space-y-6 min-w-0">
-          {access?.allowed && !sessionMeta && <InterviewPrepCard />}
+          {access === null ? (
+            <PrepCardSkeleton />
+          ) : (
+            access.allowed && !sessionMeta && <InterviewPrepCard />
+          )}
           <PastInterviewsList items={history.items} failed={history.failed} />
         </aside>
       </div>

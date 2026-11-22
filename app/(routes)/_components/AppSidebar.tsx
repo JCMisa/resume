@@ -132,7 +132,7 @@ export function AppSidebar({ userRole = "user", ...props }: AppSidebarProps) {
       <Separator orientation="horizontal" />
 
       <SidebarContent className="custom-scrollbar mt-3">
-        <SidebarGroup>
+        <SidebarGroup className={cn(isCollapsed && "px-1")}>
           <SidebarGroupContent>
             <SidebarMenu className="gap-2">
               {items.map((item) => {
@@ -175,17 +175,29 @@ export function AppSidebar({ userRole = "user", ...props }: AppSidebarProps) {
                               : undefined
                           }
                           className={cn(
-                            "flex items-center py-8 relative transition-all duration-300",
+                            "flex items-center relative transition-all duration-300 [&_svg]:size-5!",
+                            isCollapsed
+                              ? // Icon mode: a centered 40px square (overrides
+                                // the library's forced 32px + p-2)
+                                "size-10! p-0! mx-auto justify-center rounded-xl"
+                              : "py-8 rounded-xl",
                             item.children && !isCollapsed && "pr-12",
                             TONE[tone],
                           )}
                         >
-                          <div className="size-10 flex items-center justify-center shrink-0">
-                            <Icon className="w-5 h-5" />
+                          <div
+                            className={cn(
+                              "flex items-center justify-center shrink-0",
+                              !isCollapsed && "size-10",
+                            )}
+                          >
+                            <Icon />
                           </div>
-                          <div className="text-lg! tracking-wider font-extrabold! truncate">
-                            {!isCollapsed && item.title}
-                          </div>
+                          {!isCollapsed && (
+                            <div className="text-lg! tracking-wider font-extrabold! truncate">
+                              {item.title}
+                            </div>
+                          )}
                           {showDot && !item.children && (
                             <div className="absolute right-4 size-1.5 rounded-full bg-current opacity-80" />
                           )}
