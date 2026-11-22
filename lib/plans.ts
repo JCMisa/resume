@@ -40,6 +40,11 @@ export const PRO_LIMITS = {
   interview: 20,
 } as const;
 
+/** Start of the current monthly allowance period (1st of this month, UTC). */
+export function startOfMonthUTC(from = new Date()) {
+  return new Date(Date.UTC(from.getUTCFullYear(), from.getUTCMonth(), 1));
+}
+
 /** Start of the next monthly allowance period (1st of next month, UTC). */
 export function nextMonthlyReset(from = new Date()) {
   return new Date(Date.UTC(from.getUTCFullYear(), from.getUTCMonth() + 1, 1));
@@ -59,6 +64,38 @@ export function formatResetDate(date = nextMonthlyReset()) {
  * "refunded" by a tampered client; covers mic/connection failures and empty calls.
  */
 export const INTERVIEW_REFUND_WINDOW_SECONDS = 60;
+
+/** Sessions created at or after this moment can still be refunded. */
+export function refundWindowStart(now = Date.now()) {
+  return new Date(now - INTERVIEW_REFUND_WINDOW_SECONDS * 1000);
+}
+
+export type UsageCounts = { analyses: number; interviews: number; resumes: number };
+
+/** What a user may start right now, given their plan and this period's usage. */
+export function computeAllowed({
+  isPro,
+  isAdmin,
+  usage,
+}: {
+  isPro: boolean;
+  isAdmin: boolean;
+  usage: UsageCounts;
+}): Record<GatedFeature, boolean> {
+  if (isAdmin) return { analyze: true, interview: true, create_resume: true };
+  if (isPro) {
+    return {
+      analyze: true,
+      interview: usage.interviews < PRO_LIMITS.interview,
+      create_resume: true,
+    };
+  }
+  return {
+    analyze: usage.analyses < FREE_LIMITS.analyze,
+    interview: false, // Pro-only (PRO_ONLY_FEATURES)
+    create_resume: usage.resumes < FREE_LIMITS.create_resume,
+  };
+}
 
 /** Error code returned by server actions when a plan limit blocks the request. */
 export const LIMIT_REACHED = "LIMIT_REACHED";

@@ -10,8 +10,12 @@ import { enforceRateLimit, RateLimitError } from "@/lib/arcjet";
 import { AI_MODELS } from "@/lib/ai-models";
 import { mintVapiWebToken } from "@/lib/vapi-token";
 import { assertAllowed, toActionError } from "@/lib/billing-guard";
-import { INTERVIEW_REFUND_WINDOW_SECONDS } from "@/lib/plans";
-import { GRADING_FAILED, hasCandidateAnswers } from "@/lib/interview";
+import { refundWindowStart } from "@/lib/plans";
+import {
+  GRADING_FAILED,
+  hasCandidateAnswers,
+  parseInterviewGrade,
+} from "@/lib/interview";
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
@@ -178,38 +182,6 @@ const GRADING_SCHEMA = {
   required: ["overallScore", "feedback", "strengths", "weaknesses", "suggestions"],
 };
 
-const clamp = (n: number, min: number, max: number) =>
-  Math.min(max, Math.max(min, n));
-
-/** Parse + sanitize Gemini's grade so a slightly-off response can't break the report. */
-function parseGrade(text: string | undefined) {
-  if (!text) throw new Error("Empty evaluation returned from Gemini.");
-  const raw = JSON.parse(text);
-
-  const score = Math.round(Number(raw?.overallScore));
-  if (!Number.isFinite(score)) {
-    throw new Error("Gemini evaluation is missing an overall score.");
-  }
-  const strings = (value: unknown) =>
-    Array.isArray(value)
-      ? value.filter((s): s is string => typeof s === "string" && s.trim() !== "")
-      : [];
-
-  return {
-    overallScore: clamp(score, 1, 100),
-    feedback: typeof raw.feedback === "string" ? raw.feedback : "",
-    strengths: strings(raw.strengths),
-    weaknesses: strings(raw.weaknesses),
-    suggestions: (Array.isArray(raw.suggestions) ? raw.suggestions : [])
-      .filter((s: any) => s && typeof s.category === "string" && typeof s.tip === "string")
-      .map((s: any) => ({
-        category: s.category,
-        score: clamp(Math.round(Number(s.score)) || 0, 0, 100),
-        tip: s.tip,
-      })),
-  };
-}
-
 /**
  * Grade a transcript with Gemini (2 attempts) and store the result, marking the
  * session completed. Throws if both attempts fail; the caller keeps the
@@ -239,7 +211,7 @@ async function gradeInterview(
   // (covers 503 "high demand" on the primary as well as malformed output).
   const models = [AI_MODELS.interviewGrading, AI_MODELS.interviewGradingFallback];
 
-  let grade: ReturnType<typeof parseGrade> | null = null;
+  let grade: ReturnType<typeof parseInterviewGrade> | null = null;
   let lastError: unknown;
   for (const [attempt, model] of models.entries()) {
     if (grade) break;
@@ -252,7 +224,7 @@ async function gradeInterview(
           responseJsonSchema: GRADING_SCHEMA,
         },
       });
-      grade = parseGrade(response.text);
+      grade = parseInterviewGrade(response.text);
     } catch (error) {
       lastError = error;
       console.warn(`Interview grading attempt ${attempt + 1} (${model}) failed:`, error);
@@ -278,9 +250,7 @@ export async function cancelInterviewSessionAction(sessionId: string) {
     const { userId } = await auth();
     if (!userId) throw new Error("Unauthorized.");
 
-    const windowStart = new Date(
-      Date.now() - INTERVIEW_REFUND_WINDOW_SECONDS * 1000,
-    );
+    const windowStart = refundWindowStart();
 
     const cancelled = await db
       .update(interviews)

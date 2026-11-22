@@ -5,16 +5,11 @@ import { users, resumes, interviews, usageEvents } from "@/config/schema";
 import { eq, and, gte, count, ne, or, isNull } from "drizzle-orm";
 import { db } from "@/config/db";
 import {
-  FREE_LIMITS,
   LIMIT_PERIOD,
-  PRO_LIMITS,
   PRO_PLAN_KEY,
+  computeAllowed,
+  startOfMonthUTC,
 } from "@/lib/plans";
-
-function startOfMonth() {
-  const d = new Date();
-  return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), 1));
-}
 
 export async function getUserBillingStatus() {
   const { userId, has } = await auth();
@@ -26,7 +21,7 @@ export async function getUserBillingStatus() {
       allowed: { analyze: false, interview: false, create_resume: false },
     };
 
-  const monthStart = startOfMonth();
+  const monthStart = startOfMonthUTC();
   const since = (feature: keyof typeof LIMIT_PERIOD) =>
     LIMIT_PERIOD[feature] === "monthly" ? monthStart : undefined;
 
@@ -88,28 +83,11 @@ export async function getUserBillingStatus() {
   const isAdmin = userRecord?.role === "admin";
   const isPro = isAdmin || has({ plan: PRO_PLAN_KEY });
 
-  if (isPro) {
-    return {
-      isPro: true,
-      isAdmin,
-      limits: usage,
-      allowed: {
-        analyze: true,
-        interview: isAdmin || usage.interviews < PRO_LIMITS.interview,
-        create_resume: true,
-      },
-    };
-  }
-
   return {
-    isPro: false,
-    isAdmin: false,
+    isPro,
+    isAdmin,
     limits: usage,
-    allowed: {
-      analyze: usage.analyses < FREE_LIMITS.analyze,
-      interview: false, // Pro-only feature (see PRO_ONLY_FEATURES)
-      create_resume: usage.resumes < FREE_LIMITS.create_resume,
-    },
+    allowed: computeAllowed({ isPro, isAdmin, usage }),
   };
 }
 

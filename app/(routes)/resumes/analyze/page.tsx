@@ -22,6 +22,7 @@ import { getUserBillingStatus } from "@/lib/actions/billing";
 import UpgradeModal from "@/components/custom/UpgradeModal";
 import type { Resume } from "@/config/schema";
 import { describeFreeLimit, isLimitReached } from "@/lib/plans";
+import { countWords, looksScanned } from "@/lib/resume-text";
 
 export type ProcessStage =
   | "idle"
@@ -35,8 +36,6 @@ export type ViewStep = "upload" | "analysis";
 export type ExtractInfo = { pages: number; words: number };
 
 const MAX_FILE_BYTES = 10 * 1024 * 1024;
-// Fewer readable characters than this means an image-only (scanned) PDF
-const MIN_TEXT_CHARS = 150;
 
 async function loadUsage(): Promise<AnalyzeUsage & { allowed: boolean }> {
   const billing = await getUserBillingStatus();
@@ -149,7 +148,7 @@ const AnalyzeResumePage = () => {
       }
 
       const clean = text.trim();
-      if (clean.replace(/\s/g, "").length < MIN_TEXT_CHARS) {
+      if (looksScanned(clean)) {
         fail(
           "scanned",
           "We couldn't find selectable text. It's probably a scan or an image. Export it as a text PDF from Word or Google Docs, or build your resume in the editor.",
@@ -160,7 +159,7 @@ const AnalyzeResumePage = () => {
       setExtractedText(clean);
       setInfo({
         pages: totalPages,
-        words: clean.split(/\s+/).filter(Boolean).length,
+        words: countWords(clean),
       });
       setProgress(90);
       setStage("success");
