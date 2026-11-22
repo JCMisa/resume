@@ -13,9 +13,12 @@ export async function generateStructured<T>({
   schema,
   parse,
   label,
+  files,
 }: {
   model: string;
   prompt: string;
+  /** Inline files sent before the prompt (e.g. a scanned PDF), base64 */
+  files?: { mimeType: string; data: string }[];
   /** Keep it simple: no maxItems/min/max (Gemini rejects heavily constrained schemas) */
   schema: unknown;
   /** Sanitize the parsed JSON; throw to trigger the retry */
@@ -28,7 +31,17 @@ export async function generateStructured<T>({
     try {
       const response = await ai.models.generateContent({
         model,
-        contents: prompt,
+        contents: files?.length
+          ? [
+              {
+                role: "user",
+                parts: [
+                  ...files.map((f) => ({ inlineData: { mimeType: f.mimeType, data: f.data } })),
+                  { text: prompt },
+                ],
+              },
+            ]
+          : prompt,
         config: {
           responseMimeType: "application/json",
           responseJsonSchema: schema,

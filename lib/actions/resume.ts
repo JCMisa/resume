@@ -11,7 +11,9 @@ import {
   ANALYSIS_FAILED_MESSAGE,
   analyzeResumeContent,
   parseAndAnalyzeResume,
+  parseAndAnalyzeScannedResume,
 } from "@/lib/resume-ai";
+import { SCANNED_PDF_MAX_BYTES, isPdfBytes } from "@/lib/resume-text";
 import { gateResume } from "@/lib/plan-gating";
 import { currentUserIsPro } from "@/lib/plan-tier";
 
@@ -42,32 +44,82 @@ export async function analyzeAndStoreResumeAction(
       throw new Error(ANALYSIS_FAILED_MESSAGE);
     }
 
-    // Insert the resume and log the metered analysis atomically
-    // (usage is only logged on success, so failures don't use up the allowance)
-    const resumeId = globalThis.crypto.randomUUID();
-    const [[insertedResume]] = await db.batch([
-      db
-        .insert(resumes)
-        .values({
-          id: resumeId,
-          userId: userId,
-          title: fileName.replace(/\.pdf$/i, "") + " (AI Analyzed)",
-          category: "General",
-          status: "parsed", // AI-parsed upload (vs "created" in the builder)
-          content: parsed.content,
-          analysis: parsed.analysis,
-        })
-        .returning(),
-      db
-        .insert(usageEvents)
-        .values({ userId, kind: "resume_analysis", resumeId }),
-    ]);
+    const insertedResume = await storeParsedResume(userId, fileName, parsed);
 
     // Free users get the Free view of the report (Pro parts stay server-side)
     return { success: true as const, data: gateResume(insertedResume, billing.isPro) };
   } catch (error) {
     console.error("Gemini/Drizzle Pipeline Failure:", error);
     return toActionError(error, "Pipeline processing failure.");
+  }
+}
+
+// Insert a parsed upload and log the metered analysis atomically
+// (usage is only logged on success, so failures don't use up the allowance)
+async function storeParsedResume(
+  userId: string,
+  fileName: string,
+  parsed: Awaited<ReturnType<typeof parseAndAnalyzeResume>>,
+) {
+  const resumeId = globalThis.crypto.randomUUID();
+  const [[insertedResume]] = await db.batch([
+    db
+      .insert(resumes)
+      .values({
+        id: resumeId,
+        userId,
+        title: fileName.replace(/\.pdf$/i, "").slice(0, 100) + " (AI Analyzed)",
+        category: "General",
+        status: "parsed", // AI-parsed upload (vs "created" in the builder)
+        content: parsed.content,
+        analysis: parsed.analysis,
+      })
+      .returning(),
+    db.insert(usageEvents).values({ userId, kind: "resume_analysis", resumeId }),
+  ]);
+  return insertedResume;
+}
+
+// Scanned / image-only PDFs (no text layer): the PDF itself goes to Gemini.
+// Same plan limit, rate limit and storage as a text upload. Sent as FormData
+// (see serverActions.bodySizeLimit in next.config.ts).
+export async function analyzeScannedResumeAction(formData: FormData) {
+  try {
+    const { userId } = await auth();
+    if (!userId) throw new Error("Unauthorized access configuration.");
+
+    const file = formData.get("file");
+    if (!(file instanceof File)) throw new Error("No PDF was received.");
+    if (file.size > SCANNED_PDF_MAX_BYTES) {
+      throw new Error(
+        `Scanned PDFs must be ${Math.round(SCANNED_PDF_MAX_BYTES / 1024 / 1024 * 10) / 10} MB or smaller. Try exporting it at a lower quality.`,
+      );
+    }
+    const bytes = new Uint8Array(await file.arrayBuffer());
+    if (!isPdfBytes(bytes)) throw new Error("That file isn't a valid PDF.");
+
+    const billing = await assertAllowed("analyze");
+    await enforceRateLimit("analyze", userId, billing.isPro);
+
+    let parsed: Awaited<ReturnType<typeof parseAndAnalyzeScannedResume>>;
+    try {
+      parsed = await parseAndAnalyzeScannedResume(Buffer.from(bytes).toString("base64"));
+    } catch (aiError) {
+      console.error("Scanned Resume Analysis Failure:", aiError);
+      throw new Error(ANALYSIS_FAILED_MESSAGE);
+    }
+    // A blank or unreadable scan: don't save (and don't charge) an empty resume
+    if (!parsed.content.personalDetails?.name && !parsed.content.experiences?.length) {
+      throw new Error(
+        "We couldn't read this scan. Try a clearer scan, or build your resume in the editor. This attempt didn't count toward your plan.",
+      );
+    }
+
+    const insertedResume = await storeParsedResume(userId, file.name || "Scanned resume", parsed);
+    return { success: true as const, data: gateResume(insertedResume, billing.isPro) };
+  } catch (error) {
+    console.error("Scanned Resume Pipeline Failure:", error);
+    return toActionError(error, "Failed to analyze this scanned resume.");
   }
 }
 

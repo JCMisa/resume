@@ -15,6 +15,7 @@ import RecentAnalysesList, {
 } from "./_components/RecentAnalysesList";
 import {
   analyzeAndStoreResumeAction,
+  analyzeScannedResumeAction,
   updateResumeFileUrlAction,
 } from "@/lib/actions/resume";
 import { useCloudinaryUpload } from "@/hooks/useCloudinaryUpload";
@@ -22,7 +23,11 @@ import { getUserBillingStatus } from "@/lib/actions/billing";
 import UpgradeModal from "@/components/custom/UpgradeModal";
 import type { Resume } from "@/config/schema";
 import { describeFreeLimit, isLimitReached } from "@/lib/plans";
-import { countWords, looksScanned } from "@/lib/resume-text";
+import {
+  SCANNED_PDF_MAX_BYTES,
+  countWords,
+  looksScanned,
+} from "@/lib/resume-text";
 import { extractPdfText } from "@/lib/pdf-extract";
 
 export type ProcessStage =
@@ -34,7 +39,12 @@ export type ProcessStage =
   | "success" // text extracted, ready to analyze
   | "error";
 export type ViewStep = "upload" | "analysis";
-export type ExtractInfo = { pages: number; words: number };
+export type ExtractInfo = {
+  pages: number;
+  words: number;
+  /** No text layer: the PDF itself will be read by the AI */
+  scanned?: boolean;
+};
 
 const MAX_FILE_BYTES = 10 * 1024 * 1024;
 
@@ -138,10 +148,19 @@ const AnalyzeResumePage = () => {
         },
       );
       if (looksScanned(clean)) {
-        fail(
-          "scanned",
-          "We couldn't find selectable text. It's probably a scan or an image. Export it as a text PDF from Word or Google Docs, or build your resume in the editor.",
-        );
+        // No text layer: the AI can read the PDF itself if it's small enough
+        if (targetFile.size > SCANNED_PDF_MAX_BYTES) {
+          fail(
+            "scanned",
+            `This looks like a scan, and it's too large for the AI to read (over ${Math.round((SCANNED_PDF_MAX_BYTES / 1024 / 1024) * 10) / 10} MB). Re-save it at a lower quality, export it as a text PDF from Word or Google Docs, or build your resume in the editor.`,
+          );
+          return;
+        }
+        setExtractedText("");
+        setInfo({ pages: totalPages, words: 0, scanned: true });
+        setProgress(90);
+        setStage("success");
+        setStatusMessage("Scanned PDF: the AI will read the page images.");
         return;
       }
 
@@ -164,7 +183,8 @@ const AnalyzeResumePage = () => {
 
   // AI analysis first, then archive the PDF (so rejected/failed runs leave no files)
   const handleAnalyze = async () => {
-    if (!extractedText || !file) return;
+    const scanned = Boolean(info?.scanned);
+    if (!file || (!extractedText && !scanned)) return;
 
     const current = await loadUsage();
     setUsage(current);
@@ -176,16 +196,29 @@ const AnalyzeResumePage = () => {
     try {
       setStage("ai_processing");
       setProgress(92);
-      setStatusMessage("Checking structure, keywords and impact…");
-
-      const response = await analyzeAndStoreResumeAction(
-        extractedText,
-        file.name,
+      setStatusMessage(
+        scanned
+          ? "Reading the scanned pages, then checking structure and impact…"
+          : "Checking structure, keywords and impact…",
       );
 
+      const response = scanned
+        ? await analyzeScannedResumeAction(
+            (() => {
+              const fd = new FormData();
+              fd.append("file", file);
+              return fd;
+            })(),
+          )
+        : await analyzeAndStoreResumeAction(extractedText, file.name);
+
       if (!response.success) {
-        setStage("success"); // keep the extracted text so they can retry
-        setStatusMessage("Text extracted. Ready to analyze.");
+        setStage("success"); // keep the file/text so they can retry
+        setStatusMessage(
+          scanned
+            ? "Scanned PDF: the AI will read the page images."
+            : "Text extracted. Ready to analyze.",
+        );
         if (isLimitReached(response)) {
           refreshUsage();
           setIsUpgradeModalOpen(true);

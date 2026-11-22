@@ -238,13 +238,27 @@ export default function UploadSection({
                     formatBytes(file.size),
                     info &&
                       `${info.pages} page${info.pages === 1 ? "" : "s"}`,
-                    info && `${info.words.toLocaleString()} words`,
+                    info &&
+                      (info.scanned
+                        ? "scanned"
+                        : `${info.words.toLocaleString()} words`),
                   ]
                     .filter(Boolean)
                     .join(" · ")}
                 </p>
               </div>
             </div>
+            {info?.scanned && (
+              <div className="flex items-start gap-2.5 rounded-2xl border border-amber-500/30 bg-amber-500/5 p-3 text-left">
+                <ScanSearch className="size-4 shrink-0 mt-0.5 text-amber-600 dark:text-amber-400" />
+                <p className="text-xs text-muted-foreground">
+                  <span className="font-bold text-foreground">This PDF is a scan or image.</span>{" "}
+                  The AI will read the page images instead of a text layer. It takes a bit longer,
+                  and blurry scans may miss details. Note: many applicant tracking systems can&apos;t
+                  read scanned resumes, so also export a text PDF for applications.
+                </p>
+              </div>
+            )}
             <div className="flex flex-col sm:flex-row gap-2 justify-center">
               <Button
                 size="lg"
@@ -254,7 +268,8 @@ export default function UploadSection({
                 }}
                 className="rounded-xl font-black gap-2"
               >
-                Analyze resume <ArrowRight className="size-4" />
+                {info?.scanned ? "Analyze scanned resume" : "Analyze resume"}{" "}
+                <ArrowRight className="size-4" />
               </Button>
               <Button
                 size="lg"

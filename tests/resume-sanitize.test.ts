@@ -155,3 +155,14 @@ describe("extracted PDF text", () => {
     expect(countWords("")).toBe(0);
   });
 });
+
+describe("scanned PDF upload checks", () => {
+  it("recognizes the PDF signature and rejects other files", async () => {
+    const { isPdfBytes, SCANNED_PDF_MAX_BYTES } = await import("@/lib/resume-text");
+    expect(isPdfBytes(new TextEncoder().encode("%PDF-1.7\n..."))).toBe(true);
+    expect(isPdfBytes(new TextEncoder().encode("<html>"))).toBe(false);
+    expect(isPdfBytes(new Uint8Array([0x25, 0x50]))).toBe(false); // too short
+    // Must stay under the 4mb serverActions.bodySizeLimit (next.config.ts)
+    expect(SCANNED_PDF_MAX_BYTES).toBeLessThan(4 * 1024 * 1024);
+  });
+});
