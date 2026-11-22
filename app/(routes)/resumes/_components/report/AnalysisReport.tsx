@@ -23,6 +23,7 @@ import AnalyzeResumeButton from "../AnalyzeResumeButton";
 import {
   BulletAudit,
   Card,
+  ProTeaser,
   CheckCounts,
   CheckList,
   Chips,
@@ -327,6 +328,12 @@ function ReportV2({ a }: { a: ResumeAnalysisData }) {
             icon={Wand2}
           >
             <Rewrites items={a.improvements.slice(0, 4)} />
+            {(a.locked?.improvements ?? 0) > 0 && (
+              <ProTeaser
+                compact
+                title={`${a.locked!.improvements} more rewrite${a.locked!.improvements === 1 ? "" : "s"} with Pro`}
+              />
+            )}
           </Card>
         </div>
         <SummaryCards a={a} />
@@ -390,7 +397,10 @@ function ReportV2({ a }: { a: ResumeAnalysisData }) {
           subtitle="Weakest first, with ready-to-paste rewrites"
           icon={Wand2}
         >
-          <BulletAudit items={a.bulletAudit ?? []} />
+          <BulletAudit
+            items={a.bulletAudit ?? []}
+            lockedRewrites={a.locked?.bulletRewrites ?? 0}
+          />
         </Card>
         {a.improvements.length > 4 && (
           <Card title="More rewrites" icon={Sparkles}>
@@ -483,6 +493,15 @@ function ReportV2({ a }: { a: ResumeAnalysisData }) {
                     empty="None shown. Weave teamwork or leadership into your bullets."
                   />
                 </div>
+                {(a.locked?.suggestedSkills ?? 0) > 0 && (
+                  <div className="pt-3 border-t">
+                    <ProTeaser
+                      compact
+                      title={`${a.locked!.suggestedSkills} in-demand skill${a.locked!.suggestedSkills === 1 ? "" : "s"} missing for ${profile?.targetRole || "your target role"}`}
+                      detail="See which skills recruiters expect for this role that your resume doesn't show."
+                    />
+                  </div>
+                )}
                 {skills.suggested.length > 0 && (
                   <div className="space-y-1.5 pt-3 border-t">
                     <p className="text-[11px] font-bold text-muted-foreground">

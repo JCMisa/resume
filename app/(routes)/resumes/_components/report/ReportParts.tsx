@@ -6,10 +6,14 @@ import {
   Check,
   CheckCircle2,
   Copy,
+  Lock,
   XCircle,
+  Zap,
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { buttonVariants } from "@/components/ui/button";
+import ProCheckoutButton from "@/components/custom/ProCheckoutButton";
 import type {
   AtsCheck,
   BulletAuditItem,
@@ -249,7 +253,14 @@ export function CopyButton({ text, label = "Copy" }: { text: string; label?: str
   );
 }
 
-export function BulletAudit({ items }: { items: BulletAuditItem[] }) {
+export function BulletAudit({
+  items,
+  lockedRewrites = 0,
+}: {
+  items: BulletAuditItem[];
+  /** Free plan: rewrites removed server-side */
+  lockedRewrites?: number;
+}) {
   const [filter, setFilter] = useState<BulletRating | "all">("all");
   const counts = {
     all: items.length,
@@ -288,6 +299,12 @@ export function BulletAudit({ items }: { items: BulletAuditItem[] }) {
           </button>
         ))}
       </div>
+      {lockedRewrites > 0 && (
+        <ProTeaser
+          title={`${lockedRewrites} more bullet rewrite${lockedRewrites === 1 ? "" : "s"} ready`}
+          detail="Every bullet is rated for free. Pro shows the ready-to-paste rewrite for each one."
+        />
+      )}
       <ul className="space-y-3">
         {visible.map((b, i) => (
           <li key={`${b.text}-${i}`} className="rounded-2xl border p-4 space-y-2.5">
@@ -306,6 +323,11 @@ export function BulletAudit({ items }: { items: BulletAuditItem[] }) {
                   </span>
                 ))}
               </div>
+            )}
+            {!b.rewrite && b.rating !== "strong" && lockedRewrites > 0 && (
+              <p className="flex items-center gap-1.5 rounded-xl border border-dashed px-3 py-2 text-[11px] font-semibold text-muted-foreground">
+                <Lock className="size-3.5" /> Rewrite available with Pro
+              </p>
             )}
             {b.rewrite && (
               <div className="rounded-xl border-l-4 border-brand bg-brand/5 px-3 py-2 flex items-start justify-between gap-3">
@@ -388,6 +410,34 @@ export function Chips({ items, dashed, empty }: { items: string[]; dashed?: bool
           {s}
         </span>
       ))}
+    </div>
+  );
+}
+
+// ── Pro teaser ──────────────────────────────────────────────────────────────
+
+/** Shown where Free reports have Pro-only content removed (lib/plan-gating.ts). */
+export function ProTeaser({ title, detail, compact }: { title: string; detail?: string; compact?: boolean }) {
+  return (
+    <div
+      className={cn(
+        "rounded-2xl border border-dashed border-brand/40 bg-brand/5 flex flex-col @md:flex-row @md:items-center justify-between gap-3",
+        compact ? "px-3 py-2.5" : "p-4",
+      )}
+    >
+      <div className="flex items-start gap-2.5 min-w-0">
+        <Lock className="size-4 shrink-0 mt-0.5 text-brand-strong dark:text-brand" />
+        <div className="min-w-0">
+          <p className="text-sm font-bold">{title}</p>
+          {detail && <p className="text-[11px] text-muted-foreground mt-0.5">{detail}</p>}
+        </div>
+      </div>
+      <ProCheckoutButton
+        proLabel="View plan"
+        className={cn(buttonVariants({ size: "sm" }), "shrink-0 rounded-lg font-bold gap-1.5")}
+      >
+        <Zap className="size-3.5 fill-current" /> Unlock with Pro
+      </ProCheckoutButton>
     </div>
   );
 }

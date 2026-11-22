@@ -115,6 +115,9 @@ export type ResumeAnalysisData = {
   careerProfile?: CareerProfile;
   skills?: SkillsBreakdown;
   firstImpression?: string;
+
+  /** Set only on copies sent to Free users: how many Pro items were removed (lib/plan-gating.ts) */
+  locked?: { bulletRewrites: number; improvements: number; suggestedSkills: number };
 };
 
 /** Weights for the overall score (sum = 1). */

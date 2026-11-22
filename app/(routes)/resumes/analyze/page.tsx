@@ -206,7 +206,8 @@ const AnalyzeResumePage = () => {
           cloudUpload.secure_url,
         );
         if (!attached.success) throw new Error(attached.error);
-        if (attached.data) savedResume = attached.data;
+        // Merge only the file fields (the analysis stays the plan-gated one)
+        if (attached.data) savedResume = { ...savedResume, ...attached.data };
       } catch (uploadError) {
         console.error("PDF archive failed:", uploadError);
         toast.warning("Analysis saved, but the PDF couldn't be archived.", {

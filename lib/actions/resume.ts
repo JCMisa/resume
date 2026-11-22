@@ -12,6 +12,8 @@ import {
   analyzeResumeContent,
   parseAndAnalyzeResume,
 } from "@/lib/resume-ai";
+import { gateResume } from "@/lib/plan-gating";
+import { currentUserIsPro } from "@/lib/plan-tier";
 
 // The original PDF is uploaded by the client only AFTER this succeeds, then attached
 // with updateResumeFileUrlAction, so rejected/failed analyses leave no orphaned files.
@@ -61,7 +63,8 @@ export async function analyzeAndStoreResumeAction(
         .values({ userId, kind: "resume_analysis", resumeId }),
     ]);
 
-    return { success: true as const, data: insertedResume };
+    // Free users get the Free view of the report (Pro parts stay server-side)
+    return { success: true as const, data: gateResume(insertedResume, billing.isPro) };
   } catch (error) {
     console.error("Gemini/Drizzle Pipeline Failure:", error);
     return toActionError(error, "Pipeline processing failure.");
@@ -108,7 +111,7 @@ export async function analyzeExistingResumeAction(resumeId: string) {
         .values({ userId, kind: "resume_analysis", resumeId }),
     ]);
 
-    return { success: true as const, data: updatedResume };
+    return { success: true as const, data: gateResume(updatedResume, billing.isPro) };
   } catch (error) {
     console.error("Direct Optimization Pipeline Failure:", error);
     return toActionError(
@@ -133,7 +136,10 @@ export async function getResumeDetailsAction(resumeId: string) {
       return { success: false, error: "Resume not found or access denied." };
     }
 
-    return { success: true, data: resumeData };
+    return {
+      success: true,
+      data: gateResume(resumeData, await currentUserIsPro()),
+    };
   } catch (error: any) {
     console.error("Fetch Resume Details Failure:", error);
     return {
@@ -211,7 +217,8 @@ export async function updateResumeFileUrlAction(
         updatedAt: new Date(),
       })
       .where(and(eq(resumes.id, resumeId), eq(resumes.userId, userId)))
-      .returning();
+      // Only what callers need (never the analysis, which is plan-gated)
+      .returning({ id: resumes.id, fileUrl: resumes.fileUrl, updatedAt: resumes.updatedAt });
 
     if (!updatedRecord)
       throw new Error("Resume record not found or write permissions denied.");

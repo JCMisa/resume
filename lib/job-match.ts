@@ -48,6 +48,8 @@ export type JobMatchData = {
   tailoredBullets: TailoredBullet[];
   topActions: string[];
   verdict: string;
+  /** Set only on copies sent to Free users (lib/plan-gating.ts) */
+  locked?: { tailoredSummary: boolean; tailoredBullets: number };
 };
 
 export const MATCH_WEIGHTS = { requirements: 0.6, experience: 0.2, titleFit: 0.2 } as const;

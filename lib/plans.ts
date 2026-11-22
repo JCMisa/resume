@@ -145,22 +145,38 @@ export function proCapReachedMessage() {
   return `You've used all ${PRO_LIMITS.interview} AI mock interviews for this month. Your allowance resets on ${formatResetDate()}.`;
 }
 
+/**
+ * How much of the AI reports Free users see. Everything is generated and stored
+ * for every user; Pro-only parts are removed server-side before reaching a Free
+ * user's browser (lib/plan-gating.ts), so upgrading unlocks existing reports.
+ */
+export const FREE_REPORT = {
+  /** Bullet audit: every bullet is rated for Free, but only this many rewrites */
+  bulletRewrites: 3,
+  /** Suggested line rewrites ("improvements") */
+  improvements: 3,
+  /** Job match: tailored bullets (the tailored summary is Pro-only) */
+  tailoredBullets: 1,
+} as const;
+
 /** Pricing card copy, generated from the limits above. */
 export const PLAN_HIGHLIGHTS = {
   free: [
     `${FREE_LIMITS.analyze} AI resume analyses / month`,
-    `${FREE_LIMITS.create_resume} resumes / month in the builder`,
+    "ATS score, 13-point checklist & red flags",
+    `${FREE_REPORT.bulletRewrites} bullet rewrites per report`,
     `${FREE_LIMITS.job_match} job description matches / month`,
-    "ATS score with improvement tips",
+    `${FREE_LIMITS.create_resume} resumes / month in the builder`,
     "PDF export",
   ],
   pro: [
     "Unlimited AI resume analyses",
-    "Unlimited resumes in the builder",
-    "Unlimited job description matches",
+    "Every bullet rewritten, ready to paste",
+    "Unlimited job matches with a tailored summary & bullets",
+    "In-demand skills missing for your target role",
     `${PRO_LIMITS.interview} AI mock interviews / month`,
     "Scored interview reports & transcripts",
-    "Higher limits for back-to-back analyses",
+    "Unlimited resumes in the builder",
     "PDF export",
   ],
 };

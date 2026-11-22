@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   FREE_LIMITS,
+  FREE_REPORT,
   INTERVIEW_REFUND_WINDOW_SECONDS,
   LIMIT_REACHED,
   PLAN_HIGHLIGHTS,
@@ -149,10 +150,12 @@ describe("messages and copy", () => {
   });
 
   it("pricing copy stays in sync with the limits", () => {
-    expect(PLAN_HIGHLIGHTS.free[0]).toContain(String(FREE_LIMITS.analyze));
-    expect(PLAN_HIGHLIGHTS.free[1]).toContain(String(FREE_LIMITS.create_resume));
-    expect(PLAN_HIGHLIGHTS.pro.join(" ")).toContain(
-      `${PRO_LIMITS.interview} AI mock interviews`,
-    );
+    const free = PLAN_HIGHLIGHTS.free.join(" | ");
+    const pro = PLAN_HIGHLIGHTS.pro.join(" | ");
+    expect(free).toContain(`${FREE_LIMITS.analyze} AI resume analyses`);
+    expect(free).toContain(`${FREE_LIMITS.create_resume} resumes`);
+    expect(free).toContain(`${FREE_LIMITS.job_match} job description matches`);
+    expect(free).toContain(`${FREE_REPORT.bulletRewrites} bullet rewrites`);
+    expect(pro).toContain(`${PRO_LIMITS.interview} AI mock interviews`);
   });
 });

@@ -7,6 +7,8 @@ import { jobMatches, resumes, usageEvents } from "@/config/schema";
 import { assertAllowed, toActionError } from "@/lib/billing-guard";
 import { enforceRateLimit } from "@/lib/arcjet";
 import { matchResumeToJob } from "@/lib/job-match-ai";
+import { gateJobMatch } from "@/lib/plan-gating";
+import { currentUserIsPro } from "@/lib/plan-tier";
 import {
   MAX_JOB_DESCRIPTION_CHARS,
   MIN_JOB_DESCRIPTION_CHARS,
@@ -86,7 +88,11 @@ export async function createJobMatchAction(
       db.insert(usageEvents).values({ userId, kind: "job_match", resumeId }),
     ]);
 
-    return { success: true as const, data: match };
+    // Free users get the Free view (tailored summary/bullets stay server-side)
+    return {
+      success: true as const,
+      data: { ...match, result: gateJobMatch(match.result, billing.isPro) },
+    };
   } catch (error) {
     console.error("Create Job Match Failure:", error);
     return toActionError(error, "Failed to compare your resume with this job.");
@@ -131,7 +137,10 @@ export async function getJobMatchAction(matchId: string) {
       .where(and(eq(jobMatches.id, matchId), eq(jobMatches.userId, userId)));
     if (!match) return { success: false as const, error: "Job match not found." };
 
-    return { success: true as const, data: match };
+    return {
+      success: true as const,
+      data: { ...match, result: gateJobMatch(match.result, await currentUserIsPro()) },
+    };
   } catch (error) {
     console.error("Get Job Match Failure:", error);
     return { success: false as const, error: "Failed to load this job match." };

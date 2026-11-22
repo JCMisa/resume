@@ -18,7 +18,7 @@ import {
   type JobRequirement,
   type RequirementStatus,
 } from "@/lib/job-match";
-import { Card, CopyButton, ScoreRing, scoreTone } from "../report/ReportParts";
+import { Card, CopyButton, ProTeaser, ScoreRing, scoreTone } from "../report/ReportParts";
 
 const STATUS: Record<
   RequirementStatus,
@@ -202,6 +202,15 @@ export default function JobMatchReport({ data }: { data: JobMatchData }) {
         </Card>
       )}
 
+      {data.locked?.tailoredSummary && (
+        <Card title="Tailored summary" subtitle="A professional summary aimed at this job" icon={Sparkles}>
+          <ProTeaser
+            title="Your tailored summary is ready"
+            detail="Pro writes a summary for this exact job using the posting's key terms."
+          />
+        </Card>
+      )}
+
       {data.tailoredSummary && (
         <Card
           title="Tailored summary"
@@ -213,8 +222,14 @@ export default function JobMatchReport({ data }: { data: JobMatchData }) {
         </Card>
       )}
 
-      {data.tailoredBullets.length > 0 && (
+      {(data.tailoredBullets.length > 0 || (data.locked?.tailoredBullets ?? 0) > 0) && (
         <Card title="Tailored bullets" subtitle="Your bullets, aimed at this job" icon={Wand2}>
+          {(data.locked?.tailoredBullets ?? 0) > 0 && (
+            <ProTeaser
+              compact
+              title={`${data.locked!.tailoredBullets} more tailored bullet${data.locked!.tailoredBullets === 1 ? "" : "s"} with Pro`}
+            />
+          )}
           <ul className="space-y-3">
             {data.tailoredBullets.map((b, i) => (
               <li key={i} className="rounded-2xl border p-4 space-y-2">
