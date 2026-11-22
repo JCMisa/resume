@@ -1,6 +1,5 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import {
   Dialog,
   DialogContent,
@@ -9,7 +8,9 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
+import ProCheckoutButton from "@/components/custom/ProCheckoutButton";
+import { cn } from "@/lib/utils";
 import { Zap } from "lucide-react";
 
 interface UpgradeModalProps {
@@ -19,14 +20,27 @@ interface UpgradeModalProps {
   description: string;
 }
 
+// Resolves once Radix has finished closing every dialog (exit animation done,
+// body pointer-events lock released), so Clerk's checkout drawer is clickable.
+function waitForDialogsClosed(timeoutMs = 600) {
+  return new Promise<void>((resolve) => {
+    const start = performance.now();
+    const check = () => {
+      const open = document.querySelector('[data-slot="dialog-content"]');
+      const locked = document.body.style.pointerEvents === "none";
+      if ((!open && !locked) || performance.now() - start > timeoutMs) resolve();
+      else requestAnimationFrame(check);
+    };
+    requestAnimationFrame(check);
+  });
+}
+
 export default function UpgradeModal({
   isOpen,
   onClose,
   title,
   description,
 }: UpgradeModalProps) {
-  const router = useRouter();
-
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="sm:max-w-md border border-stone-200 dark:border-stone-800">
@@ -50,16 +64,21 @@ export default function UpgradeModal({
           >
             Back to Workspace
           </Button>
-          <Button
-            onClick={() => {
+          {/* Opens Clerk's checkout in place; the modal closes first */}
+          <ProCheckoutButton
+            proLabel="View my plan"
+            onBeforeCheckout={async () => {
               onClose();
-              router.push("/settings?tab=billing");
+              await waitForDialogsClosed();
             }}
-            className="rounded-xl font-black text-xs !py-5 bg-primary text-primary-foreground shadow-lg shadow-primary/20 gap-1.5"
+            className={cn(
+              buttonVariants(),
+              "rounded-xl font-black text-xs !py-5 bg-primary text-primary-foreground shadow-lg shadow-primary/20 gap-1.5",
+            )}
           >
             <Zap className="h-3.5 w-3.5 fill-current" />
             Upgrade to Pro
-          </Button>
+          </ProCheckoutButton>
         </DialogFooter>
       </DialogContent>
     </Dialog>

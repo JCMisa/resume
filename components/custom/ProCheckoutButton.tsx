@@ -24,11 +24,18 @@ export default function ProCheckoutButton({
   children,
   className,
   proLabel = "Manage subscription",
+  onBeforeCheckout,
 }: {
   children: React.ReactNode;
   className?: string;
   /** Label shown to users who already have Pro */
   proLabel?: React.ReactNode;
+  /**
+   * Runs on click, before navigating or opening checkout. Awaited before the
+   * checkout drawer opens, so a host dialog can fully close first (its focus
+   * trap / pointer-events lock would otherwise block Clerk's drawer).
+   */
+  onBeforeCheckout?: () => void | Promise<void>;
 }) {
   const router = useRouter();
   const { isLoaded, isSignedIn, has } = useAuth();
@@ -51,6 +58,7 @@ export default function ProCheckoutButton({
   if (!isLoaded || !isSignedIn) {
     return (
       <Link
+        onClick={() => void onBeforeCheckout?.()}
         href={`/sign-up?redirect_url=${encodeURIComponent(BILLING_PATH)}`}
         className={className}
       >
@@ -61,7 +69,11 @@ export default function ProCheckoutButton({
 
   if (isPro) {
     return (
-      <Link href={BILLING_PATH} className={className}>
+      <Link
+        href={BILLING_PATH}
+        className={className}
+        onClick={() => void onBeforeCheckout?.()}
+      >
         {proLabel}
       </Link>
     );
@@ -70,7 +82,11 @@ export default function ProCheckoutButton({
   if (!planId) {
     // Still loading, or lookup failed: the billing page has the pricing table
     return (
-      <Link href={BILLING_PATH} className={className}>
+      <Link
+        href={BILLING_PATH}
+        className={className}
+        onClick={() => void onBeforeCheckout?.()}
+      >
         {children}
       </Link>
     );
@@ -83,7 +99,13 @@ export default function ProCheckoutButton({
       newSubscriptionRedirectUrl="/dashboard"
       onSubscriptionComplete={() => router.refresh()}
     >
-      <button type="button" className={className}>
+      <button
+        type="button"
+        className={className}
+        onClick={async () => {
+          await onBeforeCheckout?.();
+        }}
+      >
         {children}
       </button>
     </CheckoutButton>
