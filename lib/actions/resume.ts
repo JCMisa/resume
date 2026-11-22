@@ -1,16 +1,17 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use server";
 
-import { GoogleGenAI } from "@google/genai";
 import { auth } from "@clerk/nextjs/server";
 import { db } from "@/config/db";
 import { resumes, usageEvents } from "@/config/schema";
 import { and, eq } from "drizzle-orm";
 import { enforceRateLimit } from "@/lib/arcjet";
-import { AI_MODELS } from "@/lib/ai-models";
 import { assertAllowed, toActionError } from "@/lib/billing-guard";
-
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+import {
+  ANALYSIS_FAILED_MESSAGE,
+  analyzeResumeContent,
+  parseAndAnalyzeResume,
+} from "@/lib/resume-ai";
 
 // The original PDF is uploaded by the client only AFTER this succeeds, then attached
 // with updateResumeFileUrlAction, so rejected/failed analyses leave no orphaned files.
@@ -21,6 +22,7 @@ export async function analyzeAndStoreResumeAction(
   try {
     const { userId } = await auth();
     if (!userId) throw new Error("Unauthorized access configuration.");
+    if (!rawText?.trim()) throw new Error("No readable text was found in this resume.");
 
     // Plan limit first, so blocked requests don't consume rate-limit tokens
     const billing = await assertAllowed("analyze");
@@ -28,103 +30,17 @@ export async function analyzeAndStoreResumeAction(
     // Burst protection: plan-sized token bucket + shield + bot detection
     await enforceRateLimit("analyze", userId, billing.isPro);
 
-    // 🚀 ALIGNED PROMPT: Matches the exact object parameters expected by the Form view state layers
-    const systemPrompt = `
-      You are an elite corporate recruiter and professional resume parsing engine. 
-      Analyze the raw text extracted from a user's resume PDF and convert it into structured content arrays alongside a critical, honest resume audit.
-
-      Analyze layout alignment, career gaps, wording quality, and best industry practices. 
-      You must respond ONLY with a clean JSON object adhering strictly to the following schema format:
-
-      {
-        "content": {
-          "personalDetails": {
-            "name": "string",
-            "phone": "string",
-            "email": "string",
-            "address": "string",
-            "links": [{ "label": "string", "url": "string" }]
-          },
-          "professionalSummary": "string",
-          "skills": [{ "category": "string", "value": "string" }],
-          "experiences": [{ "company": "string", "role": "string", "duration": "string", "bullets": ["string"] }],
-          "projects": [{ "title": "string", "duration": "string", "description": ["string"] }],
-          "educations": [{ "schoolName": "string", "course": "string", "major": "string", "duration": "string", "gwa": "string" }],
-          "certificates": [{ "title": "string", "issuedDate": "string", "description": "string" }]
-        },
-        "analysis": {
-          "overallScore": number (1 to 100),
-          "readability": "string (e.g., Excellent, Good, Needs Improvement)",
-          "keyKeywords": ["string"],
-          "summary": "string",
-          "strengths": ["string"],
-          "weaknesses": ["string"],
-          "improvements": [{ "section": "string", "current": "string", "suggested": "string", "reason": "string" }],
-          "gapsDetected": ["string"]
-        }
-      }
-
-      RAW RESUME TEXT INPUT:
-      ${rawText}
-    `;
-
-    const response = await ai.models.generateContent({
-      model: AI_MODELS.resumeAnalysis,
-      contents: systemPrompt,
-      config: {
-        responseMimeType: "application/json",
-      },
-    });
-
-    const resultText = response.text;
-    if (!resultText)
-      throw new Error("Empty data returned from Gemini framework.");
-
-    const parsedData = JSON.parse(resultText);
-
-    // 🛠️ BACKFILL ATOMIC IDs & DEFAULT SORT ORDER FOR THE DND SYSTEM
-    // Since Gemini creates raw objects, we map through arrays to append random crypto IDs
-    // so the frontend Drag-and-Drop tracking indexes have structural reference tags right away.
-    const content = parsedData.content;
-
-    if (content.skills)
-      content.skills = content.skills.map((s: any) => ({
-        id: globalThis.crypto.randomUUID(),
-        ...s,
-      }));
-    if (content.experiences)
-      content.experiences = content.experiences.map((e: any) => ({
-        id: globalThis.crypto.randomUUID(),
-        ...e,
-      }));
-    if (content.projects)
-      content.projects = content.projects.map((p: any) => ({
-        id: globalThis.crypto.randomUUID(),
-        ...p,
-      }));
-    if (content.educations)
-      content.educations = content.educations.map((ed: any) => ({
-        id: globalThis.crypto.randomUUID(),
-        ...ed,
-      }));
-    if (content.certificates)
-      content.certificates = content.certificates.map((c: any) => ({
-        id: globalThis.crypto.randomUUID(),
-        ...c,
-      }));
-
-    // Injecting the initial default render positions order sequence list index arrays
-    content.sectionOrder = [
-      "personal",
-      "summary",
-      "skills",
-      "experience",
-      "projects",
-      "education",
-      "certificates",
-    ];
+    // Schema-constrained Gemini call + sanitizing + one retry (lib/resume-ai.ts)
+    let parsed: Awaited<ReturnType<typeof parseAndAnalyzeResume>>;
+    try {
+      parsed = await parseAndAnalyzeResume(rawText);
+    } catch (aiError) {
+      console.error("Resume Parse/Analysis Failure:", aiError);
+      throw new Error(ANALYSIS_FAILED_MESSAGE);
+    }
 
     // Insert the resume and log the metered analysis atomically
+    // (usage is only logged on success, so failures don't use up the allowance)
     const resumeId = globalThis.crypto.randomUUID();
     const [[insertedResume]] = await db.batch([
       db
@@ -132,11 +48,11 @@ export async function analyzeAndStoreResumeAction(
         .values({
           id: resumeId,
           userId: userId,
-          title: fileName.replace(".pdf", "") + " (AI Analyzed)",
+          title: fileName.replace(/\.pdf$/i, "") + " (AI Analyzed)",
           category: "General",
-          status: "parsed", // Explicitly tag this row as an AI incoming file upload asset
-          content: content,
-          analysis: parsedData.analysis,
+          status: "parsed", // AI-parsed upload (vs "created" in the builder)
+          content: parsed.content,
+          analysis: parsed.analysis,
         })
         .returning(),
       db
@@ -156,13 +72,7 @@ export async function analyzeExistingResumeAction(resumeId: string) {
     const { userId } = await auth();
     if (!userId) throw new Error("Unauthorized access configuration.");
 
-    // Plan limit first, so blocked requests don't consume rate-limit tokens
-    const billing = await assertAllowed("analyze");
-
-    // Burst protection: plan-sized token bucket + shield + bot detection
-    await enforceRateLimit("analyze", userId, billing.isPro);
-
-    // 1. Fetch the existing resume directly from Drizzle
+    // Load the resume first, so a bad id doesn't cost a rate-limit token
     const [existingResume] = await db
       .select()
       .from(resumes)
@@ -170,54 +80,26 @@ export async function analyzeExistingResumeAction(resumeId: string) {
 
     if (!existingResume) throw new Error("Resume record not found.");
 
-    // 2. Build a targeted prompt using the pre-existing content block JSON
-    const optimizationPrompt = `
-      You are an elite corporate recruiter and professional resume parsing engine.
-      Analyze the structured JSON content profile of this candidate's resume and generate a critical, honest resume audit.
+    // Plan limit first, so blocked requests don't consume rate-limit tokens
+    const billing = await assertAllowed("analyze");
 
-      Analyze layout alignment, potential career timeline gaps, wording choices, and alignment with industry standards.
-      You must respond ONLY with a clean JSON object matching this schema format exactly:
+    // Burst protection: plan-sized token bucket + shield + bot detection
+    await enforceRateLimit("analyze", userId, billing.isPro);
 
-      {
-        "analysis": {
-          "overallScore": number (1 to 100),
-          "readability": "string (e.g., Excellent, Good, Needs Improvement)",
-          "keyKeywords": ["string"],
-          "summary": "string",
-          "strengths": ["string"],
-          "weaknesses": ["string"],
-          "improvements": [{ "section": "string", "current": "string", "suggested": "string", "reason": "string" }],
-          "gapsDetected": ["string"]
-        }
-      }
+    // Schema-constrained Gemini call + sanitizing + one retry (lib/resume-ai.ts)
+    let analysis: Awaited<ReturnType<typeof analyzeResumeContent>>;
+    try {
+      analysis = await analyzeResumeContent(existingResume.content);
+    } catch (aiError) {
+      console.error("Resume Re-analysis Failure:", aiError);
+      throw new Error(ANALYSIS_FAILED_MESSAGE);
+    }
 
-      CANDIDATE DATA TO EVALUATE:
-      ${JSON.stringify(existingResume.content, null, 2)}
-    `;
-
-    // 3. Fire the request up to your active Gemini client tier
-    const response = await ai.models.generateContent({
-      model: AI_MODELS.resumeAnalysis,
-      contents: optimizationPrompt,
-      config: {
-        responseMimeType: "application/json",
-      },
-    });
-
-    const resultText = response.text;
-    if (!resultText)
-      throw new Error("Empty diagnostic dataset returned from Gemini.");
-
-    const parsedPayload = JSON.parse(resultText);
-
-    // 4. Update the row in place and log the metered re-analysis atomically
+    // Update the row in place and log the metered re-analysis atomically
     const [[updatedResume]] = await db.batch([
       db
         .update(resumes)
-        .set({
-          analysis: parsedPayload.analysis,
-          updatedAt: new Date(),
-        })
+        .set({ analysis, updatedAt: new Date() })
         .where(and(eq(resumes.id, resumeId), eq(resumes.userId, userId)))
         .returning(),
       db
