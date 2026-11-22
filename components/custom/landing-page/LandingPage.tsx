@@ -35,6 +35,7 @@ import ElectricBorder from "../ElectricBorder";
 import { Highlighter } from "@/components/ui/highlighter";
 import Image from "next/image";
 import { PLAN_HIGHLIGHTS, PRO_PRICE_MONTHLY_USD } from "@/lib/plans";
+import ProCheckoutButton from "@/components/custom/ProCheckoutButton";
 
 // ── Animated Number Counter ───────────────────────────────────────────────────
 function Counter({ to, suffix = "" }: { to: number; suffix?: string }) {
@@ -288,7 +289,12 @@ function Hero() {
         >
           <div className="flex items-center gap-2">
             <div className="flex -space-x-2">
-              {["var(--brand)", "color-mix(in oklch, var(--brand) 82%, black)", "color-mix(in oklch, var(--brand) 66%, black)", "color-mix(in oklch, var(--brand) 50%, black)"].map((c, i) => (
+              {[
+                "var(--brand)",
+                "color-mix(in oklch, var(--brand) 82%, black)",
+                "color-mix(in oklch, var(--brand) 66%, black)",
+                "color-mix(in oklch, var(--brand) 50%, black)",
+              ].map((c, i) => (
                 <div
                   key={i}
                   className="w-6 h-6 rounded-full border-2 border-stone-50 dark:border-stone-950 flex items-center justify-center text-[8px] font-black text-white"
@@ -303,10 +309,7 @@ function Hero() {
           <div className="flex items-center gap-1.5">
             <div className="flex gap-0.5">
               {[0, 1, 2, 3, 4].map((i) => (
-                <Star
-                  key={i}
-                  className="w-3 h-3 fill-brand text-brand"
-                />
+                <Star key={i} className="w-3 h-3 fill-brand text-brand" />
               ))}
             </div>
             <span className="font-medium">4.9 rating</span>
@@ -632,7 +635,11 @@ function Features() {
             >
               {feat.accent && (
                 <ShineBorder
-                  shineColor={["var(--brand)", "var(--brand-light)", "var(--brand-strong)"]}
+                  shineColor={[
+                    "var(--brand)",
+                    "var(--brand-light)",
+                    "var(--brand-strong)",
+                  ]}
                   duration={8}
                   borderWidth={1}
                 />
@@ -942,7 +949,11 @@ function Capabilities() {
             className="relative rounded-2xl p-7 bg-white dark:bg-stone-900 border border-stone-100 dark:border-stone-800 overflow-hidden group hover:shadow-lg hover:shadow-stone-900/5 transition-all"
           >
             <ShineBorder
-              shineColor={["var(--brand)", "var(--brand-strong)", "var(--brand-light)"]}
+              shineColor={[
+                "var(--brand)",
+                "var(--brand-strong)",
+                "var(--brand-light)",
+              ]}
               duration={7}
               borderWidth={1.5}
             />
@@ -1235,10 +1246,7 @@ function Testimonials() {
             >
               <div className="flex gap-0.5 mb-4">
                 {Array.from({ length: r.stars }).map((_, j) => (
-                  <Star
-                    key={j}
-                    className="w-3.5 h-3.5 fill-brand text-brand"
-                  />
+                  <Star key={j} className="w-3.5 h-3.5 fill-brand text-brand" />
                 ))}
               </div>
               <p className="text-sm text-stone-600 dark:text-stone-300 leading-relaxed mb-5 italic">
@@ -1378,12 +1386,13 @@ function Pricing() {
                   </div>
                 ))}
               </div>
-              <Link
-                href="/settings?tab=billing"
-                className="block w-full py-3 text-center rounded-xl text-sm font-black bg-brand text-brand-foreground hover:bg-brand-hover transition-colors shadow-lg shadow-brand/20"
+              {/* Opens Clerk checkout directly for signed-in free users */}
+              <ProCheckoutButton
+                className="block w-full py-3 text-center rounded-xl text-sm font-black bg-brand text-brand-foreground hover:bg-brand-hover transition-colors shadow-lg shadow-brand/20 cursor-pointer"
+                proLabel="You're on Pro · Manage plan"
               >
                 Start Pro Subscription
-              </Link>
+              </ProCheckoutButton>
             </motion.div>
           </ElectricBorder>
         </div>

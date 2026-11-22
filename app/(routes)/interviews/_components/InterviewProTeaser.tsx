@@ -1,4 +1,3 @@
-import Link from "next/link";
 import {
   CheckCircle2,
   Crown,
@@ -7,7 +6,8 @@ import {
   Target,
   ZapIcon,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
+import ProCheckoutButton from "@/components/custom/ProCheckoutButton";
 
 // Static, clearly-labelled sample so Free users can see what a report looks like
 // before paying. Not real user data.
@@ -71,15 +71,16 @@ export default function InterviewProTeaser() {
           ))}
         </ul>
 
-        <Button
-          asChild
-          className="rounded-xl font-black text-xs py-5 gap-1.5 w-full shadow-lg shadow-primary/20"
+        {/* Opens Clerk checkout in place (falls back to the billing page) */}
+        <ProCheckoutButton
+          className={buttonVariants({
+            className:
+              "rounded-xl font-black text-xs py-5 gap-1.5 w-full shadow-lg shadow-primary/20 cursor-pointer",
+          })}
         >
-          <Link href="/settings?tab=billing">
-            <ZapIcon className="size-3.5 fill-current" />
-            Upgrade to Pro
-          </Link>
-        </Button>
+          <ZapIcon className="size-3.5 fill-current" />
+          Upgrade to Pro
+        </ProCheckoutButton>
       </div>
 
       {/* Sample report preview */}

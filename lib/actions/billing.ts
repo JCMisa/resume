@@ -1,6 +1,6 @@
 "use server";
 
-import { auth } from "@clerk/nextjs/server";
+import { auth, clerkClient } from "@clerk/nextjs/server";
 import { users, resumes, interviews, usageEvents } from "@/config/schema";
 import { eq, and, gte, count, ne, or, isNull } from "drizzle-orm";
 import { db } from "@/config/db";
@@ -111,4 +111,29 @@ export async function getUserBillingStatus() {
       create_resume: usage.resumes < FREE_LIMITS.create_resume,
     },
   };
+}
+
+// ── Pro plan id for direct checkout ─────────────────────────────────────────
+// Clerk's <CheckoutButton> needs the plan *id*, which differs between the dev
+// and production Clerk instances. Resolve it from the plan key instead of
+// hard-coding it, and cache per server instance (plan ids rarely change).
+const PLAN_ID_TTL_MS = 60 * 60 * 1000;
+let proPlanIdCache: { id: string; at: number } | null = null;
+
+export async function getProPlanIdAction() {
+  try {
+    if (proPlanIdCache && Date.now() - proPlanIdCache.at < PLAN_ID_TTL_MS) {
+      return { success: true as const, data: proPlanIdCache.id };
+    }
+    const client = await clerkClient();
+    const plans = await client.billing.getPlanList({ payerType: "user" });
+    const pro = plans.data.find((p) => p.slug === PRO_PLAN_KEY);
+    if (!pro) throw new Error(`No Clerk user plan with key "${PRO_PLAN_KEY}".`);
+
+    proPlanIdCache = { id: pro.id, at: Date.now() };
+    return { success: true as const, data: pro.id };
+  } catch (error) {
+    console.error("Pro Plan Lookup Failure:", error);
+    return { success: false as const, error: "Checkout is unavailable right now." };
+  }
 }
