@@ -2,6 +2,7 @@
 
 import { auth } from "@clerk/nextjs/server";
 import { and, desc, eq } from "drizzle-orm";
+import { unstable_rethrow } from "next/navigation";
 import { db } from "@/config/db";
 import { resumes, usageEvents } from "@/config/schema";
 import {
@@ -89,6 +90,7 @@ export async function getResumeLibraryAction() {
       },
     };
   } catch (error) {
+    unstable_rethrow(error); // let Next handle dynamic-rendering/redirect signals
     console.error("Resume Library Failure:", error);
     return { success: false as const, error: "Failed to load your resumes." };
   }
