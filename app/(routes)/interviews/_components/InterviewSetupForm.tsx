@@ -18,6 +18,8 @@ import {
 import { toast } from "sonner";
 import { cn, formatBytes } from "@/lib/utils";
 import { extractPdfText } from "@/lib/pdf-extract";
+import { extractDocxText } from "@/lib/docx-extract";
+import { resumeFileKind } from "@/lib/docx-text";
 import { countWords, looksScanned } from "@/lib/resume-text";
 
 interface SetupProps {
@@ -26,7 +28,7 @@ interface SetupProps {
   onSetupComplete: (text: string, role: string, desc: string) => void;
 }
 
-const MAX_PDF_BYTES = 10 * 1024 * 1024;
+const MAX_FILE_BYTES = 10 * 1024 * 1024;
 
 type ResumeState =
   | { status: "empty" }
@@ -55,7 +57,7 @@ export default function InterviewSetupForm({ onSetupComplete }: SetupProps) {
       return;
     }
     if (resume.status !== "ready") {
-      toast.error("Upload your resume (PDF) first.");
+      toast.error("Upload your resume (PDF or Word) first.");
       return;
     }
     onSetupComplete(resume.text, role.trim(), desc);
@@ -139,24 +141,36 @@ function ResumeDropzone({
 
   async function handleFile(file: File | undefined) {
     if (!file) return;
-    if (file.type !== "application/pdf" && !file.name.toLowerCase().endsWith(".pdf")) {
-      onChange({ status: "error", name: file.name, message: "Only PDF files are supported." });
+    const kind = resumeFileKind(file);
+    if (kind === "doc") {
+      onChange({ status: "error", name: file.name, message: "Old Word (.doc) files aren't supported. Save it as .docx or PDF." });
       return;
     }
-    if (file.size > MAX_PDF_BYTES) {
-      onChange({ status: "error", name: file.name, message: "PDFs must be 10 MB or smaller." });
+    if (kind === "other") {
+      onChange({ status: "error", name: file.name, message: "Only PDF or Word (.docx) files are supported." });
+      return;
+    }
+    if (file.size > MAX_FILE_BYTES) {
+      onChange({ status: "error", name: file.name, message: "Files must be 10 MB or smaller." });
       return;
     }
 
     onChange({ status: "reading", name: file.name });
     try {
-      // Same layout-aware extraction as the analyze page (lib/pdf-extract.ts)
-      const { text, pages } = await extractPdfText(await file.arrayBuffer());
+      // Same extraction as the analyze page (lib/pdf-extract.ts, lib/docx-extract.ts)
+      const data = await file.arrayBuffer();
+      const { text, pages } =
+        kind === "docx"
+          ? { ...(await extractDocxText(data)), pages: 0 }
+          : await extractPdfText(data);
       if (looksScanned(text)) {
         onChange({
           status: "error",
           name: file.name,
-          message: "We couldn't find any text. This PDF may be a scanned image; try a text-based export.",
+          message:
+            kind === "docx"
+              ? "We couldn't find text in this Word file. If it's an image inside Word, export a text PDF instead."
+              : "We couldn't find any text. This PDF may be a scanned image; try a text-based export.",
         });
         return;
       }
@@ -169,11 +183,11 @@ function ResumeDropzone({
         text,
       });
     } catch (err) {
-      console.error("PDF parse failed:", err);
+      console.error("Resume file parse failed:", err);
       onChange({
         status: "error",
         name: file.name,
-        message: "We couldn't read this PDF. It may be damaged or password-protected.",
+        message: "We couldn't read this file. It may be damaged or password-protected.",
       });
     }
   }
@@ -184,7 +198,7 @@ function ResumeDropzone({
     <div
       role="button"
       tabIndex={0}
-      aria-label="Upload your resume PDF"
+      aria-label="Upload your resume (PDF or Word)"
       onClick={() => state.status !== "reading" && openPicker()}
       onKeyDown={(e) => {
         if ((e.key === "Enter" || e.key === " ") && state.status !== "reading") {
@@ -218,7 +232,7 @@ function ResumeDropzone({
       <input
         ref={inputRef}
         type="file"
-        accept="application/pdf,.pdf"
+        accept="application/pdf,.pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,.docx"
         className="hidden"
         onChange={(e) => {
           handleFile(e.target.files?.[0]);
@@ -229,7 +243,7 @@ function ResumeDropzone({
       {dragging ? (
         <>
           <FileUp className="size-9 text-brand mb-3" />
-          <p className="text-sm font-bold">Drop your PDF here</p>
+          <p className="text-sm font-bold">Drop your resume here</p>
         </>
       ) : state.status === "reading" ? (
         <>
@@ -244,8 +258,11 @@ function ResumeDropzone({
           <CheckCircle2 className="size-9 text-brand mb-3" />
           <p className="text-sm font-bold truncate max-w-full">{state.name}</p>
           <p className="text-xs text-muted-foreground mt-1">
-            {formatBytes(state.size)} · {state.pages}{" "}
-            {state.pages === 1 ? "page" : "pages"} · {state.words.toLocaleString()} words
+            {formatBytes(state.size)} ·{" "}
+            {state.pages
+              ? `${state.pages} ${state.pages === 1 ? "page" : "pages"}`
+              : "Word document"}{" "}
+            · {state.words.toLocaleString()} words
           </p>
           <div className="flex gap-2 mt-4">
             <Button
@@ -284,7 +301,7 @@ function ResumeDropzone({
             </p>
           )}
           <p className="text-xs font-semibold text-brand-strong dark:text-brand mt-3">
-            Click or drop another PDF
+            Click or drop another file
           </p>
         </>
       ) : (
@@ -299,7 +316,7 @@ function ResumeDropzone({
             </span>
           </p>
           <p className="text-xs text-muted-foreground mt-1">
-            PDF up to 10 MB. Only its text is used; the file isn&apos;t stored.
+            PDF or Word (.docx), up to 10 MB. Only its text is used; the file isn&apos;t stored.
           </p>
         </>
       )}

@@ -101,7 +101,7 @@ export default function UploadSection({
       <input
         type="file"
         ref={inputRef}
-        accept="application/pdf"
+        accept="application/pdf,.pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,.docx"
         className="hidden"
         onChange={(e) => {
           const f = e.target.files?.[0];
@@ -154,7 +154,7 @@ export default function UploadSection({
         {dragging ? (
           <>
             <UploadCloud className="size-12 text-brand-strong dark:text-brand mb-4 animate-bounce" />
-            <p className="text-lg font-bold">Drop your PDF to start</p>
+            <p className="text-lg font-bold">Drop your resume to start</p>
           </>
         ) : busy ? (
           <div className="w-full max-w-md space-y-5">
@@ -237,7 +237,9 @@ export default function UploadSection({
                   {[
                     formatBytes(file.size),
                     info &&
-                      `${info.pages} page${info.pages === 1 ? "" : "s"}`,
+                      (info.docx
+                        ? "Word document"
+                        : `${info.pages} page${info.pages === 1 ? "" : "s"}`),
                     info &&
                       (info.scanned
                         ? "scanned"
@@ -297,7 +299,7 @@ export default function UploadSection({
               </span>
             </p>
             <p className="text-sm text-muted-foreground mt-1">
-              Text-based PDF, up to 10 MB
+              PDF or Word (.docx), up to 10 MB
             </p>
           </>
         )}
@@ -327,9 +329,10 @@ export default function UploadSection({
           ))}
         </div>
         <p className="text-[11px] text-muted-foreground border-t pt-4">
-          Text is extracted in your browser and reviewed by Google Gemini. After
-          a successful analysis, the PDF is saved to your account so you can
-          open it later.
+          Text is extracted in your browser and reviewed by Google Gemini (scanned
+          PDFs are read by Gemini directly). After a successful analysis, PDFs are
+          saved to your account (Word files aren&apos;t stored) so you can
+          open them later.
         </p>
       </section>
     </motion.div>

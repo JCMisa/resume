@@ -29,6 +29,8 @@ import {
   looksScanned,
 } from "@/lib/resume-text";
 import { extractPdfText } from "@/lib/pdf-extract";
+import { extractDocxText } from "@/lib/docx-extract";
+import { resumeFileKind } from "@/lib/docx-text";
 
 export type ProcessStage =
   | "idle"
@@ -44,6 +46,8 @@ export type ExtractInfo = {
   words: number;
   /** No text layer: the PDF itself will be read by the AI */
   scanned?: boolean;
+  /** Word upload: text comes from the .docx; the file itself isn't archived */
+  docx?: boolean;
 };
 
 const MAX_FILE_BYTES = 10 * 1024 * 1024;
@@ -107,14 +111,20 @@ const AnalyzeResumePage = () => {
 
   // Validate, check the plan allowance, then extract text in the browser
   const handleFile = async (targetFile: File) => {
-    const isPdf =
-      targetFile.type === "application/pdf" || /\.pdf$/i.test(targetFile.name);
-    if (!isPdf) {
-      toast.warning("Please upload a PDF file.");
+    const kind = resumeFileKind(targetFile);
+    if (kind === "doc") {
+      toast.warning("Old Word (.doc) files aren't supported.", {
+        description:
+          "In Word, choose File → Save As → Word Document (.docx) or PDF.",
+      });
+      return;
+    }
+    if (kind === "other") {
+      toast.warning("Please upload a PDF or Word (.docx) file.");
       return;
     }
     if (targetFile.size > MAX_FILE_BYTES) {
-      toast.warning("That file is over 10 MB. Try a smaller PDF.");
+      toast.warning("That file is over 10 MB. Try a smaller file.");
       return;
     }
 
@@ -135,6 +145,28 @@ const AnalyzeResumePage = () => {
 
     try {
       const arrayBuffer = await targetFile.arrayBuffer();
+
+      // Word: mammoth keeps headings, bullets and tables (lib/docx-text.ts)
+      if (kind === "docx") {
+        setProgress(40);
+        setStage("extracting");
+        setStatusMessage("Reading your Word document…");
+        const { text } = await extractDocxText(arrayBuffer);
+        if (looksScanned(text)) {
+          fail(
+            "unreadable",
+            "We couldn't find text in this Word file. If your resume is an image inside Word, export it as a PDF instead.",
+          );
+          return;
+        }
+        setExtractedText(text);
+        setInfo({ pages: 0, words: countWords(text), docx: true });
+        setProgress(90);
+        setStage("success");
+        setStatusMessage("Text extracted. Ready to analyze.");
+        return;
+      }
+
       setProgress(35);
       setStatusMessage("Loading the PDF reader…");
 
@@ -176,7 +208,9 @@ const AnalyzeResumePage = () => {
       console.error("PDF Client Parsing Failure:", error);
       fail(
         "unreadable",
-        "The file may be corrupted or password-protected. Try re-exporting it as a PDF.",
+        kind === "docx"
+          ? "The Word file may be corrupted or password-protected. Try saving it again, or export it as a PDF."
+          : "The file may be corrupted or password-protected. Try re-exporting it as a PDF.",
       );
     }
   };
@@ -223,30 +257,36 @@ const AnalyzeResumePage = () => {
           refreshUsage();
           setIsUpgradeModalOpen(true);
         } else {
-          toast.error(response.error || "The analysis failed. Please try again.");
+          toast.error(
+            response.error || "The analysis failed. Please try again.",
+          );
         }
         return;
       }
 
       // Archive the original PDF. Non-fatal: the analysis is already saved.
+      // Word files aren't archived (the resume viewer shows PDFs; a PDF can be
+      // attached later from the resume's page).
       let savedResume: Resume = response.data;
-      try {
-        setStage("uploading_to_cloud");
-        setStatusMessage("Saving the original PDF to your account…");
-        const cloudUpload = await uploadDocument(file);
-        const attached = await updateResumeFileUrlAction(
-          savedResume.id,
-          cloudUpload.secure_url,
-        );
-        if (!attached.success) throw new Error(attached.error);
-        // Merge only the file fields (the analysis stays the plan-gated one)
-        if (attached.data) savedResume = { ...savedResume, ...attached.data };
-      } catch (uploadError) {
-        console.error("PDF archive failed:", uploadError);
-        toast.warning("Analysis saved, but the PDF couldn't be archived.", {
-          description: "You can attach the file later from the resume's page.",
-        });
-      }
+      if (!info?.docx)
+        try {
+          setStage("uploading_to_cloud");
+          setStatusMessage("Saving the original PDF to your account…");
+          const cloudUpload = await uploadDocument(file);
+          const attached = await updateResumeFileUrlAction(
+            savedResume.id,
+            cloudUpload.secure_url,
+          );
+          if (!attached.success) throw new Error(attached.error);
+          // Merge only the file fields (the analysis stays the plan-gated one)
+          if (attached.data) savedResume = { ...savedResume, ...attached.data };
+        } catch (uploadError) {
+          console.error("PDF archive failed:", uploadError);
+          toast.warning("Analysis saved, but the PDF couldn't be archived.", {
+            description:
+              "You can attach the file later from the resume's page.",
+          });
+        }
 
       setProgress(100);
       setAnalysisResult(savedResume);

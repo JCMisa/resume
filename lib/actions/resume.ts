@@ -68,7 +68,7 @@ async function storeParsedResume(
       .values({
         id: resumeId,
         userId,
-        title: fileName.replace(/\.pdf$/i, "").slice(0, 100) + " (AI Analyzed)",
+        title: fileName.replace(/\.(pdf|docx)$/i, "").slice(0, 100) + " (AI Analyzed)",
         category: "General",
         status: "parsed", // AI-parsed upload (vs "created" in the builder)
         content: parsed.content,
