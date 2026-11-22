@@ -1,27 +1,77 @@
 import { describe, expect, it } from "vitest";
 import {
   DEFAULT_SECTION_ORDER,
-  sanitizeAnalysis,
+  AI_LIMITS,
+  sanitizeAiAnalysis,
   sanitizeContent,
   sanitizeParsedResume,
 } from "@/lib/resume-sanitize";
 import { countWords, looksScanned } from "@/lib/resume-text";
 
-describe("sanitizeAnalysis", () => {
-  it("clamps the score to 1-100 and rounds it", () => {
-    expect(sanitizeAnalysis({ overallScore: -5 }).overallScore).toBe(1);
-    expect(sanitizeAnalysis({ overallScore: 180 }).overallScore).toBe(100);
-    expect(sanitizeAnalysis({ overallScore: "64.4" }).overallScore).toBe(64);
+const scores = { impact: 60, keywords: 70, clarity: 80 };
+
+describe("sanitizeAiAnalysis", () => {
+  it("clamps and rounds the AI sub-scores to 0-100", () => {
+    const a = sanitizeAiAnalysis({ scores: { impact: -5, keywords: 180, clarity: "64.4" } });
+    expect(a.scores).toEqual({ impact: 0, keywords: 100, clarity: 64 });
   });
 
-  it("throws when the score is missing (so the call is retried, not saved)", () => {
-    expect(() => sanitizeAnalysis({})).toThrow();
-    expect(() => sanitizeAnalysis(null)).toThrow();
+  it("throws when a sub-score is missing (so the call is retried, not saved)", () => {
+    expect(() => sanitizeAiAnalysis({})).toThrow(/impact/);
+    expect(() => sanitizeAiAnalysis(null)).toThrow();
+    expect(() => sanitizeAiAnalysis({ scores: { impact: 1, keywords: 2 } })).toThrow(/clarity/);
+  });
+
+  it("normalizes enums, falling back to safe defaults", () => {
+    const a = sanitizeAiAnalysis({ scores, readability: "fair", seniority: "SENIOR" });
+    expect(a.readability).toBe("Fair");
+    expect(a.seniority).toBe("senior");
+    const b = sanitizeAiAnalysis({ scores, readability: "amazing", seniority: "wizard" });
+    expect(b.readability).toBe("Good");
+    expect(b.seniority).toBe("mid");
+  });
+
+  it("normalizes position dates to YYYY-MM / present / unknown", () => {
+    const a = sanitizeAiAnalysis({
+      scores,
+      positions: [
+        { company: "Acme", title: "Dev", start: "2021-3", end: "Present" },
+        { company: "Beta", title: "Intern", start: "2019", end: "2020-13" },
+        { company: "", title: "" },
+      ],
+    });
+    expect(a.positions).toEqual([
+      { company: "Acme", title: "Dev", start: "2021-03", end: "present" },
+      { company: "Beta", title: "Intern", start: "2019-01", end: "" },
+    ]);
+  });
+
+  it("cleans the bullet audit: no rewrite for strong bullets, unknown ratings become ok", () => {
+    const a = sanitizeAiAnalysis({
+      scores,
+      bulletAudit: [
+        { context: "Acme", text: "Cut costs 30%", rating: "strong", issues: [], rewrite: "should drop" },
+        { context: "Acme", text: "Did stuff", rating: "meh", issues: ["Vague", 3], rewrite: "Shipped [X]" },
+        { text: "" },
+      ],
+    });
+    expect(a.bulletAudit).toEqual([
+      { context: "Acme", text: "Cut costs 30%", rating: "strong", issues: [], rewrite: "" },
+      { context: "Acme", text: "Did stuff", rating: "ok", issues: ["Vague"], rewrite: "Shipped [X]" },
+    ]);
+  });
+
+  it("caps list sizes so stored reports stay bounded", () => {
+    const many = Array.from({ length: 50 }, (_, i) => `k${i}`);
+    const a = sanitizeAiAnalysis({ scores, keyKeywords: many, skills: { suggested: many } });
+    expect(a.keyKeywords).toHaveLength(AI_LIMITS.keywords);
+    expect(a.skills.suggested).toHaveLength(AI_LIMITS.suggestedSkills);
+    expect(a.skills.hard).toEqual([]);
   });
 
   it("coerces lists and drops improvements without a suggestion", () => {
-    const a = sanitizeAnalysis({
-      overallScore: 70,
+    const a = sanitizeAiAnalysis({
+      scores,
       keyKeywords: [" React ", "", 42, "Next.js"],
       strengths: "not a list",
       improvements: [
@@ -85,10 +135,10 @@ describe("sanitizeContent", () => {
   it("sanitizes the combined parse + analysis response", () => {
     const r = sanitizeParsedResume({
       content: { personalDetails: { name: " Alex " } },
-      analysis: { overallScore: 81 },
+      analysis: { scores: { impact: 81, keywords: 70, clarity: 75 } },
     });
     expect(r.content.personalDetails?.name).toBe("Alex");
-    expect(r.analysis.overallScore).toBe(81);
+    expect(r.ai.scores.impact).toBe(81);
     expect(() => sanitizeParsedResume({ content: {} })).toThrow();
   });
 });

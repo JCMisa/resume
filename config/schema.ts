@@ -9,6 +9,7 @@ import {
   boolean,
   index,
 } from "drizzle-orm/pg-core";
+import type { ResumeAnalysisData } from "../lib/analysis-types";
 import {
   relations,
   type InferSelectModel,
@@ -102,21 +103,8 @@ export const resumes = pgTable("resumes", {
     .notNull(),
 
   // Store Gemini's direct resume analysis, grading flags, and tips (Nullable if manual build)
-  analysis: jsonb("analysis").$type<{
-    overallScore: number;
-    readability: string;
-    keyKeywords: string[];
-    summary: string;
-    strengths: string[];
-    weaknesses: string[];
-    improvements: {
-      section: string;
-      current: string;
-      suggested: string;
-      reason: string;
-    }[];
-    gapsDetected: string[];
-  }>(),
+  // Shape (v1 + optional v2 fields) lives in lib/analysis-types.ts
+  analysis: jsonb("analysis").$type<ResumeAnalysisData>(),
 
   isDefault: boolean("is_default").default(false),
   templateId: text("template_id").default("modern"),

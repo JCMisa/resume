@@ -2,6 +2,15 @@
 // Never trust the model's output shape: coerce every field to the jsonb types
 // in config/schema.ts and add the ids + section order the editor needs.
 import type { Resume } from "@/config/schema";
+import type {
+  BulletAuditItem,
+  BulletRating,
+  Position,
+  RedFlag,
+  RedFlagType,
+  Seniority,
+  SkillsBreakdown,
+} from "@/lib/analysis-types";
 
 export type ResumeContent = Resume["content"];
 export type ResumeAnalysis = NonNullable<Resume["analysis"]>;
@@ -29,17 +38,82 @@ const links = (v: unknown) =>
     .filter((l) => l.url);
 const newId = () => globalThis.crypto.randomUUID();
 
-export function sanitizeAnalysis(raw: unknown): ResumeAnalysis {
+// ── AI part of the analysis (v2) ────────────────────────────────────────────
+// Gemini supplies judgments; lib/resume-checks.ts adds the computed parts and
+// the overall score (buildAnalysis).
+
+const READABILITY = ["Excellent", "Good", "Fair", "Needs Improvement"];
+const SENIORITY: Seniority[] = ["entry", "junior", "mid", "senior", "lead", "executive"];
+const BULLET_RATINGS: BulletRating[] = ["strong", "ok", "weak"];
+const RED_FLAG_TYPES: RedFlagType[] = ["spelling", "grammar", "tense", "pronoun", "email", "formatting", "other"];
+
+/** Output caps keep stored reports (and model output) bounded. */
+export const AI_LIMITS = {
+  keywords: 20,
+  listItems: 8,
+  improvements: 10,
+  bulletAudit: 20,
+  redFlags: 12,
+  skills: 20,
+  suggestedSkills: 8,
+} as const;
+
+const capped = (v: unknown, n: number) => texts(v).slice(0, n);
+const oneOf = <T extends string>(v: unknown, allowed: readonly T[], fallback: T): T => {
+  const t = text(v).toLowerCase();
+  return allowed.find((a) => a.toLowerCase() === t) ?? fallback;
+};
+const score = (v: unknown, name: string) => {
+  const n = Math.round(Number(v));
+  if (!Number.isFinite(n)) throw new Error(`Analysis is missing the ${name} score.`);
+  return Math.min(100, Math.max(0, n));
+};
+/** "YYYY-MM", "present", or "" (unknown). Accepts "YYYY" as January. */
+const ym = (v: unknown, allowPresent: boolean) => {
+  const t = text(v).toLowerCase();
+  if (allowPresent && /^(present|current|now)$/.test(t)) return "present";
+  const full = /^(\d{4})-(\d{1,2})$/.exec(t);
+  if (full && Number(full[2]) >= 1 && Number(full[2]) <= 12) {
+    return `${full[1]}-${full[2].padStart(2, "0")}`;
+  }
+  if (/^\d{4}$/.test(t)) return `${t}-01`;
+  return "";
+};
+
+export type AiAnalysis = {
+  readability: string;
+  keyKeywords: string[];
+  summary: string;
+  strengths: string[];
+  weaknesses: string[];
+  improvements: ResumeAnalysis["improvements"];
+  gapsDetected: string[];
+  scores: { impact: number; keywords: number; clarity: number };
+  bulletAudit: BulletAuditItem[];
+  redFlags: RedFlag[];
+  targetRole: string;
+  seniority: Seniority;
+  positions: Position[];
+  skills: SkillsBreakdown;
+  firstImpression: string;
+};
+
+export function sanitizeAiAnalysis(raw: unknown): AiAnalysis {
   const a = obj(raw);
-  const score = Math.round(Number(a.overallScore));
-  if (!Number.isFinite(score)) throw new Error("Analysis is missing an overall score.");
+  const s = obj(a.scores);
+  const skills = obj(a.skills);
   return {
-    overallScore: Math.min(100, Math.max(1, score)),
-    readability: text(a.readability) || "Good",
-    keyKeywords: texts(a.keyKeywords),
+    // Throws when a score is missing, so the call is retried rather than saved
+    scores: {
+      impact: score(s.impact, "impact"),
+      keywords: score(s.keywords, "keywords"),
+      clarity: score(s.clarity, "clarity"),
+    },
+    readability: oneOf(a.readability, READABILITY, "Good"),
+    keyKeywords: capped(a.keyKeywords, AI_LIMITS.keywords),
     summary: text(a.summary),
-    strengths: texts(a.strengths),
-    weaknesses: texts(a.weaknesses),
+    strengths: capped(a.strengths, AI_LIMITS.listItems),
+    weaknesses: capped(a.weaknesses, AI_LIMITS.listItems),
     improvements: list(a.improvements)
       .map((i) => ({
         section: text(i.section),
@@ -47,8 +121,44 @@ export function sanitizeAnalysis(raw: unknown): ResumeAnalysis {
         suggested: text(i.suggested),
         reason: text(i.reason),
       }))
-      .filter((i) => i.suggested),
-    gapsDetected: texts(a.gapsDetected),
+      .filter((i) => i.suggested)
+      .slice(0, AI_LIMITS.improvements),
+    gapsDetected: capped(a.gapsDetected, AI_LIMITS.listItems),
+    bulletAudit: list(a.bulletAudit)
+      .map((b) => {
+        const rating = oneOf(b.rating, BULLET_RATINGS, "ok");
+        return {
+          context: text(b.context),
+          text: text(b.text),
+          rating,
+          issues: capped(b.issues, 4),
+          rewrite: rating === "strong" ? "" : text(b.rewrite),
+        };
+      })
+      .filter((b) => b.text)
+      .slice(0, AI_LIMITS.bulletAudit),
+    redFlags: list(a.redFlags)
+      .map((f) => ({ type: oneOf(f.type, RED_FLAG_TYPES, "other"), text: text(f.text), fix: text(f.fix) }))
+      .filter((f) => f.text)
+      .slice(0, AI_LIMITS.redFlags),
+    targetRole: text(a.targetRole),
+    seniority: oneOf(a.seniority, SENIORITY, "mid"),
+    positions: list(a.positions)
+      .map((p) => ({
+        company: text(p.company),
+        title: text(p.title),
+        start: ym(p.start, false),
+        end: ym(p.end, true),
+      }))
+      .filter((p) => p.company || p.title)
+      .slice(0, 30),
+    skills: {
+      hard: capped(skills.hard, AI_LIMITS.skills),
+      soft: capped(skills.soft, AI_LIMITS.skills),
+      tools: capped(skills.tools, AI_LIMITS.skills),
+      suggested: capped(skills.suggested, AI_LIMITS.suggestedSkills),
+    },
+    firstImpression: text(a.firstImpression),
   };
 }
 
@@ -110,11 +220,11 @@ export function sanitizeContent(raw: unknown): ResumeContent {
   };
 }
 
-/** Combined parse + analysis response: { content, analysis }. */
+/** Combined parse + analysis response: { content, analysis } -> { content, ai }. */
 export function sanitizeParsedResume(raw: unknown) {
   const root = obj(raw);
   return {
     content: sanitizeContent(root.content),
-    analysis: sanitizeAnalysis(root.analysis),
+    ai: sanitizeAiAnalysis(root.analysis),
   };
 }
