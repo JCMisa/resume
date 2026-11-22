@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect } from "react";
-import axios from "axios";
 import { useUser } from "@clerk/nextjs";
 import { useUserStore } from "@/store/userStore";
 import { applyAccent } from "@/components/custom/AccentProvider";
@@ -21,11 +20,14 @@ export const UserStoreWatcher = () => {
     const fetchUser = async () => {
       try {
         setIsLoading(true);
-        const result = await axios.get("/api/users");
-        setUserDetails(result.data);
+        const res = await fetch("/api/users", { cache: "no-store" });
+        // fetch doesn't throw on HTTP errors (axios did), so check explicitly
+        if (!res.ok) throw new Error(`GET /api/users failed: ${res.status}`);
+        const data = await res.json(); // user row, or null right after sign-up
+        setUserDetails(data);
         // Cross-device sync: the accent saved on the account wins over this
         // device's local choice.
-        const saved = result.data?.themeAccent;
+        const saved = data?.themeAccent;
         if (isAccentId(saved) && saved !== readCurrentAccent()) {
           applyAccent(saved);
         }
