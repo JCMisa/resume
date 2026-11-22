@@ -117,7 +117,7 @@ export default async function ResumeDetailsPage({ params }: PageProps) {
   }, {});
 
   return (
-    <div className="min-h-screen bg-background p-4 lg:p-8 max-w-[1600px] mx-auto space-y-6">
+    <div className="min-h-screen w-full bg-background p-4 lg:p-8 max-w-[1600px] mx-auto space-y-6">
       {/* HEADER SECTION */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b pb-4">
         <div className="space-y-1">
