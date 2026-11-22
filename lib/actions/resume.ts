@@ -4,7 +4,7 @@
 import { auth } from "@clerk/nextjs/server";
 import { db } from "@/config/db";
 import { resumes, usageEvents } from "@/config/schema";
-import { and, eq } from "drizzle-orm";
+import { and, desc, eq, isNotNull, sql } from "drizzle-orm";
 import { enforceRateLimit } from "@/lib/arcjet";
 import { assertAllowed, toActionError } from "@/lib/billing-guard";
 import {
@@ -215,5 +215,38 @@ export async function updateResumeFileUrlAction(
         error.message ||
         "Failed to update file attachments inside the database.",
     };
+  }
+}
+
+export type RecentAnalysisItem = {
+  id: string;
+  title: string;
+  overallScore: number | null;
+  updatedAt: Date;
+};
+
+// The user's most recently analyzed resumes (newest first) for the Analyze page.
+// Only the score is pulled out of the analysis JSON, not the whole report.
+export async function listRecentAnalysesAction(limit = 10) {
+  try {
+    const { userId } = await auth();
+    if (!userId) throw new Error("Unauthorized.");
+
+    const data: RecentAnalysisItem[] = await db
+      .select({
+        id: resumes.id,
+        title: resumes.title,
+        overallScore: sql<number | null>`round((${resumes.analysis}->>'overallScore')::numeric)::int`,
+        updatedAt: resumes.updatedAt,
+      })
+      .from(resumes)
+      .where(and(eq(resumes.userId, userId), isNotNull(resumes.analysis)))
+      .orderBy(desc(resumes.updatedAt))
+      .limit(Math.min(Math.max(limit, 1), 30));
+
+    return { success: true as const, data };
+  } catch (error) {
+    console.error("Recent Analyses Failure:", error);
+    return { success: false as const, error: "Failed to load recent analyses." };
   }
 }

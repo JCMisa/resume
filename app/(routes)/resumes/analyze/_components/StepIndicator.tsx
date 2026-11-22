@@ -11,15 +11,15 @@ const StepIndicator = ({ currentStep }: { currentStep: ViewStep }) => {
   ];
 
   return (
-    <div className="flex items-center justify-center space-x-4 mb-12">
+    <div className="flex items-center gap-3 shrink-0">
       {steps.map((step, index) => (
         <React.Fragment key={step.id}>
           <div className="flex items-center gap-3">
             <div
               className={cn(
-                "h-10 w-10 rounded-full flex items-center justify-center border-2 transition-all duration-500",
+                "h-9 w-9 rounded-full flex items-center justify-center border-2 transition-all duration-500",
                 currentStep === step.id
-                  ? "border-primary bg-primary text-primary-foreground shadow-[0_0_15px_rgba(var(--primary),0.5)]"
+                  ? "border-primary bg-primary text-primary-foreground shadow-lg shadow-primary/30"
                   : steps.findIndex((s) => s.id === currentStep) > index
                     ? "border-primary bg-primary/20 text-primary"
                     : "border-muted text-muted-foreground",
@@ -29,7 +29,7 @@ const StepIndicator = ({ currentStep }: { currentStep: ViewStep }) => {
             </div>
             <span
               className={cn(
-                "text-sm font-bold tracking-tight hidden sm:block",
+                "text-xs font-bold tracking-tight hidden md:block",
                 currentStep === step.id
                   ? "text-foreground"
                   : "text-muted-foreground",
@@ -39,7 +39,7 @@ const StepIndicator = ({ currentStep }: { currentStep: ViewStep }) => {
             </span>
           </div>
           {index < steps.length - 1 && (
-            <div className="h-[2px] w-12 bg-muted rounded-full overflow-hidden">
+            <div className="h-[2px] w-10 bg-muted rounded-full overflow-hidden">
               <motion.div
                 initial={false}
                 animate={{ width: currentStep === "analysis" ? "100%" : "0%" }}

@@ -1,12 +1,18 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import React, { useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import { AnimatePresence } from "motion/react";
+import { FileSearch } from "lucide-react";
 import { toast } from "sonner";
 import UploadSection from "./_components/UploadSection";
 import AIAnalysisSection from "./_components/AIAnalysisSection";
 import StepIndicator from "./_components/StepIndicator";
+import AnalysisUsageCard, {
+  type AnalyzeUsage,
+} from "./_components/AnalysisUsageCard";
+import RecentAnalysesList, {
+  useRecentAnalyses,
+} from "./_components/RecentAnalysesList";
 import {
   analyzeAndStoreResumeAction,
   updateResumeFileUrlAction,
@@ -21,140 +27,168 @@ export type ProcessStage =
   | "idle"
   | "reading"
   | "extracting"
-  | "uploading_to_cloud" // ☁️ Added stage to track active Cloudinary pushes
+  | "uploading_to_cloud"
   | "ai_processing"
-  | "success"
+  | "success" // text extracted, ready to analyze
   | "error";
 export type ViewStep = "upload" | "analysis";
+export type ExtractInfo = { pages: number; words: number };
+
+const MAX_FILE_BYTES = 10 * 1024 * 1024;
+// Fewer readable characters than this means an image-only (scanned) PDF
+const MIN_TEXT_CHARS = 150;
+
+async function loadUsage(): Promise<AnalyzeUsage & { allowed: boolean }> {
+  const billing = await getUserBillingStatus();
+  return {
+    isPro: Boolean(billing?.isPro),
+    used: billing?.limits?.analyses ?? 0,
+    allowed: Boolean(billing?.allowed?.analyze),
+  };
+}
 
 const AnalyzeResumePage = () => {
   const [currentView, setCurrentView] = useState<ViewStep>("upload");
-  const [isDragging, setIsDragging] = useState(false);
   const [file, setFile] = useState<File | null>(null);
   const [stage, setStage] = useState<ProcessStage>("idle");
   const [progress, setProgress] = useState(0);
   const [statusMessage, setStatusMessage] = useState("");
   const [extractedText, setExtractedText] = useState("");
-  const [analysisResult, setAnalysisResult] = useState<any>(null);
+  const [info, setInfo] = useState<ExtractInfo | null>(null);
+  const [errorKind, setErrorKind] = useState<"scanned" | "unreadable" | null>(
+    null,
+  );
+  const [analysisResult, setAnalysisResult] = useState<Resume | null>(null);
   const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState(false);
+  const [usage, setUsage] = useState<
+    (AnalyzeUsage & { allowed: boolean }) | null
+  >(null);
 
-  // Initialize Cloudinary custom client-side hook
+  const recent = useRecentAnalyses();
   const { uploadDocument, progress: uploadProgress } = useCloudinaryUpload();
 
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  useEffect(() => {
+    let cancelled = false;
+    loadUsage().then((u) => !cancelled && setUsage(u));
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDragging(true);
+  const refreshUsage = () => {
+    loadUsage().then(setUsage);
   };
 
-  const handleDragLeave = () => {
-    setIsDragging(false);
+  const reset = () => {
+    setStage("idle");
+    setFile(null);
+    setExtractedText("");
+    setInfo(null);
+    setErrorKind(null);
+    setProgress(0);
+    setStatusMessage("");
   };
 
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDragging(false);
-    const droppedFile = e.dataTransfer.files[0];
-    if (droppedFile && droppedFile.type === "application/pdf") {
-      processPDFWithTierCheck(droppedFile);
-    } else {
-      toast.warning("Please upload a PDF file only.");
+  const fail = (kind: "scanned" | "unreadable", message: string) => {
+    setStage("error");
+    setErrorKind(kind);
+    setStatusMessage(message);
+  };
+
+  // Validate, check the plan allowance, then extract text in the browser
+  const handleFile = async (targetFile: File) => {
+    const isPdf =
+      targetFile.type === "application/pdf" || /\.pdf$/i.test(targetFile.name);
+    if (!isPdf) {
+      toast.warning("Please upload a PDF file.");
+      return;
     }
-  };
+    if (targetFile.size > MAX_FILE_BYTES) {
+      toast.warning("That file is over 10 MB. Try a smaller PDF.");
+      return;
+    }
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const selectedFile = e.target.files?.[0];
-    if (selectedFile) processPDFWithTierCheck(selectedFile);
-  };
-
-  // 🚀 TIER CHECK LAYER: Verifies access BEFORE kicking off pdf parsing engines
-  const processPDFWithTierCheck = async (targetFile: File) => {
-    const billing = await getUserBillingStatus();
-    if (!billing || !billing.allowed) return;
-    if (!billing.allowed.analyze) {
+    const current = await loadUsage();
+    setUsage(current);
+    if (!current.allowed) {
       setIsUpgradeModalOpen(true);
       return;
     }
-    processPDFFile(targetFile);
-  };
 
-  const processPDFFile = async (targetFile: File) => {
     setFile(targetFile);
+    setErrorKind(null);
+    setInfo(null);
+    setExtractedText("");
     setStage("reading");
     setProgress(15);
-    setStatusMessage("Reading your file safely...");
+    setStatusMessage("Opening your file…");
 
     try {
       const arrayBuffer = await targetFile.arrayBuffer();
       setProgress(35);
-      setStatusMessage("Warming up the parsing engine...");
+      setStatusMessage("Loading the PDF reader…");
 
       const pdfjs = await import("pdfjs-dist");
       pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
 
-      setProgress(55);
-      setStatusMessage("Analyzing document layout and columns...");
-
       const pdf = await pdfjs.getDocument({ data: arrayBuffer }).promise;
-
       setStage("extracting");
-      setProgress(70);
+      setProgress(55);
 
-      let textBuffer = "";
+      let text = "";
       const totalPages = pdf.numPages;
-
       for (let i = 1; i <= totalPages; i++) {
-        setStatusMessage(`Reading text from page ${i} of ${totalPages}...`);
+        setStatusMessage(`Reading page ${i} of ${totalPages}…`);
         const page = await pdf.getPage(i);
-        const textContent = await page.getTextContent();
-        const pageStrings = textContent.items.map((item: any) => item.str);
-        textBuffer += pageStrings.join(" ") + "\n";
-        setProgress(Math.floor(70 + (i / totalPages) * 20));
+        const content = await page.getTextContent();
+        text +=
+          content.items
+            .map((item) => ("str" in item ? item.str : ""))
+            .join(" ") + "\n";
+        setProgress(Math.floor(55 + (i / totalPages) * 35));
       }
 
-      setExtractedText(textBuffer.trim());
+      const clean = text.trim();
+      if (clean.replace(/\s/g, "").length < MIN_TEXT_CHARS) {
+        fail(
+          "scanned",
+          "We couldn't find selectable text. It's probably a scan or an image. Export it as a text PDF from Word or Google Docs, or build your resume in the editor.",
+        );
+        return;
+      }
+
+      setExtractedText(clean);
+      setInfo({
+        pages: totalPages,
+        words: clean.split(/\s+/).filter(Boolean).length,
+      });
       setProgress(90);
       setStage("success");
-      setStatusMessage("Awesome! Your resume text is ready. Let's analyze it.");
+      setStatusMessage("Text extracted. Ready to analyze.");
     } catch (error) {
       console.error("PDF Client Parsing Failure:", error);
-      setStage("error");
-      setStatusMessage(
-        "Oops! We couldn't read this PDF. Please check if the file is corrupted.",
+      fail(
+        "unreadable",
+        "The file may be corrupted or password-protected. Try re-exporting it as a PDF.",
       );
     }
   };
 
-  // Orchestrates dual cloud storage upload and Gemini text evaluation
-  const handleAIAnalysisInference = async () => {
-    // Double check constraints once more before invoking remote AI server credits
-    const billing = await getUserBillingStatus();
-    if (!billing || !billing.allowed || !billing.allowed.analyze) {
+  // AI analysis first, then archive the PDF (so rejected/failed runs leave no files)
+  const handleAnalyze = async () => {
+    if (!extractedText || !file) return;
+
+    const current = await loadUsage();
+    setUsage(current);
+    if (!current.allowed) {
       setIsUpgradeModalOpen(true);
       return;
     }
 
-    if (!extractedText || !file) {
-      toast.error(
-        "Text extraction failed. This PDF might be print-optimized or image-based.",
-        {
-          description:
-            "Try scanning a standard text-based PDF, or click 'Start Creating Your Resume' to input details directly!",
-          duration: 6000,
-        },
-      );
-      setStage("error");
-      setStatusMessage("Parsing failed: No readable text characters found.");
-      return;
-    }
-
     try {
-      // 1. AI analysis first: if it's rejected (plan limit / rate limit) or fails,
-      //    nothing has been uploaded yet, so no orphaned files in Cloudinary.
       setStage("ai_processing");
       setProgress(92);
-      setStatusMessage("AI is reviewing layout structure and keywords...");
+      setStatusMessage("Checking structure, keywords and impact…");
 
       const response = await analyzeAndStoreResumeAction(
         extractedText,
@@ -163,23 +197,21 @@ const AnalyzeResumePage = () => {
 
       if (!response.success) {
         setStage("success"); // keep the extracted text so they can retry
+        setStatusMessage("Text extracted. Ready to analyze.");
         if (isLimitReached(response)) {
+          refreshUsage();
           setIsUpgradeModalOpen(true);
         } else {
-          toast.error(response.error || "Generation pipeline error.");
+          toast.error(response.error || "The analysis failed. Please try again.");
         }
         return;
       }
 
-      // 2. Archive the original PDF and attach it to the saved resume.
-      //    A failure here is non-fatal: the analysis is already saved, and the
-      //    file can be attached later from the resume's detail page.
+      // Archive the original PDF. Non-fatal: the analysis is already saved.
       let savedResume: Resume = response.data;
       try {
         setStage("uploading_to_cloud");
-        setStatusMessage(
-          "Archiving resume document securely in cloud storage...",
-        );
+        setStatusMessage("Saving the original PDF to your account…");
         const cloudUpload = await uploadDocument(file);
         const attached = await updateResumeFileUrlAction(
           savedResume.id,
@@ -190,70 +222,92 @@ const AnalyzeResumePage = () => {
       } catch (uploadError) {
         console.error("PDF archive failed:", uploadError);
         toast.warning("Analysis saved, but the PDF couldn't be archived.", {
-          description:
-            "You can attach the file later from the resume's page.",
+          description: "You can attach the file later from the resume's page.",
         });
       }
 
       setProgress(100);
       setAnalysisResult(savedResume);
-      toast.success("Resume processed and saved successfully!");
+      toast.success("Resume analyzed and saved!");
       setCurrentView("analysis");
-    } catch (error: any) {
-      console.error("CRITICAL PIPELINE CRASH:", error);
-      setStage("error");
-      setStatusMessage(error.message || "AI could not finalize the check.");
-      toast.error(error.message || "Processing error execution failure.");
+      refreshUsage();
+      recent.reload();
+    } catch (error) {
+      console.error("Analysis pipeline crash:", error);
+      setStage("success");
+      setStatusMessage("Text extracted. Ready to analyze.");
+      toast.error("Something went wrong. Please try again.");
     }
   };
 
-  // The upload now runs after the AI step, so map its 0-100% into the last stretch of the bar
+  // The upload runs after the AI step: map its 0-100% into the last stretch
   const currentProgress =
     stage === "uploading_to_cloud"
       ? 92 + Math.round(uploadProgress * 0.08)
       : progress;
 
   return (
-    <div className="min-h-screen bg-background transition-colors duration-500 overflow-x-hidden overflow-y-auto no-scrollbar max-w-7xl mx-auto">
-      <section className="w-full px-6 py-8 lg:py-16 space-y-16">
+    <div className="w-full space-y-6 animate-in fade-in duration-500">
+      <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b pb-5">
+        <div className="flex items-center gap-3">
+          <div className="p-3 bg-primary/10 text-primary rounded-2xl border">
+            <FileSearch className="h-6 w-6" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-black tracking-tight">
+              AI Resume Analyzer
+            </h1>
+            <p className="text-sm text-muted-foreground mt-0.5">
+              Get an ATS score, keyword check and line-by-line rewrite
+              suggestions for your resume.
+            </p>
+          </div>
+        </div>
         <StepIndicator currentStep={currentView} />
+      </header>
 
-        <AnimatePresence mode="wait">
-          {currentView === "upload" ? (
-            <UploadSection
-              isDragging={isDragging}
-              onDragOver={handleDragOver}
-              onDragLeave={handleDragLeave}
-              onDrop={handleDrop}
-              fileInputRef={fileInputRef}
-              handleFileChange={handleFileChange}
-              stage={stage}
-              file={file}
-              statusMessage={statusMessage}
-              progress={currentProgress} // Bind the combined progress variable
-              onProceed={handleAIAnalysisInference}
-            />
-          ) : (
-            <AIAnalysisSection
-              data={analysisResult}
-              onBack={() => {
-                setCurrentView("upload");
-                setStage("idle");
-                setFile(null);
-                setExtractedText("");
-                setAnalysisResult(null);
-              }}
-            />
-          )}
-        </AnimatePresence>
-      </section>
+      <AnimatePresence mode="wait">
+        {currentView === "upload" ? (
+          <div
+            key="upload"
+            className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_400px] items-start"
+          >
+            <div className="min-w-0">
+              <UploadSection
+                stage={stage}
+                file={file}
+                info={info}
+                errorKind={errorKind}
+                statusMessage={statusMessage}
+                progress={currentProgress}
+                onFile={handleFile}
+                onProceed={handleAnalyze}
+                onReset={reset}
+              />
+            </div>
+            <aside className="space-y-6 min-w-0">
+              <AnalysisUsageCard usage={usage} />
+              <RecentAnalysesList items={recent.items} failed={recent.failed} />
+            </aside>
+          </div>
+        ) : (
+          <AIAnalysisSection
+            key="analysis"
+            data={analysisResult}
+            onBack={() => {
+              setCurrentView("upload");
+              setAnalysisResult(null);
+              reset();
+            }}
+          />
+        )}
+      </AnimatePresence>
 
-      {/* 🚀 Upgrade Modal Interceptor Activation Row */}
       <UpgradeModal
         isOpen={isUpgradeModalOpen}
         onClose={() => setIsUpgradeModalOpen(false)}
-        title="AI Optimization Limit Reached"
-        description={`Free plans include ${describeFreeLimit("analyze")}. Upgrade to Pro for unlimited resume auditing and optimization reports!`}
+        title="AI Analysis Limit Reached"
+        description={`Free plans include ${describeFreeLimit("analyze")}. Upgrade to Pro for unlimited resume analyses.`}
       />
     </div>
   );
