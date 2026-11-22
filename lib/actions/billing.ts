@@ -1,7 +1,7 @@
 "use server";
 
 import { auth, clerkClient } from "@clerk/nextjs/server";
-import { users, resumes, interviews, usageEvents } from "@/config/schema";
+import { users, interviews, usageEvents } from "@/config/schema";
 import { eq, and, gte, count, ne, or, isNull } from "drizzle-orm";
 import { db } from "@/config/db";
 import {
@@ -46,15 +46,16 @@ export async function getUserBillingStatus() {
             analyzeSince ? gte(usageEvents.createdAt, analyzeSince) : undefined,
           ),
         ),
-      // Manual builds only (status "created").
+      // Editor builds, from the usage log (survives deletion, so deleting
+      // and rebuilding can't reset the monthly allowance).
       db
         .select({ value: count() })
-        .from(resumes)
+        .from(usageEvents)
         .where(
           and(
-            eq(resumes.userId, userId),
-            eq(resumes.status, "created"),
-            resumeSince ? gte(resumes.createdAt, resumeSince) : undefined,
+            eq(usageEvents.userId, userId),
+            eq(usageEvents.kind, "resume_create"),
+            resumeSince ? gte(usageEvents.createdAt, resumeSince) : undefined,
           ),
         ),
       // Interviews this month, for the Pro fair-use cap.

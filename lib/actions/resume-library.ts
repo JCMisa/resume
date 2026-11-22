@@ -27,7 +27,7 @@ export async function getResumeLibraryAction() {
       Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - (ACTIVITY_MONTHS - 1), 1),
     );
 
-    const [rows, analysisEvents] = await Promise.all([
+    const [rows, events] = await Promise.all([
       db
         .select({
           id: resumes.id,
@@ -43,17 +43,23 @@ export async function getResumeLibraryAction() {
         .from(resumes)
         .where(eq(resumes.userId, userId))
         .orderBy(desc(resumes.updatedAt)),
-      // All analysis events: dates the latest analysis per resume + monthly activity
+      // Usage log (analyses + builds): dates each resume's latest analysis and
+      // drives monthly activity, including resumes that were later deleted
       db
-        .select({ resumeId: usageEvents.resumeId, createdAt: usageEvents.createdAt })
+        .select({
+          kind: usageEvents.kind,
+          resumeId: usageEvents.resumeId,
+          createdAt: usageEvents.createdAt,
+        })
         .from(usageEvents)
-        .where(
-          and(
-            eq(usageEvents.userId, userId),
-            eq(usageEvents.kind, "resume_analysis"),
-          ),
-        ),
+        .where(eq(usageEvents.userId, userId)),
     ]);
+
+    const analysisEvents = events.filter((e) => e.kind === "resume_analysis");
+    const recent = (kind: (typeof events)[number]["kind"]) =>
+      events
+        .filter((e) => e.kind === kind && e.createdAt >= activitySince)
+        .map((e) => e.createdAt);
 
     const lastAnalyzed = new Map<string, Date>();
     for (const e of analysisEvents) {
@@ -73,10 +79,8 @@ export async function getResumeLibraryAction() {
         trend: scoreTrend(items),
         distribution: scoreDistribution(items),
         activity: monthlyActivity(
-          analysisEvents
-            .map((e) => e.createdAt)
-            .filter((d) => d >= activitySince),
-          rows.filter((r) => r.status === "created").map((r) => r.createdAt),
+          recent("resume_analysis"),
+          recent("resume_create"),
           ACTIVITY_MONTHS,
           now,
         ),

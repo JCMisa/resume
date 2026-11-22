@@ -22,7 +22,8 @@ export async function analyzeAndStoreResumeAction(
   try {
     const { userId } = await auth();
     if (!userId) throw new Error("Unauthorized access configuration.");
-    if (!rawText?.trim()) throw new Error("No readable text was found in this resume.");
+    if (!rawText?.trim())
+      throw new Error("No readable text was found in this resume.");
 
     // Plan limit first, so blocked requests don't consume rate-limit tokens
     const billing = await assertAllowed("analyze");
@@ -162,18 +163,27 @@ export async function createManualResumeAction(payload: {
 
     await assertAllowed("create_resume");
 
-    const [newRecord] = await db
-      .insert(resumes)
-      .values({
-        userId: userId,
-        title: payload.title || "Untitled Form Resume",
-        category: payload.category || "General",
-        // fileUrl block remains null initially since this is a manual form creation flow without file upload
-        status: "created", // Tags this item explicitly as a custom built form
-        content: payload.content, // Injects your nested structural forms state arrays
-        // Analysis block remains undefined initially until they trigger an explicit AI review request
-      })
-      .returning();
+    // Insert the resume and log the build atomically (the log is what the
+    // monthly limit counts, so deleting a resume doesn't give a build back)
+    const resumeId = globalThis.crypto.randomUUID();
+    const [[newRecord]] = await db.batch([
+      db
+        .insert(resumes)
+        .values({
+          id: resumeId,
+          userId: userId,
+          title: payload.title || "Untitled Form Resume",
+          category: payload.category || "General",
+          // fileUrl block remains null initially since this is a manual form creation flow without file upload
+          status: "created", // Tags this item explicitly as a custom built form
+          content: payload.content, // Injects your nested structural forms state arrays
+          // Analysis block remains undefined initially until they trigger an explicit AI review request
+        })
+        .returning(),
+      db
+        .insert(usageEvents)
+        .values({ userId, kind: "resume_create", resumeId }),
+    ]);
 
     return { success: true as const, data: newRecord };
   } catch (error) {
@@ -236,7 +246,9 @@ export async function listRecentAnalysesAction(limit = 10) {
       .select({
         id: resumes.id,
         title: resumes.title,
-        overallScore: sql<number | null>`round((${resumes.analysis}->>'overallScore')::numeric)::int`,
+        overallScore: sql<
+          number | null
+        >`round((${resumes.analysis}->>'overallScore')::numeric)::int`,
         updatedAt: resumes.updatedAt,
       })
       .from(resumes)
@@ -247,6 +259,9 @@ export async function listRecentAnalysesAction(limit = 10) {
     return { success: true as const, data };
   } catch (error) {
     console.error("Recent Analyses Failure:", error);
-    return { success: false as const, error: "Failed to load recent analyses." };
+    return {
+      success: false as const,
+      error: "Failed to load recent analyses.",
+    };
   }
 }

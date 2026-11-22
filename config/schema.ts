@@ -22,7 +22,10 @@ export const interviewStatusEnum = pgEnum("interview_status", [
   "failed",
 ]);
 export const resumeStatusEnum = pgEnum("resume_status", ["parsed", "created"]);
-export const usageKindEnum = pgEnum("usage_kind", ["resume_analysis"]);
+export const usageKindEnum = pgEnum("usage_kind", [
+  "resume_analysis", // AI analysis (new upload or re-analysis)
+  "resume_create", // resume built in the editor
+]);
 
 // USERS
 export const users = pgTable("users", {
