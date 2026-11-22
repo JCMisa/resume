@@ -9,6 +9,7 @@ import {
 } from "@clerk/nextjs";
 import { useEffect, useState } from "react";
 import ProfilePersonalization from "./ProfilePersonalization";
+import SecuritySettings from "./SecuritySettings";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   User,
@@ -38,10 +39,10 @@ import {
 
 type TabId = "profile" | "security" | "notifications" | "billing";
 
-// Tabs that can actually be opened (incl. via ?tab=). Security and Notifications
-// are placeholder UIs for now, so they're shown disabled with a "Coming soon"
-// tooltip and links to them fall back to Profile.
-const AVAILABLE_TABS: TabId[] = ["profile", "billing"];
+// Tabs that can actually be opened (incl. via ?tab=). Notifications is still a
+// placeholder UI, so it is shown disabled with a "Coming soon" tooltip and
+// ?tab=notifications falls back to Profile.
+const AVAILABLE_TABS: TabId[] = ["profile", "security", "billing"];
 
 interface NavItem {
   id: TabId;
@@ -211,7 +212,6 @@ export default function SettingsClientLayout({
       label: "Security",
       icon: Shield,
       description: "Passwords & 2-factor auth",
-      comingSoon: true, // static placeholder content for now
     },
     {
       id: "notifications",
@@ -226,17 +226,6 @@ export default function SettingsClientLayout({
       icon: CreditCard,
       description: "Plans & payment methods",
     },
-  ];
-
-  const securityItems = [
-    { label: "Change Password", value: "Last updated 3 months ago" },
-    {
-      label: "Two-Factor Authentication",
-      value: "SMS or authenticator app",
-      toggle: true,
-    },
-    { label: "Active Sessions", value: "2 devices currently signed in" },
-    { label: "Connected Accounts", value: "Google — connected" },
   ];
 
   const notifItems = [
@@ -277,12 +266,7 @@ export default function SettingsClientLayout({
     } | null
   > = {
     profile: null,
-    security: {
-      icon: Shield,
-      title: "Security",
-      description: "Keep your account safe and your sessions secure.",
-      items: securityItems,
-    },
+    security: null, // real panel: SecuritySettings
     notifications: {
       icon: Bell,
       title: "Notifications",
@@ -293,9 +277,12 @@ export default function SettingsClientLayout({
   };
 
   return (
-    <main className="min-h-screen w-full bg-stone-50 dark:bg-stone-950 text-stone-900 dark:text-stone-100">
+    // On lg+ the page fills the available height and each column scrolls on its
+    // own: the left nav + usage cards stay put, only the right panel scrolls.
+    // Below lg the columns stack and the page scrolls normally.
+    <main className="min-h-full w-full flex flex-col lg:h-full lg:overflow-hidden bg-stone-50 dark:bg-stone-950 text-stone-900 dark:text-stone-100">
       {/* Top bar */}
-      <div className="border-b border-stone-100 dark:border-stone-800/60 bg-white/80 dark:bg-stone-900/60 backdrop-blur-xl sticky top-0 ">
+      <div className="shrink-0 border-b border-stone-100 dark:border-stone-800/60 bg-white/80 dark:bg-stone-900/60 backdrop-blur-xl sticky top-0 z-10">
         <div className="w-full px-5 sm:px-8 h-14 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
             <Image src="/logo.svg" alt="logo" width={22} height={22} />
@@ -323,10 +310,10 @@ export default function SettingsClientLayout({
         </div>
       </div>
 
-      <div className="w-full px-5 sm:px-8 py-10">
-        <div className="grid lg:grid-cols-[260px_1fr] gap-8 items-start">
-          {/* ── Left sidebar ─────────────────────────────────────────────── */}
-          <aside className="space-y-6">
+      <div className="flex-1 min-h-0 w-full px-5 sm:px-8 pt-8 lg:pb-0 pb-10">
+        <div className="grid lg:grid-cols-[260px_1fr] lg:grid-rows-[minmax(0,1fr)] lg:h-full gap-8 items-start lg:items-stretch">
+          {/* ── Left sidebar (fixed; scrolls only if the window is too short) ── */}
+          <aside className="space-y-6 lg:min-h-0 lg:overflow-y-auto custom-scrollbar lg:pb-8">
             <motion.div
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
@@ -458,8 +445,8 @@ export default function SettingsClientLayout({
             </div>
           </aside>
 
-          {/* ── Right panel ──────────────────────────────────────────────── */}
-          <div className="min-w-0">
+          {/* ── Right panel (the only part that scrolls) ─────────────────── */}
+          <div className="min-w-0 lg:min-h-0 lg:overflow-y-auto custom-scrollbar lg:pr-2 lg:pb-8">
             <AnimatePresence mode="wait">
               <motion.div
                 key={activeTab}
@@ -470,6 +457,8 @@ export default function SettingsClientLayout({
               >
                 {activeTab === "profile" ? (
                   <ProfilePersonalization />
+                ) : activeTab === "security" ? (
+                  <SecuritySettings />
                 ) : activeTab === "billing" ? (
                   <div className="rounded-2xl border border-stone-100 dark:border-stone-800 bg-white dark:bg-stone-900 shadow-sm p-6 space-y-6">
                     <div className="flex items-start gap-4 pb-6 border-b border-stone-100 dark:border-stone-800">
