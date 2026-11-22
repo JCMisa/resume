@@ -17,6 +17,8 @@ import {
   hasCandidateAnswers,
   parseInterviewGrade,
 } from "@/lib/interview";
+import { notifyLater } from "@/lib/notify";
+import { gradingFailedNotice, interviewGradedNotice } from "@/lib/notifications";
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
@@ -116,9 +118,11 @@ export async function compileInterviewEvaluationAction(
       );
 
     try {
-      await gradeInterview(session, userId, finalTranscript);
+      const score = await gradeInterview(session, userId, finalTranscript);
+      notifyLater(userId, interviewGradedNotice(session, score));
     } catch (gradingError) {
       console.error("Interview Grading Failed (transcript saved):", gradingError);
+      notifyLater(userId, gradingFailedNotice(session));
       return {
         success: false as const,
         code: GRADING_FAILED,
@@ -160,7 +164,8 @@ export async function retryInterviewGradingAction(sessionId: string) {
     // Cheap Gemini call, but still cap rapid retry spam
     await enforceRateLimit("grading", userId, true);
 
-    await gradeInterview(session, userId, session.transcript!);
+    const score = await gradeInterview(session, userId, session.transcript!);
+    notifyLater(userId, interviewGradedNotice(session, score));
     return { success: true as const };
   } catch (error) {
     console.error("Interview Grading Retry Failed:", error);
@@ -259,6 +264,7 @@ async function gradeInterview(
       .where(and(eq(interviews.id, session.id), eq(interviews.userId, userId))),
     db.insert(interviewResults).values({ interviewId: session.id, ...grade }),
   ]);
+  return grade.overallScore;
 }
 
 // 3. Cancel a session that never really happened (connection failure, no answers,

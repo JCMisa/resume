@@ -11,6 +11,20 @@ const nextConfig: NextConfig = {
       bodySizeLimit: "4mb",
     },
   },
+  async headers() {
+    return [
+      {
+        // Service worker (device notifications): always fetch the latest, and
+        // only allow it to load our own scripts
+        source: "/sw.js",
+        headers: [
+          { key: "Content-Type", value: "application/javascript; charset=utf-8" },
+          { key: "Cache-Control", value: "no-cache, no-store, must-revalidate" },
+          { key: "Content-Security-Policy", value: "default-src 'self'; script-src 'self'" },
+        ],
+      },
+    ];
+  },
   images: {
     // Only hosts we actually serve through next/image. A wildcard here would let
     // anyone use our image optimizer as a free proxy for arbitrary URLs.

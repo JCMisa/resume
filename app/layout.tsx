@@ -8,6 +8,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { ClerkProvider } from "@clerk/nextjs";
 import { shadcn } from "@clerk/ui/themes";
 import { UserStoreWatcher } from "@/providers/UserStoreWatcher";
+import { PushSessionGuard } from "@/providers/PushSessionGuard";
 import { accentBootScript, accentCss } from "@/lib/accents";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
@@ -34,6 +35,10 @@ export const metadata: Metadata = {
     "Professional CV Maker",
   ],
   authors: [{ name: "John Carlo S. Misa" }],
+  // Installed app (Add to Home Screen): needed for device notifications on iOS
+  applicationName: "ResuMe",
+  appleWebApp: { capable: true, title: "ResuMe", statusBarStyle: "black-translucent" },
+  icons: { apple: "/apple-touch-icon.png" },
 };
 
 export default function RootLayout({
@@ -71,6 +76,7 @@ export default function RootLayout({
           >
             <TooltipProvider>
               <UserStoreWatcher />
+              <PushSessionGuard />
               {children}
             </TooltipProvider>
             <Toaster />

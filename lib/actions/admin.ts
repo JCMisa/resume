@@ -21,6 +21,8 @@ import {
   type Role,
 } from "@/lib/admin";
 import { startOfMonthUTC } from "@/lib/plans";
+import { notifyLater } from "@/lib/notify";
+import { adminRoleNotice } from "@/lib/notifications";
 
 // Admin-only actions. Server actions are callable straight from the browser,
 // so every one re-checks the caller's role in the DB (requireAdmin) first.
@@ -186,6 +188,7 @@ export async function setUserRoleAction(targetId: unknown, nextRole: unknown) {
 
     // Ids only (no emails) in logs
     console.info(`Admin role change: ${adminId} set ${targetId} to ${role}`);
+    notifyLater(targetId, adminRoleNotice(role === "admin"));
     revalidatePath("/admin");
     return { success: true as const, data: { id: updated.id, role: normalizeRole(updated.role) } };
   } catch (error) {

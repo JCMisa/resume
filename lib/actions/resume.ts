@@ -16,6 +16,8 @@ import {
 import { SCANNED_PDF_MAX_BYTES, isPdfBytes } from "@/lib/resume-text";
 import { gateResume } from "@/lib/plan-gating";
 import { currentUserIsPro } from "@/lib/plan-tier";
+import { notifyLater, notifyUsageLater } from "@/lib/notify";
+import { analysisReadyNotice } from "@/lib/notifications";
 
 // The original PDF is uploaded by the client only AFTER this succeeds, then attached
 // with updateResumeFileUrlAction, so rejected/failed analyses leave no orphaned files.
@@ -45,6 +47,8 @@ export async function analyzeAndStoreResumeAction(
     }
 
     const insertedResume = await storeParsedResume(userId, fileName, parsed);
+    notifyLater(userId, analysisReadyNotice(insertedResume));
+    notifyUsageLater(userId, "analyze", billing);
 
     // Free users get the Free view of the report (Pro parts stay server-side)
     return { success: true as const, data: gateResume(insertedResume, billing.isPro) };
@@ -116,6 +120,8 @@ export async function analyzeScannedResumeAction(formData: FormData) {
     }
 
     const insertedResume = await storeParsedResume(userId, file.name || "Scanned resume", parsed);
+    notifyLater(userId, analysisReadyNotice(insertedResume));
+    notifyUsageLater(userId, "analyze", billing);
     return { success: true as const, data: gateResume(insertedResume, billing.isPro) };
   } catch (error) {
     console.error("Scanned Resume Pipeline Failure:", error);
@@ -162,6 +168,9 @@ export async function analyzeExistingResumeAction(resumeId: string) {
         .insert(usageEvents)
         .values({ userId, kind: "resume_analysis", resumeId }),
     ]);
+
+    notifyLater(userId, analysisReadyNotice(updatedResume));
+    notifyUsageLater(userId, "analyze", billing);
 
     return { success: true as const, data: gateResume(updatedResume, billing.isPro) };
   } catch (error) {
@@ -219,7 +228,7 @@ export async function createManualResumeAction(payload: {
     const { userId } = await auth();
     if (!userId) throw new Error("Unauthorized access profile configuration.");
 
-    await assertAllowed("create_resume");
+    const billing = await assertAllowed("create_resume");
 
     // Insert the resume and log the build atomically (the log is what the
     // monthly limit counts, so deleting a resume doesn't give a build back)
@@ -242,6 +251,8 @@ export async function createManualResumeAction(payload: {
         .insert(usageEvents)
         .values({ userId, kind: "resume_create", resumeId }),
     ]);
+
+    notifyUsageLater(userId, "create_resume", billing);
 
     return { success: true as const, data: newRecord };
   } catch (error) {

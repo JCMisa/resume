@@ -10,6 +10,7 @@ import {
 import { useEffect, useState } from "react";
 import ProfilePersonalization from "./ProfilePersonalization";
 import SecuritySettings from "./SecuritySettings";
+import NotificationSettings from "./NotificationSettings";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   User,
@@ -17,7 +18,6 @@ import {
   Bell,
   CreditCard,
   LogOut,
-  ChevronRight,
   FileText,
   Mic,
   Target,
@@ -40,10 +40,9 @@ import {
 
 type TabId = "profile" | "security" | "notifications" | "billing";
 
-// Tabs that can actually be opened (incl. via ?tab=). Notifications is still a
-// placeholder UI, so it is shown disabled with a "Coming soon" tooltip and
-// ?tab=notifications falls back to Profile.
-const AVAILABLE_TABS: TabId[] = ["profile", "security", "billing"];
+// Tabs that can actually be opened (incl. via ?tab=). A tab marked comingSoon
+// is shown disabled with a "Coming soon" tooltip.
+const AVAILABLE_TABS: TabId[] = ["profile", "security", "notifications", "billing"];
 
 interface NavItem {
   id: TabId;
@@ -91,80 +90,6 @@ function StatCard({
           {value}
         </p>
         <p className="text-[10px] text-stone-400 mt-0.5">{sub}</p>
-      </div>
-    </div>
-  );
-}
-
-function PlaceholderPanel({
-  icon: Icon,
-  title,
-  description,
-  items,
-}: {
-  icon: React.ElementType;
-  title: string;
-  description: string;
-  items: { label: string; value: string; toggle?: boolean }[];
-}) {
-  const [toggles, setToggles] = useState<Record<string, boolean>>(
-    Object.fromEntries(
-      items.filter((i) => i.toggle).map((i) => [i.label, true]),
-    ),
-  );
-
-  return (
-    <div className="space-y-6">
-      <div className="flex items-start gap-4 pb-6 border-b border-stone-100 dark:border-stone-800">
-        <div className="w-10 h-10 rounded-xl bg-brand/10 border border-brand/15 flex items-center justify-center flex-shrink-0">
-          <Icon className="w-5 h-5 text-brand-strong dark:text-brand" />
-        </div>
-        <div>
-          <h2 className="text-lg font-black text-stone-900 dark:text-stone-100 mb-0.5 tracking-tight">
-            {title}
-          </h2>
-          <p className="text-sm text-stone-500 dark:text-stone-400">
-            {description}
-          </p>
-        </div>
-      </div>
-
-      <div className="space-y-2">
-        {items.map((item) => (
-          <div
-            key={item.label}
-            className="flex items-center justify-between p-4 rounded-xl bg-stone-50 dark:bg-stone-800/40 border border-stone-100 dark:border-stone-700/40 hover:bg-white dark:hover:bg-stone-800 transition-colors group"
-          >
-            <div>
-              <p className="text-sm font-semibold text-stone-800 dark:text-stone-200">
-                {item.label}
-              </p>
-              <p className="text-[11px] text-stone-400 mt-0.5">{item.value}</p>
-            </div>
-            {item.toggle ? (
-              <button
-                onClick={() =>
-                  setToggles((p) => ({ ...p, [item.label]: !p[item.label] }))
-                }
-                className={`relative w-10 h-5.5 rounded-full transition-colors flex-shrink-0 ${
-                  toggles[item.label]
-                    ? "bg-brand"
-                    : "bg-stone-200 dark:bg-stone-700"
-                }`}
-                style={{ height: "22px", width: "40px" }}
-                aria-label={`Toggle ${item.label}`}
-              >
-                <span
-                  className={`absolute top-0.5 left-0.5 w-[18px] h-[18px] rounded-full bg-white shadow-sm transition-transform ${
-                    toggles[item.label] ? "translate-x-[18px]" : "translate-x-0"
-                  }`}
-                />
-              </button>
-            ) : (
-              <ChevronRight className="w-4 h-4 text-stone-300 dark:text-stone-600 group-hover:text-stone-400 transition-colors" />
-            )}
-          </div>
-        ))}
       </div>
     </div>
   );
@@ -219,8 +144,7 @@ export default function SettingsClientLayout({
       id: "notifications",
       label: "Notifications",
       icon: Bell,
-      description: "Email & in-app alerts",
-      comingSoon: true, // static placeholder content for now
+      description: "In-app & device alerts",
     },
     {
       id: "billing",
@@ -229,54 +153,6 @@ export default function SettingsClientLayout({
       description: "Plans & payment methods",
     },
   ];
-
-  const notifItems = [
-    {
-      label: "Resume Analysis Complete",
-      value: "Get notified when AI finishes auditing",
-      toggle: true,
-    },
-    {
-      label: "Interview Session Summary",
-      value: "Receive your session score report",
-      toggle: true,
-    },
-    {
-      label: "Weekly Progress Digest",
-      value: "Summary of your activity each week",
-      toggle: false,
-    },
-    {
-      label: "Product Updates",
-      value: "New features & improvements",
-      toggle: true,
-    },
-    {
-      label: "Marketing Emails",
-      value: "Tips, guides, and career resources",
-      toggle: false,
-    },
-  ];
-
-  const panelContent: Record<
-    TabId,
-    {
-      icon: React.ElementType;
-      title: string;
-      description: string;
-      items: { label: string; value: string; toggle?: boolean }[];
-    } | null
-  > = {
-    profile: null,
-    security: null, // real panel: SecuritySettings
-    notifications: {
-      icon: Bell,
-      title: "Notifications",
-      description: "Choose what activity triggers an alert.",
-      items: notifItems,
-    },
-    billing: null,
-  };
 
   return (
     // On lg+ the page fills the available height and each column scrolls on its
@@ -468,7 +344,9 @@ export default function SettingsClientLayout({
                   <ProfilePersonalization />
                 ) : activeTab === "security" ? (
                   <SecuritySettings />
-                ) : activeTab === "billing" ? (
+                ) : activeTab === "notifications" ? (
+                  <NotificationSettings />
+                ) : (
                   <div className="rounded-2xl border border-stone-100 dark:border-stone-800 bg-white dark:bg-stone-900 shadow-sm p-6 space-y-6">
                     <div className="flex items-start gap-4 pb-6 border-b border-stone-100 dark:border-stone-800">
                       <div className="w-10 h-10 rounded-xl bg-brand/10 border border-brand/15 flex items-center justify-center flex-shrink-0">
@@ -489,12 +367,6 @@ export default function SettingsClientLayout({
                     <div className="clerk-pricing-embedded-container">
                       <PricingTable />
                     </div>
-                  </div>
-                ) : (
-                  <div className="rounded-2xl border border-stone-100 dark:border-stone-800 bg-white dark:bg-stone-900 shadow-sm p-6">
-                    {panelContent[activeTab] && (
-                      <PlaceholderPanel {...panelContent[activeTab]!} />
-                    )}
                   </div>
                 )}
               </motion.div>

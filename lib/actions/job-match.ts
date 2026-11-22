@@ -4,6 +4,8 @@ import { auth } from "@clerk/nextjs/server";
 import { and, desc, eq } from "drizzle-orm";
 import { db } from "@/config/db";
 import { jobMatches, resumes, usageEvents } from "@/config/schema";
+import { notifyLater, notifyUsageLater } from "@/lib/notify";
+import { jobMatchReadyNotice } from "@/lib/notifications";
 import { assertAllowed, toActionError } from "@/lib/billing-guard";
 import { enforceRateLimit } from "@/lib/arcjet";
 import { matchResumeToJob } from "@/lib/job-match-ai";
@@ -87,6 +89,9 @@ export async function createJobMatchAction(
         .returning(),
       db.insert(usageEvents).values({ userId, kind: "job_match", resumeId }),
     ]);
+
+    notifyLater(userId, jobMatchReadyNotice(match));
+    notifyUsageLater(userId, "job_match", billing);
 
     // Free users get the Free view (tailored summary/bullets stay server-side)
     return {

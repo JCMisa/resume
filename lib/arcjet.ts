@@ -29,6 +29,11 @@ export const RATE_LIMITS = {
   grading: {
     pro: { capacity: 3, refillRate: 10, interval: "1h" },
   },
+  // "Send test notification" in Settings: free to send, but don't let a
+  // script flood a user's own devices. Same for every user.
+  push_test: {
+    pro: { capacity: 5, refillRate: 5, interval: "1h" },
+  },
 } as const;
 
 export type RateLimitedFeature = keyof typeof RATE_LIMITS;
@@ -68,6 +73,9 @@ const limiters = {
   },
   grading: {
     pro: bucket(RATE_LIMITS.grading.pro),
+  },
+  push_test: {
+    pro: bucket(RATE_LIMITS.push_test.pro),
   },
 };
 

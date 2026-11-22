@@ -4,6 +4,8 @@ import { WebhookEvent } from "@clerk/nextjs/server";
 import { db } from "@/config/db";
 import { users } from "@/config/schema";
 import { eq } from "drizzle-orm";
+import { notifyLater } from "@/lib/notify";
+import { welcomeNotice } from "@/lib/notifications";
 
 export async function POST(req: Request) {
   const WEBHOOK_SECRET = process.env.CLERK_WEBHOOK_SECRET;
@@ -96,6 +98,8 @@ export async function POST(req: Request) {
         console.log(
           `✅ User: ${id} ${eventType === "user.created" ? "created" : "updated"}`,
         );
+        // Once per user (dedupe key), even if Clerk retries the webhook
+        if (eventType === "user.created") notifyLater(id, welcomeNotice(first_name));
         break;
       }
 

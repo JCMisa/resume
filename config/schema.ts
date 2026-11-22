@@ -8,9 +8,15 @@ import {
   pgEnum,
   boolean,
   index,
+  uniqueIndex,
 } from "drizzle-orm/pg-core";
 import type { ResumeAnalysisData } from "../lib/analysis-types";
 import type { JobMatchData } from "../lib/job-match";
+import type {
+  NotificationCategory,
+  NotificationKind,
+  NotificationPrefs,
+} from "../lib/notifications";
 import {
   relations,
   type InferSelectModel,
@@ -39,6 +45,9 @@ export const users = pgTable("users", {
   role: roleEnum("role").default("user"),
   // App accent color theme (see lib/accents.ts); null = default
   themeAccent: text("theme_accent"),
+  // Per-category in-app / device notification switches (lib/notifications.ts);
+  // null = defaults (everything on)
+  notificationPrefs: jsonb("notification_prefs").$type<NotificationPrefs>(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
@@ -191,6 +200,51 @@ export const jobMatches = pgTable(
     createdAt: timestamp("created_at").defaultNow().notNull(),
   },
   (t) => [index("job_matches_resume_idx").on(t.resumeId, t.createdAt)],
+);
+
+// NOTIFICATIONS (in-app bell; also pushed to the user's devices)
+// kind/category are text (typed in TS) so adding a kind needs no enum migration.
+// Rows older than NOTIFICATION_RETENTION_DAYS are pruned when the list loads.
+export const notifications = pgTable(
+  "notifications",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: text("user_id")
+      .references(() => users.id, { onDelete: "cascade" })
+      .notNull(),
+    kind: text("kind").$type<NotificationKind>().notNull(),
+    category: text("category").$type<NotificationCategory>().notNull(),
+    title: text("title").notNull(),
+    body: text("body").notNull().default(""),
+    href: text("href"),
+    // Same key for the same user is stored (and pushed) only once
+    dedupeKey: text("dedupe_key"),
+    readAt: timestamp("read_at"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (t) => [
+    index("notifications_user_created_idx").on(t.userId, t.createdAt),
+    uniqueIndex("notifications_user_dedupe_idx").on(t.userId, t.dedupeKey),
+  ],
+);
+
+// PUSH SUBSCRIPTIONS (one row per browser/device that turned on device
+// notifications). The endpoint is unique: if another account turns push on in
+// the same browser, the row moves to that account.
+export const pushSubscriptions = pgTable(
+  "push_subscriptions",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: text("user_id")
+      .references(() => users.id, { onDelete: "cascade" })
+      .notNull(),
+    endpoint: text("endpoint").notNull().unique(),
+    p256dh: text("p256dh").notNull(),
+    auth: text("auth").notNull(),
+    label: text("label").notNull().default("Browser"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (t) => [index("push_subscriptions_user_idx").on(t.userId)],
 );
 
 /**

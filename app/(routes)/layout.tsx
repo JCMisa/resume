@@ -4,6 +4,7 @@ import { SidebarStateProvider } from "./_providers/SidebarStateProvider";
 import { AppSidebar } from "./_components/AppSidebar";
 import Greeting from "./_components/Greeting";
 import { ThemeToggler } from "@/components/custom/ThemeToggler";
+import { NotificationBell } from "@/components/custom/notifications/NotificationBell";
 import { SearchIcon } from "lucide-react";
 import { getCurrentUser } from "@/lib/actions/user";
 import { SidebarFallback } from "./_components/SidebarFallback";
@@ -38,7 +39,7 @@ const RoutesLayout = async ({
               <Greeting />
             </div>
 
-            <div className="flex items-center gap-6">
+            <div className="flex items-center gap-3 sm:gap-6">
               {/* Search Element Block */}
               <div className="border w-64 h-8 rounded-lg hidden sm:flex items-center justify-start gap-2 relative bg-muted/20">
                 <SearchIcon className="size-[13px] absolute top-[9px] left-3 cursor-pointer text-muted-foreground" />
@@ -49,7 +50,8 @@ const RoutesLayout = async ({
                 />
               </div>
 
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <NotificationBell />
                 <ThemeToggler />
                 {/* Profile, billing shortcut and sign out */}
                 <UserButtonClient />
