@@ -10,10 +10,8 @@ import {
   FileText,
   Briefcase,
   GraduationCap,
-  Sparkles,
   AlertTriangle,
   Award,
-  CheckCircle2Icon,
   Globe,
   Code,
   FolderGit2,
@@ -23,6 +21,7 @@ import { getResumeDetailsAction } from "@/lib/actions/resume";
 import ResumeFileViewer from "../_components/ResumeFileViewer";
 import AnalyzeResumeButton from "../_components/AnalyzeResumeButton";
 import ResumeFileUploader from "../_components/ResumeFileUploader";
+import AnalysisReport from "../_components/report/AnalysisReport";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -72,21 +71,6 @@ interface ResumeContent {
   sectionOrder?: string[];
 }
 
-interface ResumeAnalysis {
-  overallScore?: number;
-  readability?: string;
-  keyKeywords?: string[];
-  summary?: string;
-  strengths?: string[];
-  weaknesses?: string[];
-  improvements?: {
-    section: string;
-    current: string;
-    suggested: string;
-    reason: string;
-  }[];
-  gapsDetected?: string[];
-}
 
 export default async function ResumeDetailsPage({ params }: PageProps) {
   const { id: resumeId } = await params;
@@ -114,13 +98,7 @@ export default async function ResumeDetailsPage({ params }: PageProps) {
 
   // Extract typecast fields with explicit array fallbacks
   const content = (result.data.content as ResumeContent) || {};
-  const analysis = (result.data.analysis as ResumeAnalysis) || {};
-
-  const strengths = analysis.strengths || [];
-  const weaknesses = analysis.weaknesses || [];
-  const improvements = analysis.improvements || [];
-  const keyKeywords = analysis.keyKeywords || [];
-  const gapsDetected = analysis.gapsDetected || [];
+  const analysis = result.data.analysis ?? null;
 
   const personalDetails = content.personalDetails || {};
   const personalLinks = personalDetails.links || [];
@@ -144,11 +122,11 @@ export default async function ResumeDetailsPage({ params }: PageProps) {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b pb-4">
         <div className="space-y-1">
           <Link
-            href="/dashboard"
+            href="/resumes"
             className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors group mb-1"
           >
             <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-1" />
-            Back to Dashboard
+            Back to Resumes
           </Link>
           <h1 className="text-2xl lg:text-3xl font-extrabold tracking-tight">
             {title}
@@ -191,6 +169,11 @@ export default async function ResumeDetailsPage({ params }: PageProps) {
 
           <ResumeFileUploader resumeId={resumeId} />
           <AnalyzeResumeButton resumeId={resumeId} />
+          {analysis && (
+            <p className="text-[11px] text-muted-foreground mt-2 text-center">
+              Re-analyzing uses one AI analysis from your plan.
+            </p>
+          )}
         </div>
 
         {/* RIGHT COLUMN: AI AUDIT AND PARSED SCHEMA TABS */}
@@ -213,131 +196,23 @@ export default async function ResumeDetailsPage({ params }: PageProps) {
               </TabsTrigger>
             </TabsList>
 
-            {/* TAB 1: AI AUDIT & FEEDBACK */}
+            {/* TAB 1: AI REPORT (shared with the analyze page) */}
             <TabsContent
               value="analysis"
-              className="space-y-6 focus-visible:outline-none"
+              className="focus-visible:outline-none animate-in fade-in duration-300"
             >
-              <div className="grid grid-cols-1 gap-6">
-                <div className="p-6 lg:p-8 border rounded-3xl bg-card shadow-sm space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                  <div className="space-y-2">
-                    <h3 className="text-xs font-bold tracking-widest text-primary uppercase">
-                      Executive Review Summary
-                    </h3>
-                    <p className="text-muted-foreground leading-relaxed">
-                      {analysis?.summary || "No evaluation parsed."}
-                    </p>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t">
-                    <div className="space-y-3">
-                      <h4 className="text-xs font-bold uppercase tracking-widest text-emerald-500 flex items-center gap-2">
-                        <CheckCircle2Icon className="h-4 w-4 text-emerald-500" />{" "}
-                        Key Strengths
-                      </h4>
-                      <ul className="space-y-1.5">
-                        {strengths.map((str: string, index: number) => (
-                          <li
-                            key={index}
-                            className="text-sm text-muted-foreground pl-3 border-l-2 border-emerald-500/40"
-                          >
-                            {str}
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-
-                    <div className="space-y-3">
-                      <h4 className="text-xs font-bold uppercase tracking-widest text-destructive flex items-center gap-2">
-                        <AlertTriangle className="h-4 w-4 text-destructive" />{" "}
-                        Critical Weaknesses
-                      </h4>
-                      <ul className="space-y-1.5">
-                        {weaknesses.map((weak: string, index: number) => (
-                          <li
-                            key={index}
-                            className="text-sm text-muted-foreground pl-3 border-l-2 border-destructive/40"
-                          >
-                            {weak}
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  </div>
+              {analysis ? (
+                <AnalysisReport analysis={analysis} resumeId={resumeId} />
+              ) : (
+                <div className="rounded-3xl border border-dashed bg-card p-8 text-center space-y-2">
+                  <Brain className="size-7 text-muted-foreground/50 mx-auto" />
+                  <p className="text-sm font-bold">Not analyzed yet</p>
+                  <p className="text-xs text-muted-foreground max-w-sm mx-auto">
+                    Run an AI analysis to get your ATS score, a checklist of fixes and
+                    bullet-by-bullet rewrites.
+                  </p>
                 </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
-                  <div className="md:col-span-7 space-y-6">
-                    <div className="p-6 border rounded-3xl bg-card shadow-sm space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500 delay-100">
-                      <h3 className="font-bold text-base flex items-center gap-2">
-                        <Sparkles className="h-4 w-4 text-primary" />
-                        Wording Improvement Lines
-                      </h3>
-                      <ScrollArea className="h-[280px] pr-2">
-                        <div className="space-y-3">
-                          {improvements.map((item: any, idx: number) => (
-                            <div
-                              key={idx}
-                              className="p-3 rounded-xl bg-muted/40 border border-transparent text-xs space-y-1 hover:border-primary/20 transition-all"
-                            >
-                              <span className="font-bold text-primary text-[9px] uppercase tracking-wider">
-                                {item.section}
-                              </span>
-                              <p className="text-muted-foreground">
-                                Change{" "}
-                                <span className="line-through opacity-60">
-                                  {item.current}
-                                </span>{" "}
-                                to{" "}
-                                <span className="font-bold text-foreground bg-primary/10 px-1 rounded text-xs">
-                                  {item.suggested}
-                                </span>
-                              </p>
-                              {item.reason && (
-                                <p className="text-[11px] italic text-muted-foreground/70 mt-0.5">
-                                  Reason: {item.reason}
-                                </p>
-                              )}
-                            </div>
-                          ))}
-                        </div>
-                      </ScrollArea>
-                    </div>
-                  </div>
-
-                  <div className="md:col-span-5 space-y-6">
-                    <div className="p-6 border rounded-3xl bg-card shadow-sm space-y-3">
-                      <h4 className="font-bold text-xs tracking-tight text-muted-foreground uppercase">
-                        Keywords Captured
-                      </h4>
-                      <div className="flex flex-wrap gap-1.5 max-h-[140px] overflow-y-auto pr-1">
-                        {keyKeywords.map((kw: string) => (
-                          <span
-                            key={kw}
-                            className="text-[11px] px-2 py-0.5 rounded-md bg-muted font-medium border border-border/60"
-                          >
-                            {kw}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-
-                    {gapsDetected.length > 0 && (
-                      <div className="p-6 border border-amber-500/20 bg-amber-500/5 rounded-3xl shadow-sm space-y-2">
-                        <h4 className="font-bold text-xs text-amber-500 uppercase tracking-wider flex items-center gap-1.5">
-                          <AlertTriangle className="h-3.5 w-3.5" /> Timeline
-                          Gaps
-                        </h4>
-                        <ul className="list-disc pl-4 text-[11px] text-muted-foreground space-y-1">
-                          {gapsDetected.map((gap: string, i: number) => (
-                            <li key={i}>{gap}</li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
+              )}
             </TabsContent>
 
             {/* TAB 2: STRUCTURED UNIFIED DATABASE VIEW (ALIGNED TO FORM SCHEMAS) */}
