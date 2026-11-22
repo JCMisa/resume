@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import React, { useRef, useState } from "react";
@@ -18,6 +17,8 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn, formatBytes } from "@/lib/utils";
+import { extractPdfText } from "@/lib/pdf-extract";
+import { countWords, looksScanned } from "@/lib/resume-text";
 
 interface SetupProps {
   // The interview session itself is created when the call starts (see Agent.tsx),
@@ -39,21 +40,6 @@ type ResumeState =
       text: string;
     }
   | { status: "error"; name?: string; message: string };
-
-/** Extract plain text from a PDF in the browser (pdf.js). */
-async function extractPdfText(file: File) {
-  const pdfjs = await import("pdfjs-dist");
-  pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
-  const pdf = await pdfjs.getDocument({ data: await file.arrayBuffer() }).promise;
-
-  let text = "";
-  for (let i = 1; i <= pdf.numPages; i++) {
-    const page = await pdf.getPage(i);
-    const content = await page.getTextContent();
-    text += content.items.map((item: any) => item.str).join(" ") + "\n";
-  }
-  return { text: text.trim(), pages: pdf.numPages };
-}
 
 export default function InterviewSetupForm({ onSetupComplete }: SetupProps) {
   const [role, setRole] = useState("");
@@ -164,8 +150,9 @@ function ResumeDropzone({
 
     onChange({ status: "reading", name: file.name });
     try {
-      const { text, pages } = await extractPdfText(file);
-      if (!text) {
+      // Same layout-aware extraction as the analyze page (lib/pdf-extract.ts)
+      const { text, pages } = await extractPdfText(await file.arrayBuffer());
+      if (looksScanned(text)) {
         onChange({
           status: "error",
           name: file.name,
@@ -178,7 +165,7 @@ function ResumeDropzone({
         name: file.name,
         size: file.size,
         pages,
-        words: text.split(/\s+/).filter(Boolean).length,
+        words: countWords(text),
         text,
       });
     } catch (err) {

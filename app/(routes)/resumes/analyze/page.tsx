@@ -23,6 +23,7 @@ import UpgradeModal from "@/components/custom/UpgradeModal";
 import type { Resume } from "@/config/schema";
 import { describeFreeLimit, isLimitReached } from "@/lib/plans";
 import { countWords, looksScanned } from "@/lib/resume-text";
+import { extractPdfText } from "@/lib/pdf-extract";
 
 export type ProcessStage =
   | "idle"
@@ -127,27 +128,15 @@ const AnalyzeResumePage = () => {
       setProgress(35);
       setStatusMessage("Loading the PDF reader…");
 
-      const pdfjs = await import("pdfjs-dist");
-      pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
-
-      const pdf = await pdfjs.getDocument({ data: arrayBuffer }).promise;
-      setStage("extracting");
-      setProgress(55);
-
-      let text = "";
-      const totalPages = pdf.numPages;
-      for (let i = 1; i <= totalPages; i++) {
-        setStatusMessage(`Reading page ${i} of ${totalPages}…`);
-        const page = await pdf.getPage(i);
-        const content = await page.getTextContent();
-        text +=
-          content.items
-            .map((item) => ("str" in item ? item.str : ""))
-            .join(" ") + "\n";
-        setProgress(Math.floor(55 + (i / totalPages) * 35));
-      }
-
-      const clean = text.trim();
+      // Layout-aware extraction: keeps lines, bullets and column order
+      const { text: clean, pages: totalPages } = await extractPdfText(
+        arrayBuffer,
+        (page, total) => {
+          setStage("extracting");
+          setStatusMessage(`Reading page ${page} of ${total}…`);
+          setProgress(Math.floor(55 + (page / total) * 35));
+        },
+      );
       if (looksScanned(clean)) {
         fail(
           "scanned",
@@ -276,6 +265,7 @@ const AnalyzeResumePage = () => {
                 stage={stage}
                 file={file}
                 info={info}
+                extractedText={extractedText}
                 errorKind={errorKind}
                 statusMessage={statusMessage}
                 progress={currentProgress}

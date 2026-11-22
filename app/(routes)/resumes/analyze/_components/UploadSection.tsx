@@ -13,6 +13,8 @@ import {
   PenLine,
   RefreshCw,
   ScanSearch,
+  ChevronDown,
+  Eye,
   Target,
   UploadCloud,
   Wand2,
@@ -56,6 +58,8 @@ interface UploadSectionProps {
   stage: ProcessStage;
   file: File | null;
   info: ExtractInfo | null;
+  /** The text sent to the AI, shown in the "What the AI read" preview */
+  extractedText: string;
   errorKind: "scanned" | "unreadable" | null;
   statusMessage: string;
   progress: number;
@@ -68,6 +72,7 @@ export default function UploadSection({
   stage,
   file,
   info,
+  extractedText,
   errorKind,
   statusMessage,
   progress,
@@ -283,6 +288,11 @@ export default function UploadSection({
         )}
       </div>
 
+      {/* What the AI read: lets users catch missing or jumbled text before spending an analysis */}
+      {extractedText && (ready || stage === "ai_processing") && (
+        <ExtractedTextPreview text={extractedText} />
+      )}
+
       {/* What the analysis covers */}
       <section className="rounded-3xl border bg-card shadow-sm p-5 sm:p-6 space-y-4">
         <h2 className="text-sm font-black tracking-tight">
@@ -308,5 +318,48 @@ export default function UploadSection({
         </p>
       </section>
     </motion.div>
+  );
+}
+
+function ExtractedTextPreview({ text }: { text: string }) {
+  const [open, setOpen] = useState(false);
+  const lines = text.split(/\n/).length;
+  return (
+    <section className="rounded-3xl border bg-card shadow-sm overflow-hidden">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        aria-expanded={open}
+        aria-controls="extracted-text"
+        className="w-full flex items-center justify-between gap-3 px-5 py-4 text-left hover:bg-muted/30 transition-colors"
+      >
+        <span className="flex items-center gap-2.5 min-w-0">
+          <span className="p-2 rounded-xl bg-brand/10 text-brand-strong dark:text-brand border border-brand/15 shrink-0">
+            <Eye className="size-4" />
+          </span>
+          <span className="min-w-0">
+            <span className="block text-sm font-black tracking-tight">What the AI read</span>
+            <span className="block text-[11px] text-muted-foreground truncate">
+              {lines.toLocaleString()} lines · {text.length.toLocaleString()} characters · check that nothing is missing or out of order
+            </span>
+          </span>
+        </span>
+        <ChevronDown
+          className={cn("size-4 shrink-0 text-muted-foreground transition-transform", open && "rotate-180")}
+        />
+      </button>
+      {open && (
+        <div id="extracted-text" className="border-t">
+          <pre className="max-h-80 overflow-auto custom-scrollbar px-5 py-4 text-xs leading-relaxed font-mono whitespace-pre-wrap break-words text-foreground/90">
+            {text}
+          </pre>
+          <p className="border-t px-5 py-3 text-[11px] text-muted-foreground">
+            Applicant tracking systems also read your PDF&apos;s text layer. If a section is missing
+            or out of order here, fix it in your source document (avoid text in images, tables or
+            text boxes) and export the PDF again.
+          </p>
+        </div>
+      )}
+    </section>
   );
 }
