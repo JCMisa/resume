@@ -8,10 +8,11 @@ import { GoogleGenAI } from "@google/genai";
 import { eq, and, gte, desc, isNull, ne, or } from "drizzle-orm";
 import { enforceRateLimit, RateLimitError } from "@/lib/arcjet";
 import { AI_MODELS } from "@/lib/ai-models";
-import { mintVapiWebToken } from "@/lib/vapi-token";
 import { assertAllowed, toActionError } from "@/lib/billing-guard";
 import { refundWindowStart } from "@/lib/plans";
+import { signCallTicket, ticketKey } from "@/lib/call-ticket";
 import {
+  CALL_TICKET_TTL_SECONDS,
   GRADING_FAILED,
   hasCandidateAnswers,
   parseInterviewGrade,
@@ -35,10 +36,12 @@ export async function createInterviewSessionAction(payload: {
     // Burst protection: plan-sized token bucket + shield + bot detection
     await enforceRateLimit("interview", userId, billing.isPro);
 
-    // Short-lived Vapi credential, only issued to users who passed the checks
-    // above. Minted before the insert so a misconfigured server can't create
-    // (and count) sessions that can never connect.
-    const vapiToken = mintVapiWebToken();
+    // Checked before the insert so a misconfigured server can't create (and
+    // count) sessions that can never connect
+    const vapiKey = process.env.VAPI_PRIVATE_API_KEY;
+    if (!vapiKey || !process.env.VAPI_ORG_ID) {
+      throw new Error("Voice interviews aren't configured on the server.");
+    }
 
     const [newSession] = await db
       .insert(interviews)
@@ -51,7 +54,18 @@ export async function createInterviewSessionAction(payload: {
       })
       .returning();
 
-    return { success: true as const, id: newSession.id, vapiToken };
+    // One-time, short-lived, signed "call ticket" (lib/call-ticket.ts): the
+    // browser hands it to /api/vapi/call/web, which builds the assistant
+    // server-side and starts the call with the private key.
+    const callTicket = signCallTicket(
+      {
+        sid: newSession.id,
+        uid: userId,
+        exp: Math.floor(Date.now() / 1000) + CALL_TICKET_TTL_SECONDS,
+      },
+      ticketKey(vapiKey),
+    );
+    return { success: true as const, id: newSession.id, callTicket };
   } catch (error) {
     console.error("Interview Session Creation Failure:", error);
     return toActionError(error, "Failed to start the interview session.");
@@ -77,6 +91,11 @@ export async function compileInterviewEvaluationAction(
     // Only grade a live session once (prevents duplicate Gemini calls / result rows)
     if (session.status !== "in-progress") {
       throw new Error("This interview session has already been closed.");
+    }
+    // Only sessions that really had a voice call (started through our proxy)
+    // can be graded, so a scripted request can't submit a made-up transcript.
+    if (!session.vapiCallId || session.vapiCallId === "pending") {
+      throw new Error("No voice call was recorded for this session.");
     }
     // Don't spend a Gemini call grading silence
     if (!hasCandidateAnswers(finalTranscript)) {

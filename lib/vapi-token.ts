@@ -2,19 +2,19 @@ import "server-only";
 
 import { createHmac } from "node:crypto";
 
-// Vapi web calls authenticate with a short-lived JWT that WE sign with the
-// private API key (HS256), instead of a long-lived public key shipped to every
-// browser. Tokens are only minted after the server has checked the user's plan,
-// so nobody can start Vapi calls on our credits without going through the app.
+// Vapi's create-web-call endpoint (POST /call/web) is public-scoped: it rejects
+// the private API key and only accepts a public key or a public JWT. So the
+// proxy (app/api/vapi/call/web/route.ts) signs a short-lived public JWT with the
+// private key (HS256) and uses it for that one server-to-server request. The
+// token never reaches the browser.
 // Docs: https://docs.vapi.ai/customization/jwt-authentication
 
-/** Long enough to connect and run a full (5-minute) interview. Vapi max is 1h. */
-const TOKEN_TTL_SECONDS = 10 * 60;
+/** Only needs to live for the single create-call request. */
+const TOKEN_TTL_SECONDS = 60;
 
-const b64url = (value: string | Buffer) =>
-  Buffer.from(value).toString("base64url");
+const b64url = (value: string | Buffer) => Buffer.from(value).toString("base64url");
 
-export function mintVapiWebToken() {
+export function mintVapiPublicToken() {
   const orgId = process.env.VAPI_ORG_ID;
   const privateKey = process.env.VAPI_PRIVATE_API_KEY;
   if (!orgId || !privateKey) {
@@ -28,18 +28,15 @@ export function mintVapiWebToken() {
     iat: now,
     exp: now + TOKEN_TTL_SECONDS,
     token: {
-      tag: "public", // usable by the Web SDK only
+      tag: "public",
       restrictions: {
-        // The interviewer is built per call in lib/vapi.config.ts
+        // The assistant is built per call on the server (lib/vapi.config.ts)
         allowTransientAssistant: true,
       },
     },
   };
 
   const unsigned = `${b64url(JSON.stringify(header))}.${b64url(JSON.stringify(payload))}`;
-  const signature = createHmac("sha256", privateKey)
-    .update(unsigned)
-    .digest("base64url");
-
+  const signature = createHmac("sha256", privateKey).update(unsigned).digest("base64url");
   return `${unsigned}.${signature}`;
 }

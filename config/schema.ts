@@ -129,6 +129,9 @@ export const interviews = pgTable("interviews", {
 
   status: interviewStatusEnum("status").default("in-progress"),
   transcript: text("transcript"), // Aggregated text lines appended upon completion
+  // Vapi call created for this session by /api/vapi/call/web (one call per
+  // session; "pending" while the call is being created)
+  vapiCallId: text("vapi_call_id"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 

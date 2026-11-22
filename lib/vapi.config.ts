@@ -1,3 +1,7 @@
+import "server-only";
+
+// Built on the server by /api/vapi/call/web (never in the browser), so the
+// call limits and prompt can't be changed by the client.
 import { CreateAssistantDTO } from "@vapi-ai/web/dist/api";
 import { AI_MODELS } from "@/lib/ai-models";
 

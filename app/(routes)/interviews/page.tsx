@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useUser } from "@clerk/nextjs";
 import { Video } from "lucide-react";
 import InterviewSetupForm from "./_components/InterviewSetupForm";
 import Agent from "./_components/Agent";
@@ -20,7 +19,6 @@ import {
 } from "./_components/InterviewSkeletons";
 
 export default function InterviewsPage() {
-  const { user } = useUser();
   // Loaded once; shared by the history panel and the progress card
   const history = useInterviewHistory();
 
@@ -96,7 +94,6 @@ export default function InterviewsPage() {
           ) : (
             <div className="animate-in slide-in-from-bottom-4 duration-300">
               <Agent
-                userName={user?.firstName || "Candidate"}
                 sessionMeta={sessionMeta}
                 onLimitReached={refreshAccess}
               />

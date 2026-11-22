@@ -6,7 +6,6 @@ import { Mic, MicOff, PhoneOff, Loader2, Activity } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import Vapi from "@vapi-ai/web";
-import { configureAssistant } from "@/lib/vapi.config";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
@@ -19,7 +18,6 @@ import { isLimitReached } from "@/lib/plans";
 import { GRADING_FAILED, hasCandidateAnswers } from "@/lib/interview";
 
 interface AgentProps {
-  userName: string;
   sessionMeta: { text: string; role: string; desc: string };
   /** Called when the server rejects a new session because of a plan limit. */
   onLimitReached?: () => void;
@@ -28,7 +26,6 @@ interface AgentProps {
 type StageStatus = "idle" | "connecting" | "active" | "processing_results";
 
 export default function Agent({
-  userName,
   sessionMeta,
   onLimitReached,
 }: AgentProps) {
@@ -117,8 +114,10 @@ export default function Agent({
     }
   }
 
-  // 🚀 STEP 2: A fresh Vapi client per call, authenticated with the short-lived
-  // token the server minted for this session (Vapi's recommended JWT flow).
+  // STEP 2: A fresh Vapi client per call, pointed at OUR proxy
+  // (/api/vapi/call/web) instead of api.vapi.ai. The "token" is the signed,
+  // one-time call ticket from the server; the server builds the assistant and
+  // starts the call with the private key, so the browser can't change its limits.
   const vapiRef = useRef<Vapi | null>(null);
 
   function disposeClient() {
@@ -127,12 +126,23 @@ export default function Agent({
     if (!client) return;
     // Detach first so stopping doesn't re-trigger our call-end handling
     client.removeAllListeners();
+    // Keep a no-op error listener so a late SDK error during teardown can't
+    // throw "Unhandled error"
+    client.on("error", () => {});
     client.stop();
   }
 
-  function createClient(token: string) {
+  function createClient(callTicket: string) {
     disposeClient();
-    const client = new Vapi(token);
+    // The SDK appends "/call/web", so this hits app/api/vapi/call/web/route.ts
+    const client = new Vapi(callTicket, `${window.location.origin}/api/vapi`);
+
+    // The SDK reports failures as "error" events; without a listener they
+    // surface as "Unhandled error". Log the detail; the start()/call-end
+    // handling below takes care of cancelling and refunding the session.
+    client.on("error", (err: any) => {
+      console.error("Vapi error:", err);
+    });
 
     client.on("call-start", () => {
       setStatus("active");
@@ -205,14 +215,9 @@ export default function Agent({
     transcriptTimelineRef.current = "";
 
     try {
-      const config = configureAssistant(
-        userName,
-        sessionMeta.role,
-        sessionMeta.desc,
-        sessionMeta.text,
-      );
-      const client = createClient(res.vapiToken);
-      const call = await client.start(config);
+      const client = createClient(res.callTicket);
+      // Placeholder: the proxy ignores it and uses the server-built assistant
+      const call = await client.start({ name: "ResuMe-Interviewer" });
       if (!call) {
         // start() resolves null on failure
         disposeClient();

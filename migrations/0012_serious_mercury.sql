@@ -1,0 +1,1 @@
+ALTER TABLE "interviews" ADD COLUMN "vapi_call_id" text;

@@ -5,6 +5,9 @@ const isPublicRoute = createRouteMatcher([
   "/sign-up(.*)",
   "/",
   "/api/webhooks(.*)",
+  // Vapi SDK proxy: authenticated by a signed call ticket, not Clerk (the SDK's
+  // Authorization header would be misread as a Clerk token)
+  "/api/vapi(.*)",
 ]);
 
 export default clerkMiddleware(async (auth, request) => {

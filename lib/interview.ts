@@ -1,6 +1,12 @@
 // Shared (client + server) helpers for interview transcripts.
 // Agent.tsx records final transcript lines as "[ROLE]: text", e.g. "[USER]: I led the migration".
 
+/**
+ * How long after creating a session the browser may start its (single) voice
+ * call through /api/vapi/call/web. Covers mic permission + connecting.
+ */
+export const CALL_TICKET_TTL_SECONDS = 120;
+
 /** Action error code: the transcript was saved, but AI grading failed (retryable). */
 export const GRADING_FAILED = "GRADING_FAILED";
 
