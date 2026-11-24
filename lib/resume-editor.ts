@@ -13,7 +13,14 @@ export const EDITOR_LIMITS = {
   items: 30, // entries per section
   bullets: 20, // bullets per entry
   links: 10,
+  customSections: 5,
+  customBody: 5000,
 } as const;
+
+export const CUSTOM_PREFIX = "custom:";
+export const isCustomKey = (key: string) => key.startsWith(CUSTOM_PREFIX);
+export const customKey = (id: string) => CUSTOM_PREFIX + id;
+const TEXT_SCALES = ["sm", "md", "lg"] as const;
 
 export const TITLE_MAX = 100;
 export const DEFAULT_TITLE = "Untitled resume";
@@ -36,9 +43,13 @@ const links = (v: unknown) =>
   });
 const lines = (v: unknown) => arr(v, EDITOR_LIMITS.bullets).map((b) => str(b, EDITOR_LIMITS.long));
 
-/** Known section keys, each once; missing ones appended in default order. */
-export function normalizeSectionOrder(order: unknown): string[] {
-  const known = new Set(DEFAULT_SECTION_ORDER);
+/**
+ * Known section keys (standard + this resume's custom sections), each once;
+ * missing ones appended (standard in default order, then custom).
+ */
+export function normalizeSectionOrder(order: unknown, customIds: string[] = []): string[] {
+  const custom = customIds.map(customKey);
+  const known = new Set([...DEFAULT_SECTION_ORDER, ...custom]);
   const seen = new Set<string>();
   const out: string[] = [];
   for (const key of Array.isArray(order) ? order : []) {
@@ -47,7 +58,7 @@ export function normalizeSectionOrder(order: unknown): string[] {
       out.push(key);
     }
   }
-  for (const key of DEFAULT_SECTION_ORDER) if (!seen.has(key)) out.push(key);
+  for (const key of [...DEFAULT_SECTION_ORDER, ...custom]) if (!seen.has(key)) out.push(key);
   return out;
 }
 
@@ -56,6 +67,10 @@ export function sanitizeEditorContent(raw: unknown): ResumeContent {
   const c = obj(raw);
   const p = obj(c.personalDetails);
   const { short, medium, long, items } = EDITOR_LIMITS;
+  const customSections = arr(c.customSections, EDITOR_LIMITS.customSections).map((s) => {
+    const o = obj(s);
+    return { id: keepId(o.id), title: str(o.title, 80), body: str(o.body, EDITOR_LIMITS.customBody) };
+  });
   return {
     personalDetails: {
       name: str(p.name, short),
@@ -111,8 +126,28 @@ export function sanitizeEditorContent(raw: unknown): ResumeContent {
         links: links(o.links),
       };
     }),
-    sectionOrder: normalizeSectionOrder(c.sectionOrder),
+    customSections,
+    design: sanitizeDesign(c.design),
+    sectionOrder: normalizeSectionOrder(
+      c.sectionOrder,
+      customSections.map((s) => s.id),
+    ),
   };
+}
+
+function sanitizeDesign(raw: unknown): NonNullable<ResumeContent["design"]> {
+  const d = obj(raw);
+  const out: NonNullable<ResumeContent["design"]> = {};
+  if (TEXT_SCALES.includes(d.textScale as (typeof TEXT_SCALES)[number])) out.textScale = d.textScale as "sm" | "md" | "lg";
+  if (typeof d.dividers === "boolean") out.dividers = d.dividers;
+  const titles = obj(d.sectionTitles);
+  const sectionTitles: Record<string, string> = {};
+  for (const key of DEFAULT_SECTION_ORDER) {
+    const t = str(titles[key], 60);
+    if (t.trim()) sectionTitles[key] = t;
+  }
+  if (Object.keys(sectionTitles).length) out.sectionTitles = sectionTitles;
+  return out;
 }
 
 /** A new, empty resume (name/email prefilled from the account when known). */
@@ -133,6 +168,7 @@ export function cloneContent(content: unknown): ResumeContent {
     projects: reId(c.projects),
     educations: reId(c.educations),
     certificates: reId(c.certificates),
+    // Custom section ids are referenced by sectionOrder: keep them as they are
   };
 }
 
@@ -146,4 +182,107 @@ export function normalizeResumeTitle(value: unknown, fallback = DEFAULT_TITLE): 
 export function copyTitle(title: string): string {
   const base = title.replace(/\s*\((AI Analyzed|copy)\)\s*$/i, "").trim() || DEFAULT_TITLE;
   return normalizeResumeTitle(base.startsWith("Copy of ") ? base : `Copy of ${base}`);
+}
+
+// ── Document-mode operations (pure; the editor applies them to its state) ──
+
+export type EntrySection = "experience" | "projects" | "education" | "certificates";
+const ENTRY_FIELD = {
+  experience: "experiences",
+  projects: "projects",
+  education: "educations",
+  certificates: "certificates",
+} as const;
+
+export function blankEntry(section: EntrySection) {
+  const id = newId();
+  switch (section) {
+    case "experience":
+      return { id, company: "", role: "", duration: "", bullets: [""] };
+    case "projects":
+      return { id, title: "", duration: "", description: [""], links: [] };
+    case "education":
+      return { id, schoolName: "", course: "", duration: "" };
+    case "certificates":
+      return { id, title: "", issuedDate: "", links: [] };
+  }
+}
+
+type Entry = { id: string };
+const entries = (content: ResumeContent, section: EntrySection) =>
+  ((content[ENTRY_FIELD[section]] as Entry[] | undefined) ?? []) as Entry[];
+const withEntries = (content: ResumeContent, section: EntrySection, list: Entry[]): ResumeContent => ({
+  ...content,
+  [ENTRY_FIELD[section]]: list,
+});
+
+export function addEntry(content: ResumeContent, section: EntrySection) {
+  const entry = blankEntry(section);
+  const list = entries(content, section);
+  if (list.length >= EDITOR_LIMITS.items) return { content, id: null };
+  return { content: withEntries(content, section, [...list, entry]), id: entry.id };
+}
+
+export function removeEntry(content: ResumeContent, section: EntrySection, id: string): ResumeContent {
+  return withEntries(content, section, entries(content, section).filter((e) => e.id !== id));
+}
+
+export function moveEntry(content: ResumeContent, section: EntrySection, id: string, dir: -1 | 1): ResumeContent {
+  const list = [...entries(content, section)];
+  const i = list.findIndex((e) => e.id === id);
+  const j = i + dir;
+  if (i < 0 || j < 0 || j >= list.length) return content;
+  [list[i], list[j]] = [list[j], list[i]];
+  return withEntries(content, section, list);
+}
+
+export function addCustomSection(content: ResumeContent, title = "Custom section") {
+  const list = content.customSections ?? [];
+  if (list.length >= EDITOR_LIMITS.customSections) return { content, id: null };
+  const id = newId();
+  return {
+    content: {
+      ...content,
+      customSections: [...list, { id, title, body: "" }],
+      sectionOrder: [...content.sectionOrder, customKey(id)],
+    },
+    id,
+  };
+}
+
+export function removeCustomSection(content: ResumeContent, id: string): ResumeContent {
+  return {
+    ...content,
+    customSections: (content.customSections ?? []).filter((s) => s.id !== id),
+    sectionOrder: content.sectionOrder.filter((k) => k !== customKey(id)),
+  };
+}
+
+/** Skills as editable "Category: a, b" rows (document mode). */
+export type SkillGroup = { category: string; values: string };
+
+export function skillsToGroups(skills: ResumeContent["skills"]): SkillGroup[] {
+  const groups: SkillGroup[] = [];
+  for (const s of skills ?? []) {
+    const g = groups.find((x) => x.category === s.category);
+    if (g) g.values = g.values ? `${g.values}, ${s.value}` : s.value;
+    else groups.push({ category: s.category, values: s.value });
+  }
+  return groups;
+}
+
+/** Rows back to items; ids kept by position so React keys stay stable. */
+export function groupsToSkills(groups: SkillGroup[], previous: ResumeContent["skills"] = []) {
+  const items = groups.flatMap((g) =>
+    g.values
+      .split(",")
+      .map((v) => v.trim())
+      .filter(Boolean)
+      .map((value) => ({ category: g.category, value })),
+  );
+  // A row with a category but no skills yet keeps one empty item, so it stays visible
+  for (const g of groups) {
+    if (!g.values.split(",").some((v) => v.trim())) items.push({ category: g.category, value: "" });
+  }
+  return items.map((it, i) => ({ id: previous[i]?.id ?? newId(), ...it }));
 }

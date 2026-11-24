@@ -11,6 +11,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { Plus, Trash2, Code, Link2 } from "lucide-react";
+import RichField from "../rich/RichField";
 
 interface ProjectsFormProps {
   data: any[];
@@ -42,28 +43,8 @@ export default function ProjectsForm({ data, onChange }: ProjectsFormProps) {
     onChange(data.filter((item) => item.id !== id));
   };
 
-  const handleDescChange = (
-    projIndex: number,
-    dIndex: number,
-    value: string,
-  ) => {
-    const updated = [...data];
-    updated[projIndex].description[dIndex] = value;
-    onChange(updated);
-  };
-
-  const addDescField = (projIndex: number) => {
-    const updated = [...data];
-    updated[projIndex].description.push("");
-    onChange(updated);
-  };
-
-  const removeDescField = (projIndex: number, dIndex: number) => {
-    const updated = [...data];
-    updated[projIndex].description = updated[projIndex].description.filter(
-      (_: any, i: number) => i !== dIndex,
-    );
-    onChange(updated);
+  const setDescription = (index: number, description: string[]) => {
+    onChange(data.map((item, i) => (i === index ? { ...item, description } : item)));
   };
 
   const handleLinkChange = (
@@ -72,13 +53,15 @@ export default function ProjectsForm({ data, onChange }: ProjectsFormProps) {
     key: string,
     value: string,
   ) => {
-    const updated = [...data];
-    if (!updated[projIndex].links) updated[projIndex].links = [];
-    updated[projIndex].links[lIdx] = {
-      ...updated[projIndex].links[lIdx],
-      [key]: value,
-    };
-    onChange(updated);
+    // Immutable update (never change the saved objects in place)
+    onChange(
+      data.map((item, i) => {
+        if (i !== projIndex) return item;
+        const links = [...(item.links ?? [])];
+        links[lIdx] = { ...links[lIdx], [key]: value };
+        return { ...item, links };
+      }),
+    );
   };
 
   return (
@@ -162,48 +145,19 @@ export default function ProjectsForm({ data, onChange }: ProjectsFormProps) {
                   </div>
                 </div>
 
-                {/* DESCRIPTION ACTIONS */}
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[11px] font-bold text-primary uppercase">
-                      Feature Scope Bullet Points
-                    </span>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => addDescField(index)}
-                      className="h-6 rounded-lg text-[10px] font-bold gap-0.5 px-2"
-                    >
-                      <Plus className="h-3 w-3" /> Add Detail
-                    </Button>
-                  </div>
-                  <div className="space-y-2">
-                    {proj.description?.map((desc: string, dIdx: number) => (
-                      <div
-                        key={dIdx}
-                        className="flex items-center gap-2 animate-in slide-in-from-top-1 duration-200"
-                      >
-                        <Input
-                          placeholder="Integrated Vapi voice systems establishing conversational automation flows..."
-                          value={desc || ""}
-                          onChange={(e) =>
-                            handleDescChange(index, dIdx, e.target.value)
-                          }
-                          className="rounded-xl h-8 text-xs flex-grow"
-                        />
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => removeDescField(index, dIdx)}
-                          className="text-destructive hover:bg-destructive/10 h-7 w-7 rounded-lg shrink-0"
-                        >
-                          <Trash2 className="h-3.5 w-3.5" />
-                        </Button>
-                      </div>
-                    ))}
-                  </div>
+                {/* Bullets: one rich field */}
+                <div className="space-y-1.5">
+                  <span className="text-[11px] font-bold text-primary uppercase">
+                    Feature Scope Bullet Points
+                  </span>
+                  <RichField
+                    kind="bullets"
+                    toolbar="inline"
+                    value={proj.description ?? [""]}
+                    onChange={(v) => setDescription(index, v as string[])}
+                    ariaLabel={`${proj.title || "Project"} bullet points`}
+                    placeholder="Built … that … (result)"
+                  />
                 </div>
 
                 {/* PROJECT ATTACHED LINKS ROW */}

@@ -2,35 +2,39 @@ import React from "react";
 import { Document, Link, Page, StyleSheet, Text, View } from "@react-pdf/renderer";
 import type { ResumeContent } from "@/lib/resume-sanitize";
 import {
-  SECTION_TITLES,
   bulletsOf,
   contactParts,
+  effectiveTemplate,
   groupSkills,
   linksOf,
   safeLinkUrl,
+  sectionTitle,
   visibleSections,
   type TemplateDef,
 } from "@/lib/resume-templates";
+import { nonEmptyBlocks, parseBlocks, parseInline, stripRich, type Span } from "@/lib/rich-text";
 
 // PDF renderer for a resume template (@react-pdf/renderer). Mirrors
-// ResumeDocument.tsx: same TemplateDef, same pt sizes. Uses the PDF standard
-// fonts (Helvetica / Times), so nothing is downloaded and the text stays
-// real, selectable text that ATS can parse.
+// ResumeDocument.tsx: same TemplateDef (+ design settings), same pt sizes.
+// Uses the PDF standard fonts (Helvetica / Times, with their bold and italic
+// variants), so nothing is downloaded and the text stays real, selectable
+// text that ATS can parse.
 
 const FONTS = {
-  sans: { regular: "Helvetica", bold: "Helvetica-Bold" },
-  serif: { regular: "Times-Roman", bold: "Times-Bold" },
+  sans: { regular: "Helvetica", bold: "Helvetica-Bold", italic: "Helvetica-Oblique", boldItalic: "Helvetica-BoldOblique" },
+  serif: { regular: "Times-Roman", bold: "Times-Bold", italic: "Times-Italic", boldItalic: "Times-BoldItalic" },
 } as const;
 
 export default function ResumePdfDocument({
   content,
-  template: t,
+  template,
   title,
 }: {
   content: ResumeContent;
   template: TemplateDef;
   title?: string;
 }) {
+  const t = effectiveTemplate(template, content.design);
   const { colors, size, spacing } = t;
   const font = FONTS[t.font];
   const s = StyleSheet.create({
@@ -64,6 +68,39 @@ export default function ResumePdfDocument({
     link: { color: colors.accent, textDecoration: "underline" },
   });
 
+  // Inline markup -> nested <Text> runs with the right font variant
+  const spans = (list: Span[]) =>
+    list.map((sp, i) => {
+      const family = sp.bold && sp.italic ? font.boldItalic : sp.bold ? font.bold : sp.italic ? font.italic : undefined;
+      const style = {
+        ...(family ? { fontFamily: family } : {}),
+        ...(sp.bold ? { color: colors.text } : {}),
+        ...(sp.underline ? { textDecoration: "underline" as const } : {}),
+      };
+      const href = sp.href ? safeLinkUrl(sp.href) : null;
+      return href ? (
+        <Link key={i} src={href} style={[s.link, style]}>
+          {sp.text}
+        </Link>
+      ) : (
+        <Text key={i} style={style}>
+          {sp.text}
+        </Text>
+      );
+    });
+
+  const richBlocks = (value: string, lists: boolean) =>
+    nonEmptyBlocks(parseBlocks(value, { lists })).map((b, i) =>
+      b.type === "bullet" ? (
+        <View key={i} style={s.bulletRow} wrap={false}>
+          <Text style={s.bulletDot}>•</Text>
+          <Text style={s.bulletText}>{spans(b.spans)}</Text>
+        </View>
+      ) : (
+        <Text key={i}>{spans(b.spans)}</Text>
+      ),
+    );
+
   const entryHead = (title: string, date?: string, subtitle?: string) => (
     <>
       <View style={s.entryHead}>
@@ -78,7 +115,7 @@ export default function ResumePdfDocument({
     items.map((b, i) => (
       <View key={i} style={s.bulletRow} wrap={false}>
         <Text style={s.bulletDot}>•</Text>
-        <Text style={s.bulletText}>{b}</Text>
+        <Text style={s.bulletText}>{spans(parseInline(b))}</Text>
       </View>
     ));
 
@@ -107,9 +144,13 @@ export default function ResumePdfDocument({
   };
 
   const renderSection = (key: string) => {
+    if (key.startsWith("custom:")) {
+      const c = content.customSections?.find((x) => `custom:${x.id}` === key);
+      return c ? richBlocks(c.body, true) : null;
+    }
     switch (key) {
       case "summary":
-        return <Text>{content.professionalSummary}</Text>;
+        return richBlocks(content.professionalSummary ?? "", false);
       case "skills":
         return groupSkills(content.skills).map((g) => (
           <Text key={g.category} style={{ marginBottom: 1 }}>
@@ -153,7 +194,9 @@ export default function ResumePdfDocument({
           .map((c) => (
             <View key={c.id} style={s.entry} wrap={false}>
               {entryHead(c.title, [c.issuedDate, c.expirationDate].filter((v) => v?.trim()).join(" - "))}
-              {c.description?.trim() ? <Text style={{ marginTop: 1 }}>{c.description}</Text> : null}
+              {stripRich(c.description).trim() ? (
+                <Text style={{ marginTop: 1 }}>{spans(parseInline(c.description!))}</Text>
+              ) : null}
               {linkRow(c.links)}
             </View>
           ));
@@ -206,7 +249,7 @@ export default function ResumePdfDocument({
           .map((key) => (
             <View key={key} style={s.section}>
               <Text style={s.heading} minPresenceAhead={24}>
-                {SECTION_TITLES[key]}
+                {sectionTitle(content, key)}
               </Text>
               {renderSection(key)}
             </View>

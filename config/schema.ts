@@ -107,6 +107,15 @@ export const resumes = pgTable("resumes", {
         description?: string;
         links?: { label: string; url: string }[];
       }[];
+      // Free-form sections from the editor (key "custom:<id>" in sectionOrder).
+      // body uses the inline markup in lib/rich-text.ts.
+      customSections?: { id: string; title: string; body: string }[];
+      // Document-mode look settings (lib/resume-templates.ts effectiveTemplate)
+      design?: {
+        textScale?: "sm" | "md" | "lg";
+        dividers?: boolean;
+        sectionTitles?: Record<string, string>;
+      };
       // 🎛️ DRAG & DROP TRACKING ORDER SECTION
       // Keeps track of user preferences, e.g., ["personal", "summary", "projects", "skills"...]
       sectionOrder: string[];

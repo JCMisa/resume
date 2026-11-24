@@ -53,6 +53,7 @@ export function contentText(content: Content): string {
     ...(content.projects ?? []).flatMap((pr) => [pr.title, pr.duration, ...(pr.description ?? [])]),
     ...(content.educations ?? []).flatMap((ed) => [ed.schoolName, ed.course, ed.major, ed.duration]),
     ...(content.certificates ?? []).flatMap((c) => [c.title, c.issuedDate, c.description]),
+    ...(content.customSections ?? []).flatMap((c) => [c.title, c.body]),
   ]
     .filter(Boolean)
     .join("\n");

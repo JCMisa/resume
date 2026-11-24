@@ -5,16 +5,17 @@ import { SortableContext, arrayMove, sortableKeyboardCoordinates, useSortable, v
 import { restrictToParentElement, restrictToVerticalAxis } from "@dnd-kit/modifiers";
 import { ArrowDown, ArrowUp, GripVertical } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { SECTION_TITLES } from "@/lib/resume-templates";
 
 function Row({
   id,
+  title,
   filled,
   index,
   count,
   onMove,
 }: {
   id: string;
+  title: string;
   filled: boolean;
   index: number;
   count: number;
@@ -33,20 +34,20 @@ function Row({
       <button
         type="button"
         className="size-8 shrink-0 rounded-lg flex items-center justify-center text-muted-foreground hover:bg-muted cursor-grab active:cursor-grabbing touch-none"
-        aria-label={`Drag ${SECTION_TITLES[id]}`}
+        aria-label={`Drag ${title}`}
         {...attributes}
         {...listeners}
       >
         <GripVertical className="size-4" />
       </button>
-      <span className="flex-1 text-sm font-semibold">{SECTION_TITLES[id]}</span>
+      <span className="flex-1 text-sm font-semibold">{title}</span>
       {!filled && <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Empty · hidden</span>}
       {/* Buttons as a non-drag alternative (keyboard / small screens) */}
       <button
         type="button"
         disabled={index === 0}
         onClick={() => onMove(index, index - 1)}
-        aria-label={`Move ${SECTION_TITLES[id]} up`}
+        aria-label={`Move ${title} up`}
         className="size-7 rounded-md flex items-center justify-center text-muted-foreground hover:bg-muted disabled:opacity-30"
       >
         <ArrowUp className="size-3.5" />
@@ -55,7 +56,7 @@ function Row({
         type="button"
         disabled={index === count - 1}
         onClick={() => onMove(index, index + 1)}
-        aria-label={`Move ${SECTION_TITLES[id]} down`}
+        aria-label={`Move ${title} down`}
         className="size-7 rounded-md flex items-center justify-center text-muted-foreground hover:bg-muted disabled:opacity-30"
       >
         <ArrowDown className="size-3.5" />
@@ -68,10 +69,12 @@ function Row({
 export default function SectionOrderList({
   order,
   filled,
+  titleOf,
   onChange,
 }: {
   order: string[];
   filled: (key: string) => boolean;
+  titleOf: (key: string) => string;
   onChange: (order: string[]) => void;
 }) {
   const movable = order.filter((k) => k !== "personal");
@@ -102,7 +105,7 @@ export default function SectionOrderList({
         <SortableContext items={movable} strategy={verticalListSortingStrategy}>
           <ul className="space-y-2">
             {movable.map((id, i) => (
-              <Row key={id} id={id} index={i} count={movable.length} filled={filled(id)} onMove={move} />
+              <Row key={id} id={id} title={titleOf(id)} index={i} count={movable.length} filled={filled(id)} onMove={move} />
             ))}
           </ul>
         </SortableContext>

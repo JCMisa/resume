@@ -156,3 +156,82 @@ describe("templates", () => {
     expect(safeLinkUrl("data:text/html,hi")).toBeNull();
   });
 });
+
+import {
+  addCustomSection,
+  addEntry,
+  groupsToSkills,
+  moveEntry,
+  removeCustomSection,
+  removeEntry,
+  skillsToGroups,
+} from "@/lib/resume-editor";
+import { effectiveTemplate, sectionTitle } from "@/lib/resume-templates";
+
+describe("document-mode operations", () => {
+  const base = () => sanitizeEditorContent({ experiences: [{ id: "a", role: "A" }, { id: "b", role: "B" }] });
+
+  it("adds, moves and removes entries without touching the original", () => {
+    const c = base();
+    const added = addEntry(c, "experience");
+    expect(added.content.experiences).toHaveLength(3);
+    expect(c.experiences).toHaveLength(2);
+    expect(moveEntry(c, "experience", "b", -1).experiences!.map((e) => e.id)).toEqual(["b", "a"]);
+    expect(moveEntry(c, "experience", "a", -1)).toBe(c); // already first: unchanged
+    expect(removeEntry(c, "experience", "a").experiences!.map((e) => e.id)).toEqual(["b"]);
+  });
+
+  it("custom sections join and leave the section order", () => {
+    const { content, id } = addCustomSection(base(), "Languages");
+    expect(content.customSections).toEqual([{ id, title: "Languages", body: "" }]);
+    expect(content.sectionOrder.at(-1)).toBe(`custom:${id}`);
+    expect(sectionTitle(content, `custom:${id}`)).toBe("Languages");
+    const removed = removeCustomSection(content, id!);
+    expect(removed.customSections).toEqual([]);
+    expect(removed.sectionOrder).not.toContain(`custom:${id}`);
+  });
+
+  it("caps custom sections", () => {
+    let c = base();
+    for (let i = 0; i < EDITOR_LIMITS.customSections; i++) c = addCustomSection(c).content;
+    expect(addCustomSection(c).id).toBeNull();
+  });
+
+  it("sanitizer keeps custom keys only for sections that exist", () => {
+    const c = sanitizeEditorContent({
+      customSections: [{ id: "x1", title: "Awards", body: "**Best**" }],
+      sectionOrder: ["custom:x1", "custom:gone", "summary"],
+    });
+    expect(c.sectionOrder[0]).toBe("custom:x1");
+    expect(c.sectionOrder).not.toContain("custom:gone");
+    expect(c.sectionOrder).toContain("experience");
+  });
+
+  it("skills rows round-trip, keep ids and empty rows", () => {
+    const skills = [
+      { id: "1", category: "Tools", value: "Git" },
+      { id: "2", category: "Tools", value: "Docker" },
+    ];
+    const groups = skillsToGroups(skills);
+    expect(groups).toEqual([{ category: "Tools", values: "Git, Docker" }]);
+    const back = groupsToSkills([...groups, { category: "Languages", values: "" }], skills);
+    expect(back.map((s) => [s.id, s.category, s.value])).toEqual([
+      ["1", "Tools", "Git"],
+      ["2", "Tools", "Docker"],
+      [back[2].id, "Languages", ""],
+    ]);
+  });
+
+  it("design: renamed headings, text size and dividers", () => {
+    const c = sanitizeEditorContent({
+      design: { textScale: "lg", dividers: false, sectionTitles: { experience: "Work History", bogus: "x" }, junk: 1 },
+    });
+    expect(c.design).toEqual({ textScale: "lg", dividers: false, sectionTitles: { experience: "Work History" } });
+    expect(sectionTitle(c, "experience")).toBe("Work History");
+    expect(sectionTitle(c, "education")).toBe("Education");
+    const t = effectiveTemplate(TEMPLATES.classic, c.design);
+    expect(t.size.body).toBeGreaterThan(TEMPLATES.classic.size.body);
+    expect(t.heading.rule).toBe(false);
+    expect(effectiveTemplate(TEMPLATES.classic, undefined)).toEqual(TEMPLATES.classic);
+  });
+});

@@ -1,42 +1,28 @@
 import React from "react";
 import type { ResumeContent } from "@/lib/resume-sanitize";
 import {
-  PAGE,
-  SECTION_TITLES,
   bulletsOf,
   contactParts,
+  effectiveTemplate,
   groupSkills,
   linksOf,
   safeLinkUrl,
+  sectionTitle,
   visibleSections,
   type TemplateDef,
 } from "@/lib/resume-templates";
+import { stripRich } from "@/lib/rich-text";
+import { docStyles, PLACEHOLDER } from "./doc-styles";
+import { RichBlocks, RichInline } from "./RichText";
 
-// On-screen renderer for a resume template (editor preview, thumbnails,
-// later the public share page). Mirrors ResumePdfDocument.tsx: both read the
-// same TemplateDef, and sizes are in pt so the layouts match.
+// Read-only on-screen renderer for a resume template (editor preview,
+// thumbnails, later the public share page). Mirrors ResumePdfDocument.tsx:
+// both read the same TemplateDef (+ the resume's design settings), in pt.
 // Always a white "paper" page, regardless of the app's dark mode.
-
-const FONT_STACK = {
-  sans: 'Helvetica, Arial, "Liberation Sans", sans-serif',
-  serif: '"Times New Roman", Times, "Liberation Serif", serif',
-} as const;
-
-const pt = (n: number) => `${n}pt`;
-
-function Link({ url, children, color }: { url: string; children: React.ReactNode; color: string }) {
-  const href = safeLinkUrl(url);
-  if (!href) return <span>{children}</span>;
-  return (
-    <a href={href} target="_blank" rel="noopener noreferrer nofollow" style={{ color, textDecoration: "underline" }}>
-      {children}
-    </a>
-  );
-}
 
 export default function ResumeDocument({
   content,
-  template: t,
+  template,
   placeholders = false,
 }: {
   content: ResumeContent;
@@ -44,47 +30,28 @@ export default function ResumeDocument({
   /** Editor only: show "Your Name" etc. while the resume is empty */
   placeholders?: boolean;
 }) {
-  const { colors, size, spacing } = t;
-  const sections = visibleSections(content);
+  const t = effectiveTemplate(template, content.design);
+  const s = docStyles(t);
+  const sections = visibleSections(content).filter((key) => key !== "personal");
   const personal = content.personalDetails;
   const name = personal?.name?.trim();
 
-  const heading = (key: string) => (
-    <div
-      style={{
-        fontSize: pt(size.heading),
-        fontWeight: 700,
-        textTransform: t.heading.upper ? "uppercase" : "none",
-        letterSpacing: pt(t.heading.letterSpacing),
-        color: t.heading.rule ? colors.accent : colors.text,
-        borderBottom: t.heading.rule ? `0.75pt solid ${colors.rule}` : "none",
-        paddingBottom: pt(2),
-        marginBottom: pt(4),
-      }}
-    >
-      {SECTION_TITLES[key]}
-    </div>
-  );
-
-  // Title (bold) + right-aligned date row used by every timeline entry
   const entryHead = (title: React.ReactNode, date?: string, subtitle?: React.ReactNode) => (
     <>
-      <div style={{ display: "flex", justifyContent: "space-between", gap: pt(8), alignItems: "baseline" }}>
-        <div style={{ fontWeight: 700, color: colors.text }}>{title}</div>
-        {date?.trim() && (
-          <div style={{ fontSize: pt(size.meta), color: colors.muted, whiteSpace: "nowrap" }}>{date}</div>
-        )}
+      <div style={s.entryHead}>
+        <div style={s.entryTitle}>{title}</div>
+        {date?.trim() && <div style={s.date}>{date}</div>}
       </div>
-      {subtitle && <div style={{ fontSize: pt(size.meta), color: colors.muted }}>{subtitle}</div>}
+      {subtitle && <div style={s.subtitle}>{subtitle}</div>}
     </>
   );
 
   const bulletList = (items: string[]) =>
     items.length > 0 && (
-      <ul style={{ margin: `${pt(2)} 0 0`, paddingLeft: pt(12), listStyleType: "disc" }}>
+      <ul style={s.bulletList}>
         {items.map((b, i) => (
-          <li key={i} style={{ marginBottom: pt(1) }}>
-            {b}
+          <li key={i} style={s.bullet}>
+            <RichInline value={b} linkStyle={s.link} />
           </li>
         ))}
       </ul>
@@ -94,31 +61,42 @@ export default function ResumeDocument({
     const items = linksOf(list);
     if (!items.length) return null;
     return (
-      <div style={{ fontSize: pt(size.meta), marginTop: pt(2) }}>
-        {items.map((l, i) => (
-          <React.Fragment key={i}>
-            {i > 0 && <span style={{ color: colors.muted }}> {t.header.separator} </span>}
-            <Link url={l.url} color={colors.accent}>
-              {l.label}
-            </Link>
-          </React.Fragment>
-        ))}
+      <div style={s.linkRow}>
+        {items.map((l, i) => {
+          const href = safeLinkUrl(l.url);
+          return (
+            <React.Fragment key={i}>
+              {i > 0 && <span> {t.header.separator} </span>}
+              {href ? (
+                <a href={href} target="_blank" rel="noopener noreferrer nofollow" style={s.link}>
+                  {l.label}
+                </a>
+              ) : (
+                <span>{l.label}</span>
+              )}
+            </React.Fragment>
+          );
+        })}
       </div>
     );
   };
 
   const renderSection = (key: string) => {
+    if (key.startsWith("custom:")) {
+      const c = content.customSections?.find((x) => `custom:${x.id}` === key);
+      return c ? (
+        <RichBlocks value={c.body} lists paragraphStyle={s.paragraph} listStyle={s.bulletList} itemStyle={s.bullet} linkStyle={s.link} />
+      ) : null;
+    }
     switch (key) {
-      case "personal":
-        return null; // rendered as the header
       case "summary":
-        return <p style={{ margin: 0, whiteSpace: "pre-line" }}>{content.professionalSummary}</p>;
+        return <RichBlocks value={content.professionalSummary ?? ""} paragraphStyle={s.paragraph} linkStyle={s.link} />;
       case "skills":
         return (
           <div>
             {groupSkills(content.skills).map((g) => (
-              <div key={g.category} style={{ marginBottom: pt(1) }}>
-                <span style={{ fontWeight: 700, color: colors.text }}>{g.category}: </span>
+              <div key={g.category} style={{ marginBottom: "1pt" }}>
+                <span style={s.strong}>{g.category}: </span>
                 {g.values.join(", ")}
               </div>
             ))}
@@ -128,7 +106,7 @@ export default function ResumeDocument({
         return (content.experiences ?? [])
           .filter((e) => e.role?.trim() || e.company?.trim())
           .map((e) => (
-            <div key={e.id} style={{ marginBottom: pt(spacing.item) }}>
+            <div key={e.id} style={s.entry}>
               {entryHead(e.role?.trim() || e.company, e.duration, e.role?.trim() ? e.company : undefined)}
               {bulletList(bulletsOf(e.bullets))}
             </div>
@@ -137,7 +115,7 @@ export default function ResumeDocument({
         return (content.projects ?? [])
           .filter((p) => p.title?.trim())
           .map((p) => (
-            <div key={p.id} style={{ marginBottom: pt(spacing.item) }}>
+            <div key={p.id} style={s.entry}>
               {entryHead(p.title, p.duration)}
               {bulletList(bulletsOf(p.description))}
               {linkRow(p.links)}
@@ -149,7 +127,7 @@ export default function ResumeDocument({
           .map((e) => {
             const detail = [e.course, e.major, e.gwa?.trim() ? `GWA: ${e.gwa}` : ""].filter((v) => v?.trim()).join(" · ");
             return (
-              <div key={e.id} style={{ marginBottom: pt(spacing.item) }}>
+              <div key={e.id} style={s.entry}>
                 {entryHead(e.schoolName?.trim() || e.course, e.duration, e.schoolName?.trim() ? detail : undefined)}
               </div>
             );
@@ -157,16 +135,17 @@ export default function ResumeDocument({
       case "certificates":
         return (content.certificates ?? [])
           .filter((c) => c.title?.trim())
-          .map((c) => {
-            const date = [c.issuedDate, c.expirationDate].filter((v) => v?.trim()).join(" - ");
-            return (
-              <div key={c.id} style={{ marginBottom: pt(spacing.item) }}>
-                {entryHead(c.title, date)}
-                {c.description?.trim() && <div style={{ marginTop: pt(1) }}>{c.description}</div>}
-                {linkRow(c.links)}
-              </div>
-            );
-          });
+          .map((c) => (
+            <div key={c.id} style={s.entry}>
+              {entryHead(c.title, [c.issuedDate, c.expirationDate].filter((v) => v?.trim()).join(" - "))}
+              {stripRich(c.description).trim() && (
+                <div style={{ marginTop: "1pt" }}>
+                  <RichInline value={c.description!} linkStyle={s.link} />
+                </div>
+              )}
+              {linkRow(c.links)}
+            </div>
+          ));
       default:
         return null;
     }
@@ -176,43 +155,12 @@ export default function ResumeDocument({
   const showHeader = Boolean(name) || contacts.length > 0 || linksOf(personal?.links).length > 0 || placeholders;
 
   return (
-    <div
-      style={{
-        width: pt(PAGE.width),
-        minHeight: pt(PAGE.height),
-        padding: pt(spacing.page),
-        boxSizing: "border-box",
-        background: "#ffffff",
-        color: colors.muted,
-        fontFamily: FONT_STACK[t.font],
-        fontSize: pt(size.body),
-        lineHeight: t.lineHeight,
-        textAlign: "left",
-        overflowWrap: "anywhere",
-      }}
-    >
+    <div style={s.page}>
       {showHeader && (
-        <header
-          style={{
-            textAlign: t.header.align,
-            marginBottom: pt(spacing.section),
-            ...(t.header.align === "left" ? { borderLeft: `3pt solid ${colors.accent}`, paddingLeft: pt(8) } : {}),
-          }}
-        >
-          <div
-            style={{
-              fontSize: pt(size.name),
-              fontWeight: 700,
-              color: name ? colors.text : "#a8a29e",
-              textTransform: t.header.nameUpper ? "uppercase" : "none",
-              letterSpacing: t.header.nameUpper ? pt(0.5) : undefined,
-              lineHeight: 1.15,
-            }}
-          >
-            {name || "Your Name"}
-          </div>
+        <header style={s.header}>
+          <div style={{ ...s.name, color: name ? s.name.color : PLACEHOLDER }}>{name || "Your Name"}</div>
           {(contacts.length > 0 || placeholders) && (
-            <div style={{ fontSize: pt(size.meta), marginTop: pt(3) }}>
+            <div style={s.contactRow}>
               {contacts.length > 0 ? (
                 contacts.map((c, i) => (
                   <React.Fragment key={i}>
@@ -221,7 +169,9 @@ export default function ResumeDocument({
                   </React.Fragment>
                 ))
               ) : (
-                <span style={{ color: "#a8a29e" }}>Phone {t.header.separator} Email {t.header.separator} City</span>
+                <span style={{ color: PLACEHOLDER }}>
+                  Phone {t.header.separator} Email {t.header.separator} City
+                </span>
               )}
             </div>
           )}
@@ -229,17 +179,15 @@ export default function ResumeDocument({
         </header>
       )}
 
-      {sections
-        .filter((key) => key !== "personal")
-        .map((key) => (
-          <section key={key} style={{ marginBottom: pt(spacing.section) }}>
-            {heading(key)}
-            {renderSection(key)}
-          </section>
-        ))}
+      {sections.map((key) => (
+        <section key={key} style={s.section}>
+          <div style={s.heading}>{sectionTitle(content, key)}</div>
+          {renderSection(key)}
+        </section>
+      ))}
 
-      {placeholders && sections.filter((k) => k !== "personal").length === 0 && (
-        <p style={{ color: "#a8a29e", fontSize: pt(size.body), marginTop: pt(12) }}>
+      {placeholders && sections.length === 0 && (
+        <p style={{ color: PLACEHOLDER, marginTop: "12pt" }}>
           Your summary, experience, skills and education will appear here as you fill them in.
         </p>
       )}

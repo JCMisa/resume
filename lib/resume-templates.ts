@@ -7,6 +7,8 @@
 // HTML renderer uses CSS pt units so both renderers lay out the same.
 
 import type { ResumeContent } from "./resume-sanitize";
+import { stripRich } from "./rich-text";
+export { safeLinkUrl } from "./rich-text";
 
 export const TEMPLATE_IDS = ["classic", "modern", "compact"] as const;
 export type TemplateId = (typeof TEMPLATE_IDS)[number];
@@ -118,15 +120,41 @@ export function contactParts(personal: ResumeContent["personalDetails"]) {
 
 const filled = (v?: string) => Boolean(v?.trim());
 
+const TEXT_SCALE = { sm: 0.92, md: 1, lg: 1.08 } as const;
+
+/** The template with the resume's own look settings applied (text size, divider lines). */
+export function effectiveTemplate(t: TemplateDef, design?: ResumeContent["design"]): TemplateDef {
+  const k = TEXT_SCALE[design?.textScale ?? "md"];
+  const round = (n: number) => Math.round(n * k * 4) / 4;
+  return {
+    ...t,
+    size: { name: round(t.size.name), heading: round(t.size.heading), body: round(t.size.body), meta: round(t.size.meta) },
+    heading: { ...t.heading, rule: design?.dividers ?? t.heading.rule },
+  };
+}
+
+/** Heading for a section: the user's rename, a custom section's title, or the default. */
+export function sectionTitle(content: ResumeContent, key: string): string {
+  if (key.startsWith("custom:")) {
+    const s = content.customSections?.find((c) => `custom:${c.id}` === key);
+    return s?.title.trim() || "Custom section";
+  }
+  return content.design?.sectionTitles?.[key]?.trim() || SECTION_TITLES[key] || key;
+}
+
 /** Whether a section has anything to print (empty ones are skipped). */
 export function sectionHasContent(content: ResumeContent, key: string): boolean {
+  if (key.startsWith("custom:")) {
+    const s = content.customSections?.find((c) => `custom:${c.id}` === key);
+    return Boolean(s && stripRich(s.body).trim());
+  }
   switch (key) {
     case "personal": {
       const p = content.personalDetails;
       return filled(p?.name) || contactParts(p).length > 0 || Boolean(p?.links?.some((l) => filled(l.url)));
     }
     case "summary":
-      return filled(content.professionalSummary);
+      return filled(stripRich(content.professionalSummary));
     case "skills":
       return groupSkills(content.skills).length > 0;
     case "experience":
@@ -148,22 +176,13 @@ export function visibleSections(content: ResumeContent): string[] {
 }
 
 /** Bullets with something in them. */
-export const bulletsOf = (list: string[] | undefined) => (list ?? []).map((b) => b.trim()).filter(Boolean);
+export const bulletsOf = (list: string[] | undefined) => (list ?? []).filter((b) => stripRich(b).trim());
 
 /** Links with a URL; label falls back to the URL without the protocol. */
 export function linksOf(list: { label: string; url: string }[] | undefined) {
   return (list ?? [])
     .filter((l) => filled(l.url))
     .map((l) => ({ url: l.url.trim(), label: l.label?.trim() || l.url.trim().replace(/^https?:\/\//, "") }));
-}
-
-/** Only http(s) and mailto links are made clickable. */
-export function safeLinkUrl(url: string): string | null {
-  const u = url.trim();
-  if (/^mailto:/i.test(u)) return u;
-  if (/^https?:\/\//i.test(u)) return u;
-  if (/^[\w.-]+\.[a-z]{2,}(\/\S*)?$/i.test(u)) return `https://${u}`;
-  return null;
 }
 
 // ── Sample content for template thumbnails ──────────────────────────────────

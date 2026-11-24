@@ -194,3 +194,45 @@
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
+
+/* ── Resume editor rich fields (Tiptap, app/(routes)/resumes/_components/editor/rich) ── */
+.rich-field .ProseMirror {
+  outline: none;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.rich-field .ProseMirror p {
+  margin: 0;
+}
+.rich-field .ProseMirror ul {
+  list-style: disc;
+  padding-left: 1.1em;
+  margin: 0.15em 0;
+}
+.rich-field .ProseMirror a {
+  text-decoration: underline;
+  color: inherit;
+}
+/* Bullet fields: every paragraph is one bullet */
+.rich-bullets .ProseMirror p {
+  display: list-item;
+  list-style: disc;
+  margin-left: 1.1em;
+}
+/* Placeholders (Tiptap Placeholder extension) */
+.rich-field .ProseMirror .is-empty::before {
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  pointer-events: none;
+  color: #a8a29e;
+}
+.rich-field .ProseMirror li .is-empty::before {
+  content: none;
+}
+/* Single-line editable text on the resume page (InlineText) */
+[data-inline-text]:empty::before {
+  content: attr(data-placeholder);
+  color: #a8a29e;
+  pointer-events: none;
+}
