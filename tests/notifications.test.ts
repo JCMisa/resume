@@ -111,7 +111,7 @@ describe("usageNotice", () => {
 });
 
 describe("capFor / usageNoticeFor", () => {
-  const usage = { analyses: 0, interviews: 0, resumes: 0, jobMatches: 0 };
+  const usage = { analyses: 0, interviews: 0, resumes: 0, jobMatches: 0, aiWrites: 0 };
 
   it("free caps, Pro only capped on interviews, admins never", () => {
     expect(capFor("analyze", { isPro: false, isAdmin: false })).toBe(FREE_LIMITS.analyze);

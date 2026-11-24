@@ -11,6 +11,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { Plus, Trash2, Award } from "lucide-react";
+import RichField from "../rich/RichField";
 
 interface CertificatesFormProps {
   data: any[];
@@ -130,13 +131,13 @@ export default function CertificatesForm({
                   <span className="text-[11px] font-bold text-muted-foreground uppercase">
                     Authority / Short Details
                   </span>
-                  <Input
-                    placeholder="Issued by Anthropic Learning Network"
+                  <RichField
+                    kind="inline"
+                    toolbar="inline"
                     value={cert.description || ""}
-                    onChange={(e) =>
-                      handleCertChange(index, "description", e.target.value)
-                    }
-                    className="rounded-xl h-9"
+                    onChange={(v) => handleCertChange(index, "description", v as string)}
+                    ariaLabel="Certification details"
+                    placeholder="Issued by …"
                   />
                 </div>
               </AccordionContent>

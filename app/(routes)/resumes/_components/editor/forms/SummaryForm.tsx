@@ -1,7 +1,8 @@
 "use client";
 
 import React from "react";
-import { Textarea } from "@/components/ui/textarea";
+import RichField from "../rich/RichField";
+import { AiSummaryAssist } from "../ai/AiAssists";
 
 interface SummaryFormProps {
   data: string;
@@ -15,16 +16,20 @@ export default function SummaryForm({ data, onChange }: SummaryFormProps) {
         <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
           Professional Summary (Optional)
         </label>
-        <Textarea
-          placeholder="Passionate Full-Stack Developer specializing in high-performance web applications and AI integrations..."
+        <RichField
+          kind="paragraphs"
+          toolbar="inline"
           value={data}
-          onChange={(e) => onChange(e.target.value)}
-          className="rounded-xl min-h-[200px] resize-none leading-relaxed"
+          onChange={(v) => onChange(v as string)}
+          ariaLabel="Professional summary"
+          placeholder="Full-stack developer specializing in fast web apps and AI integrations…"
+          className="[&_.rich-field]:min-h-48"
         />
         <p className="text-[11px] text-muted-foreground italic">
           Tip: Write a short, punchy paragraph (3-4 sentences) highlighting your
           core expertise and engineering focus.
         </p>
+        <AiSummaryAssist hasSummary={!!data.trim()} onUse={onChange} />
       </div>
     </div>
   );

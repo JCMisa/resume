@@ -14,6 +14,12 @@ export const AI_MODELS = {
   jobMatch: "gemini-3.1-flash-lite",
 
   /**
+   * Editor AI writing help (summary, bullets, skill ideas) and Tailor to a
+   * job. Short outputs, so Flash-Lite keeps each action well under a cent.
+   */
+  aiWriting: "gemini-3.1-flash-lite",
+
+  /**
    * Grading a finished mock interview (Pro only, once per interview).
    * Planned upgrade: "gemini-3.8-flash" (stronger feedback, ~1 cent per grade).
    * On 2026-11-21 it returned 503 "high demand" twice for our API key, so it's

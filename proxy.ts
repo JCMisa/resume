@@ -8,6 +8,9 @@ const isPublicRoute = createRouteMatcher([
   // Vapi SDK proxy: authenticated by a signed call ticket, not Clerk (the SDK's
   // Authorization header would be misread as a Clerk token)
   "/api/vapi(.*)",
+  // Shared resumes (/r/<code>) and their link-preview images. Note the slash:
+  // "/r(.*)" would also match /resumes.
+  "/r/(.*)",
 ]);
 
 export default clerkMiddleware(async (auth, request) => {

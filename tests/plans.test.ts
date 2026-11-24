@@ -24,6 +24,7 @@ const usage = (u: Partial<UsageCounts> = {}): UsageCounts => ({
   interviews: 0,
   resumes: 0,
   jobMatches: 0,
+  aiWrites: 0,
   ...u,
 });
 const free = (u?: Partial<UsageCounts>) =>
@@ -83,6 +84,23 @@ describe("computeAllowed", () => {
     expect(free().interview).toBe(false);
   });
 
+  it("free: AI writing until the monthly limit; Tailor to a job is Pro-only", () => {
+    expect(free({ aiWrites: FREE_LIMITS.ai_write - 1 }).ai_write).toBe(true);
+    expect(free({ aiWrites: FREE_LIMITS.ai_write }).ai_write).toBe(false);
+    expect(free().tailor).toBe(false);
+    expect(pro({ aiWrites: 999 }).ai_write).toBe(true);
+    expect(pro().tailor).toBe(true);
+  });
+
+  it("designer looks and version history are Pro-only", () => {
+    expect(free().design).toBe(false);
+    expect(free().history).toBe(false);
+    expect(pro().design).toBe(true);
+    expect(pro().history).toBe(true);
+    expect(limitReachedMessage("design")).toMatch(/Pro features/);
+    expect(limitReachedMessage("history")).toMatch(/Version history is a Pro feature/);
+  });
+
   it("pro: unlimited analyses and resumes", () => {
     const a = pro({ analyses: 999, resumes: 999 });
     expect(a.analyze).toBe(true);
@@ -99,9 +117,18 @@ describe("computeAllowed", () => {
       computeAllowed({
         isPro: false,
         isAdmin: true,
-        usage: usage({ analyses: 999, interviews: 999, resumes: 999, jobMatches: 999 }),
+        usage: usage({ analyses: 999, interviews: 999, resumes: 999, jobMatches: 999, aiWrites: 999 }),
       }),
-    ).toEqual({ analyze: true, interview: true, create_resume: true, job_match: true });
+    ).toEqual({
+      analyze: true,
+      interview: true,
+      create_resume: true,
+      job_match: true,
+      ai_write: true,
+      tailor: true,
+      design: true,
+      history: true,
+    });
   });
 });
 
@@ -135,6 +162,8 @@ describe("messages and copy", () => {
   it("knows interviews are Pro-only", () => {
     expect(isProOnly("interview")).toBe(true);
     expect(isProOnly("analyze")).toBe(false);
+    expect(isProOnly("tailor")).toBe(true);
+    expect(isProOnly("ai_write")).toBe(false);
   });
 
   it("limit messages use the real numbers and reset date", () => {
@@ -146,6 +175,8 @@ describe("messages and copy", () => {
     expect(limitReachedMessage("analyze")).toContain(`all ${FREE_LIMITS.analyze}`);
     expect(limitReachedMessage("analyze")).toContain("resets Dec 1");
     expect(limitReachedMessage("interview")).toMatch(/Pro feature/);
+    expect(limitReachedMessage("tailor")).toMatch(/Tailor to a job is a Pro feature/);
+    expect(limitReachedMessage("ai_write")).toContain(`all ${FREE_LIMITS.ai_write} AI writing actions`);
     expect(proCapReachedMessage()).toContain(`${PRO_LIMITS.interview}`);
   });
 
@@ -156,6 +187,7 @@ describe("messages and copy", () => {
     expect(free).toContain(`${FREE_LIMITS.create_resume} resumes`);
     expect(free).toContain(`${FREE_LIMITS.job_match} job description matches`);
     expect(free).toContain(`${FREE_REPORT.bulletRewrites} bullet rewrites`);
+    expect(free).toContain(`${FREE_LIMITS.ai_write} AI writing actions`);
     expect(pro).toContain(`${PRO_LIMITS.interview} AI mock interviews`);
   });
 });

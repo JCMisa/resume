@@ -1,7 +1,9 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { Progress } from "@/components/ui/progress";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+import { RichBlocks, RichInline } from "@/components/resume-templates/RichText";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
@@ -16,6 +18,9 @@ import {
   Code,
   FolderGit2,
   Target,
+  FilePen,
+  Copy,
+  Share2,
 } from "lucide-react";
 import Link from "next/link";
 import { getResumeDetailsAction } from "@/lib/actions/resume";
@@ -74,6 +79,7 @@ interface ResumeContent {
     links?: { label: string; url: string }[];
   }[];
   sectionOrder?: string[];
+  customSections?: { id: string; title: string; body: string }[];
 }
 
 
@@ -101,6 +107,7 @@ export default async function ResumeDetailsPage({ params, searchParams }: PagePr
   }
 
   const title = result.data.title;
+  const builtInEditor = result.data.status === "created";
   const category = result.data.category;
   const fileUrl = result.data.fileUrl || null;
 
@@ -139,9 +146,27 @@ export default async function ResumeDetailsPage({ params, searchParams }: PagePr
           <h1 className="text-2xl lg:text-3xl font-extrabold tracking-tight">
             {title}
           </h1>
-          <span className="inline-flex items-center text-xs font-bold px-3 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20 uppercase tracking-wider">
-            {category}
-          </span>
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="inline-flex items-center text-xs font-bold px-3 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20 uppercase tracking-wider">
+              {category}
+            </span>
+            {/* Built resumes open in the editor; uploads are edited as a copy */}
+            <Link
+              href={builtInEditor ? `/resumes/${resumeId}/edit` : `/resumes/create?from=${resumeId}`}
+              className={cn(buttonVariants({ size: "sm", variant: builtInEditor ? "default" : "outline" }), "rounded-lg gap-1.5 h-7")}
+            >
+              {builtInEditor ? <FilePen className="size-3.5" /> : <Copy className="size-3.5" />}
+              {builtInEditor ? "Edit resume" : "Edit a copy"}
+            </Link>
+            {builtInEditor && (
+              <Link
+                href={`/resumes/${resumeId}/share`}
+                className={cn(buttonVariants({ size: "sm", variant: "outline" }), "rounded-lg gap-1.5 h-7")}
+              >
+                <Share2 className="size-3.5" /> Download & share
+              </Link>
+            )}
+          </div>
         </div>
 
         {analysis?.overallScore && (
@@ -289,9 +314,9 @@ export default async function ResumeDetailsPage({ params, searchParams }: PagePr
                       <h4 className="text-[10px] font-bold text-primary uppercase tracking-widest">
                         Professional Summary
                       </h4>
-                      <p className="text-xs text-muted-foreground leading-relaxed text-justify">
-                        {content.professionalSummary}
-                      </p>
+                      <div className="text-xs text-muted-foreground leading-relaxed space-y-1.5">
+                        <RichBlocks value={content.professionalSummary} />
+                      </div>
                     </div>
                   )}
                 </div>
@@ -330,7 +355,7 @@ export default async function ResumeDetailsPage({ params, searchParams }: PagePr
                                   {exp.bullets?.map(
                                     (bullet: string, i: number) => (
                                       <li key={i} className="leading-relaxed">
-                                        {bullet}
+                                        <RichInline value={bullet} linkStyle={{ textDecoration: "underline" }} />
                                       </li>
                                     ),
                                   )}
@@ -368,7 +393,7 @@ export default async function ResumeDetailsPage({ params, searchParams }: PagePr
                                   {proj.description?.map(
                                     (bullet: string, i: number) => (
                                       <li key={i} className="leading-relaxed">
-                                        {bullet}
+                                        <RichInline value={bullet} linkStyle={{ textDecoration: "underline" }} />
                                       </li>
                                     ),
                                   )}
@@ -518,7 +543,7 @@ export default async function ResumeDetailsPage({ params, searchParams }: PagePr
                                 </h4>
                                 {cert.description && (
                                   <p className="text-[11px] text-muted-foreground font-medium">
-                                    {cert.description}
+                                    <RichInline value={cert.description} />
                                   </p>
                                 )}
                                 <p className="text-[9px] font-mono text-muted-foreground">
@@ -530,6 +555,20 @@ export default async function ResumeDetailsPage({ params, searchParams }: PagePr
                         </ScrollArea>
                       </div>
                     )}
+
+                    {/* CUSTOM SECTIONS (from the editor) */}
+                    {(content.customSections ?? [])
+                      .filter((c) => c.body?.trim())
+                      .map((c) => (
+                        <div key={c.id} className="p-5 border rounded-2xl bg-card shadow-sm space-y-3">
+                          <h3 className="text-[11px] font-bold tracking-widest text-muted-foreground uppercase flex items-center gap-1.5">
+                            <FileText className="h-3.5 w-3.5 text-primary" /> {c.title || "Custom section"}
+                          </h3>
+                          <div className="text-xs text-muted-foreground leading-relaxed space-y-1.5 [&_ul]:list-disc [&_ul]:pl-4">
+                            <RichBlocks value={c.body} lists />
+                          </div>
+                        </div>
+                      ))}
                   </div>
                 </div>
               </div>

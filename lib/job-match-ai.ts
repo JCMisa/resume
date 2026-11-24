@@ -9,6 +9,7 @@ import {
   type JobMatchData,
 } from "@/lib/job-match";
 import { contentText } from "@/lib/resume-checks";
+import { toPlainContent } from "@/lib/rich-text";
 import type { ResumeContent } from "@/lib/resume-sanitize";
 
 // Gemini side of resume vs job description matching. Not a server action;
@@ -95,6 +96,7 @@ export async function matchResumeToJob(
   jobDescription: string,
   knownYears?: number | null,
 ): Promise<JobMatchData> {
+  content = toPlainContent(content); // no editor formatting in prompts/matching
   const resumeJson = JSON.stringify(content, null, 2).slice(0, 40_000);
   const jd = jobDescription.slice(0, MAX_JOB_DESCRIPTION_CHARS);
 

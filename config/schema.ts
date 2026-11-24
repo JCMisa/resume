@@ -34,6 +34,7 @@ export const usageKindEnum = pgEnum("usage_kind", [
   "resume_analysis", // AI analysis (new upload or re-analysis)
   "resume_create", // resume built in the editor
   "job_match", // resume vs job description match
+  "ai_write", // AI writing help in the editor (summary, bullets, skills, tailor)
 ]);
 
 // USERS
@@ -107,6 +108,19 @@ export const resumes = pgTable("resumes", {
         description?: string;
         links?: { label: string; url: string }[];
       }[];
+      // Free-form sections from the editor (key "custom:<id>" in sectionOrder).
+      // body uses the inline markup in lib/rich-text.ts.
+      customSections?: { id: string; title: string; body: string }[];
+      // Document-mode look settings (lib/resume-templates.ts effectiveTemplate)
+      design?: {
+        textScale?: "sm" | "md" | "lg";
+        dividers?: boolean;
+        sectionTitles?: Record<string, string>;
+        /** Pro: accent colour "#rrggbb" (headings, rules, links, header band) */
+        accent?: string;
+        /** Pro: font family override */
+        font?: "sans" | "serif";
+      };
       // 🎛️ DRAG & DROP TRACKING ORDER SECTION
       // Keeps track of user preferences, e.g., ["personal", "summary", "projects", "skills"...]
       sectionOrder: string[];
@@ -118,7 +132,16 @@ export const resumes = pgTable("resumes", {
   analysis: jsonb("analysis").$type<ResumeAnalysisData>(),
 
   isDefault: boolean("is_default").default(false),
-  templateId: text("template_id").default("modern"),
+  // Editor template id (lib/resume-templates.ts); null = default (Classic)
+  templateId: text("template_id"),
+
+  // Public share link (/r/<shareCode>). Off by default; the code is made the
+  // first time sharing is turned on and can be regenerated (old link dies).
+  shareCode: text("share_code").unique(),
+  shareEnabled: boolean("share_enabled").default(false).notNull(),
+  // Privacy: hide phone + address on the public page (on by default)
+  shareHideContact: boolean("share_hide_contact").default(true).notNull(),
+  shareViews: integer("share_views").default(0).notNull(),
 
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
@@ -177,6 +200,31 @@ export const usageEvents = pgTable(
     createdAt: timestamp("created_at").defaultNow().notNull(),
   },
   (t) => [index("usage_events_user_kind_idx").on(t.userId, t.kind, t.createdAt)],
+);
+
+// RESUME VERSIONS (Pro version history: snapshots of a built resume)
+// Taken automatically while editing (at most one per 10 minutes), on
+// "Save version", and before a restore. Deleted with their resume.
+export const resumeVersions = pgTable(
+  "resume_versions",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    resumeId: uuid("resume_id")
+      .references(() => resumes.id, { onDelete: "cascade" })
+      .notNull(),
+    userId: text("user_id")
+      .references(() => users.id, { onDelete: "cascade" })
+      .notNull(),
+    /** "auto" | "manual" | "restore" (typed in lib/resume-versions.ts) */
+    kind: text("kind").notNull(),
+    /** User's name for a manual version */
+    label: text("label"),
+    title: text("title").notNull(),
+    templateId: text("template_id"),
+    content: jsonb("content").$type<Resume["content"]>().notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (t) => [index("resume_versions_resume_created_idx").on(t.resumeId, t.createdAt)],
 );
 
 // JOB MATCHES (a resume compared against a pasted job description)
@@ -290,6 +338,7 @@ export type InterviewResult = InferSelectModel<typeof interviewResults>;
 export type NewInterviewResult = InferInsertModel<typeof interviewResults>;
 
 export type JobMatch = InferSelectModel<typeof jobMatches>;
+export type ResumeVersion = InferSelectModel<typeof resumeVersions>;
 export type NewJobMatch = InferInsertModel<typeof jobMatches>;
 
 export type UsageEvent = InferSelectModel<typeof usageEvents>;

@@ -21,6 +21,7 @@ import {
   FileText,
   Mic,
   Target,
+  WandSparkles,
   FilePlus, // 🚀 Added for resume attempts visual styling
 } from "lucide-react";
 import Image from "next/image";
@@ -62,6 +63,7 @@ interface SettingsClientLayoutProps {
       interviews: number | string;
       resumes: number | string;
       jobMatches: number | string;
+      aiWrites: number | string;
     };
   };
 }
@@ -309,6 +311,13 @@ export default function SettingsClientLayout({
                 label="Job Matches"
                 value={`${billingData.limits.jobMatches} / ${isPro ? "∞" : FREE_LIMITS.job_match}`}
                 sub={usageSub("job_match")}
+              />
+
+              <StatCard
+                icon={WandSparkles}
+                label="AI Writing"
+                value={`${billingData.limits.aiWrites} / ${isPro ? "∞" : FREE_LIMITS.ai_write}`}
+                sub={usageSub("ai_write")}
               />
 
               <StatCard

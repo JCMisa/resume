@@ -11,6 +11,8 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { Plus, Trash2, Briefcase } from "lucide-react";
+import RichField from "../rich/RichField";
+import { AiBulletsAssist } from "../ai/AiAssists";
 
 interface ExperienceFormProps {
   data: any[];
@@ -45,28 +47,9 @@ export default function ExperienceForm({
     onChange(data.filter((item) => item.id !== id));
   };
 
-  const handleBulletChange = (
-    expIndex: number,
-    bIndex: number,
-    value: string,
-  ) => {
-    const updated = [...data];
-    updated[expIndex].bullets[bIndex] = value;
-    onChange(updated);
-  };
-
-  const addBulletField = (expIndex: number) => {
-    const updated = [...data];
-    updated[expIndex].bullets.push("");
-    onChange(updated);
-  };
-
-  const removeBulletField = (expIndex: number, bIndex: number) => {
-    const updated = [...data];
-    updated[expIndex].bullets = updated[expIndex].bullets.filter(
-      (_: any, i: number) => i !== bIndex,
-    );
-    onChange(updated);
+  // Bullets are one rich field: Enter adds a bullet, Backspace on an empty one removes it
+  const setBullets = (index: number, bullets: string[]) => {
+    onChange(data.map((item, i) => (i === index ? { ...item, bullets } : item)));
   };
 
   return (
@@ -170,48 +153,28 @@ export default function ExperienceForm({
                   />
                 </div>
 
-                {/* BULLETS REPEATABLE SUB SECTION */}
-                <div className="space-y-2 pt-2">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[11px] font-bold text-primary uppercase tracking-wider">
-                      Responsibilities & Key Metrics
-                    </span>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => addBulletField(index)}
-                      className="h-6 rounded-lg text-[10px] font-bold gap-0.5 px-2"
-                    >
-                      <Plus className="h-3 w-3" /> Add Bullet
-                    </Button>
-                  </div>
-                  <div className="space-y-2">
-                    {exp.bullets?.map((bullet: string, bIdx: number) => (
-                      <div
-                        key={bIdx}
-                        className="flex items-center gap-2 animate-in slide-in-from-top-1 duration-200"
-                      >
-                        <Input
-                          placeholder="Reduced initial application load times by 30% through vector code optimizations..."
-                          value={bullet || ""}
-                          onChange={(e) =>
-                            handleBulletChange(index, bIdx, e.target.value)
-                          }
-                          className="rounded-xl h-8 text-xs flex-grow"
-                        />
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => removeBulletField(index, bIdx)}
-                          className="text-destructive hover:bg-destructive/10 h-7 w-7 rounded-lg shrink-0"
-                        >
-                          <Trash2 className="h-3.5 w-3.5" />
-                        </Button>
-                      </div>
-                    ))}
-                  </div>
+                {/* Bullets: one rich field (bold/italic/underline/links) */}
+                <div className="space-y-1.5 pt-2">
+                  <span className="text-[11px] font-bold text-primary uppercase tracking-wider">
+                    Responsibilities & Key Metrics
+                  </span>
+                  <RichField
+                    kind="bullets"
+                    toolbar="inline"
+                    value={exp.bullets ?? [""]}
+                    onChange={(v) => setBullets(index, v as string[])}
+                    ariaLabel={`${exp.role || "Job"} bullet points`}
+                    placeholder="Reduced load times by 30% by…"
+                  />
+                  <p className="text-[11px] text-muted-foreground">Press Enter for a new bullet. Start with a verb and add a number.</p>
+                  <AiBulletsAssist
+                    section="experience"
+                    index={index}
+                    hasBullets={(exp.bullets ?? []).some((b: string) => b.trim())}
+                    onUse={(bullets, mode) =>
+                      setBullets(index, mode === "add" ? [...(exp.bullets ?? []).filter((b: string) => b.trim()), ...bullets] : bullets)
+                    }
+                  />
                 </div>
               </AccordionContent>
             </AccordionItem>
