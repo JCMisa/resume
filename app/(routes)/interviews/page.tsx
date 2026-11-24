@@ -3,7 +3,9 @@
 import { useEffect, useState } from "react";
 import { Video } from "lucide-react";
 import InterviewSetupForm from "./_components/InterviewSetupForm";
-import Agent from "./_components/Agent";
+import Agent, { type StageStatus } from "./_components/Agent";
+import InterviewRoom from "./_components/InterviewRoom";
+import { enterFullscreen } from "@/lib/fullscreen";
 import InterviewProTeaser from "./_components/InterviewProTeaser";
 import InterviewCapReached from "./_components/InterviewCapReached";
 import PastInterviewsList, {
@@ -27,6 +29,7 @@ export default function InterviewsPage() {
     role: string; // job role typed by user
     desc: string; // optional job desc typed by user
   } | null>(null);
+  const [callStatus, setCallStatus] = useState<StageStatus>("idle");
 
   // Interview access: Free users see the Pro teaser; Pro users who used their
   // monthly allowance see when it resets.
@@ -87,17 +90,27 @@ export default function InterviewsPage() {
             )
           ) : !sessionMeta ? (
             <InterviewSetupForm
-              onSetupComplete={(text, role, desc) =>
-                setSessionMeta({ text, role, desc })
-              }
+              onSetupComplete={(text, role, desc) => {
+                // Still inside the Continue click, so the browser allows
+                // fullscreen; if it refuses, the room still fills the window
+                void enterFullscreen();
+                setCallStatus("idle");
+                setSessionMeta({ text, role, desc });
+              }}
             />
           ) : (
-            <div className="animate-in slide-in-from-bottom-4 duration-300">
+            // Opens maximized (focus mode); can be minimized back to this page
+            <InterviewRoom
+              role={sessionMeta.role}
+              canLeave={callStatus === "idle"}
+              onLeave={() => setSessionMeta(null)}
+            >
               <Agent
                 sessionMeta={sessionMeta}
                 onLimitReached={refreshAccess}
+                onStatusChange={setCallStatus}
               />
-            </div>
+            </InterviewRoom>
           )}
 
           {/* Score trends under the form */}

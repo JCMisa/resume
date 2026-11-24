@@ -21,13 +21,16 @@ interface AgentProps {
   sessionMeta: { text: string; role: string; desc: string };
   /** Called when the server rejects a new session because of a plan limit. */
   onLimitReached?: () => void;
+  /** Lets the interview room know whether a call is running. */
+  onStatusChange?: (status: StageStatus) => void;
 }
 
-type StageStatus = "idle" | "connecting" | "active" | "processing_results";
+export type StageStatus = "idle" | "connecting" | "active" | "processing_results";
 
 export default function Agent({
   sessionMeta,
   onLimitReached,
+  onStatusChange,
 }: AgentProps) {
   const router = useRouter();
   const [status, setStatus] = useState<StageStatus>("idle");
@@ -184,6 +187,10 @@ export default function Agent({
       if (id) void cancelInterviewSessionAction(id);
     };
   }, []);
+
+  useEffect(() => {
+    onStatusChange?.(status);
+  }, [status, onStatusChange]);
 
   useEffect(() => {
     let interval: NodeJS.Timeout;
