@@ -116,6 +116,10 @@ export const resumes = pgTable("resumes", {
         textScale?: "sm" | "md" | "lg";
         dividers?: boolean;
         sectionTitles?: Record<string, string>;
+        /** Pro: accent colour "#rrggbb" (headings, rules, links, header band) */
+        accent?: string;
+        /** Pro: font family override */
+        font?: "sans" | "serif";
       };
       // 🎛️ DRAG & DROP TRACKING ORDER SECTION
       // Keeps track of user preferences, e.g., ["personal", "summary", "projects", "skills"...]
@@ -196,6 +200,31 @@ export const usageEvents = pgTable(
     createdAt: timestamp("created_at").defaultNow().notNull(),
   },
   (t) => [index("usage_events_user_kind_idx").on(t.userId, t.kind, t.createdAt)],
+);
+
+// RESUME VERSIONS (Pro version history: snapshots of a built resume)
+// Taken automatically while editing (at most one per 10 minutes), on
+// "Save version", and before a restore. Deleted with their resume.
+export const resumeVersions = pgTable(
+  "resume_versions",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    resumeId: uuid("resume_id")
+      .references(() => resumes.id, { onDelete: "cascade" })
+      .notNull(),
+    userId: text("user_id")
+      .references(() => users.id, { onDelete: "cascade" })
+      .notNull(),
+    /** "auto" | "manual" | "restore" (typed in lib/resume-versions.ts) */
+    kind: text("kind").notNull(),
+    /** User's name for a manual version */
+    label: text("label"),
+    title: text("title").notNull(),
+    templateId: text("template_id"),
+    content: jsonb("content").$type<Resume["content"]>().notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (t) => [index("resume_versions_resume_created_idx").on(t.resumeId, t.createdAt)],
 );
 
 // JOB MATCHES (a resume compared against a pasted job description)
@@ -309,6 +338,7 @@ export type InterviewResult = InferSelectModel<typeof interviewResults>;
 export type NewInterviewResult = InferInsertModel<typeof interviewResults>;
 
 export type JobMatch = InferSelectModel<typeof jobMatches>;
+export type ResumeVersion = InferSelectModel<typeof resumeVersions>;
 export type NewJobMatch = InferInsertModel<typeof jobMatches>;
 
 export type UsageEvent = InferSelectModel<typeof usageEvents>;

@@ -12,10 +12,18 @@ import {
 } from "@/lib/resume-editor";
 import { DEFAULT_SECTION_ORDER } from "@/lib/resume-sanitize";
 import {
+  ACCENT_PRESETS,
   DEFAULT_TEMPLATE,
+  MIN_ACCENT_CONTRAST,
   SAMPLE_CONTENT,
   TEMPLATES,
   TEMPLATE_IDS,
+  contrastOnWhite,
+  headerColors,
+  headingColor,
+  isProTemplate,
+  readableAccent,
+  usesProDesign,
   contactParts,
   groupSkills,
   isTemplateId,
@@ -233,5 +241,47 @@ describe("document-mode operations", () => {
     expect(t.size.body).toBeGreaterThan(TEMPLATES.classic.size.body);
     expect(t.heading.rule).toBe(false);
     expect(effectiveTemplate(TEMPLATES.classic, undefined)).toEqual(TEMPLATES.classic);
+  });
+
+  it("design (Pro): accent colour and font are kept only when valid", () => {
+    const c = sanitizeEditorContent({ design: { accent: "#0F766E", font: "serif" } });
+    expect(c.design).toEqual({ accent: "#0f766e", font: "serif" });
+    expect(sanitizeEditorContent({ design: { accent: "red", font: "comic" } }).design).toEqual({});
+    expect(usesProDesign(c.design)).toBe(true);
+    expect(usesProDesign({ textScale: "lg" })).toBe(false);
+  });
+
+  it("design (Pro): custom accent recolours headings and coloured rules, not grey ones", () => {
+    const modern = effectiveTemplate(TEMPLATES.modern, { accent: "#0f766e", font: "serif" });
+    expect(modern.colors.accent).toBe("#0f766e");
+    expect(modern.colors.rule).toBe("#0f766e"); // Modern's rule follows its accent
+    expect(modern.font).toBe("serif");
+    const classic = effectiveTemplate(TEMPLATES.classic, { accent: "#0f766e" });
+    expect(classic.colors.rule).toBe(TEMPLATES.classic.colors.rule); // grey rule stays grey
+  });
+});
+
+describe("designer templates and colours", () => {
+  it("designer templates are Pro, still ATS-safe, and decorated", () => {
+    const pro = TEMPLATE_IDS.filter((id) => isProTemplate(id));
+    expect(pro).toEqual(["executive", "studio", "elegant", "spotlight"]);
+    for (const id of pro) expect(TEMPLATES[id].atsSafe).toBe(true);
+    expect(isProTemplate("classic")).toBe(false);
+    expect(isProTemplate("nope")).toBe(false);
+  });
+
+  it("band headers use white text on the accent; plain ones don't", () => {
+    expect(headerColors(TEMPLATES.executive)).toMatchObject({ background: "#0f2a4a", name: "#ffffff" });
+    expect(headerColors(TEMPLATES.classic).background).toBeNull();
+    expect(headingColor(TEMPLATES.studio)).toBe(TEMPLATES.studio.colors.accent); // bar, no rule
+  });
+
+  it("too-light colours are darkened until readable on white", () => {
+    expect(readableAccent("#1e3a8a")).toBe("#1e3a8a");
+    const yellow = readableAccent("#ffeb3b");
+    expect(yellow).not.toBe("#ffeb3b");
+    expect(contrastOnWhite(yellow)).toBeGreaterThanOrEqual(MIN_ACCENT_CONTRAST);
+    expect(readableAccent("not a colour")).toBe("#1c1917");
+    for (const p of ACCENT_PRESETS) expect(contrastOnWhite(p.hex)).toBeGreaterThanOrEqual(MIN_ACCENT_CONTRAST);
   });
 });

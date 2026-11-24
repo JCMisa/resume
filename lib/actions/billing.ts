@@ -25,6 +25,8 @@ export async function getUserBillingStatus() {
         job_match: false,
         ai_write: false,
         tailor: false,
+        design: false,
+        history: false,
       },
     };
 

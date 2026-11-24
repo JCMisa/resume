@@ -10,6 +10,7 @@ import { cn } from "@/lib/utils";
 import ResumeDocument from "@/components/resume-templates/ResumeDocument";
 import ScaledPage from "@/components/resume-templates/ScaledPage";
 import { getPublicResume, recordShareView } from "@/lib/public-resume";
+import { userIsPro } from "@/lib/owner-plan";
 import { headline, isLikelyBot } from "@/lib/resume-share";
 import PublicResumeActions from "./PublicResumeActions";
 
@@ -60,7 +61,12 @@ export default async function PublicResumePage({ params }: Props) {
   }
 
   // Count real visits only: not the owner, not link-preview bots
-  const [{ userId }, ua] = await Promise.all([auth(), headers().then((h) => h.get("user-agent"))]);
+  const [{ userId }, ua, ownerPro] = await Promise.all([
+    auth(),
+    headers().then((h) => h.get("user-agent")),
+    // Pro owners get a clean page: no "Made with ResuMe" footer
+    userIsPro(resume.ownerId),
+  ]);
   if (userId !== resume.ownerId && !isLikelyBot(ua)) after(() => recordShareView(resume.id));
 
   const name = resume.content.personalDetails?.name?.trim() || resume.title;
@@ -90,13 +96,17 @@ export default async function PublicResumePage({ params }: Props) {
         </div>
       </main>
 
-      <footer className="py-6 text-center text-xs text-muted-foreground">
-        Made with{" "}
-        <Link href="/" className="font-bold text-foreground hover:underline">
-          ResuMe
-        </Link>{" "}
-        · Build an ATS-friendly resume for free
-      </footer>
+      {ownerPro ? (
+        <div className="py-4" />
+      ) : (
+        <footer className="py-6 text-center text-xs text-muted-foreground">
+          Made with{" "}
+          <Link href="/" className="font-bold text-foreground hover:underline">
+            ResuMe
+          </Link>{" "}
+          · Build an ATS-friendly resume for free
+        </footer>
+      )}
     </div>
   );
 }

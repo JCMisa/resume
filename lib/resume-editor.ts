@@ -140,6 +140,9 @@ function sanitizeDesign(raw: unknown): NonNullable<ResumeContent["design"]> {
   const out: NonNullable<ResumeContent["design"]> = {};
   if (TEXT_SCALES.includes(d.textScale as (typeof TEXT_SCALES)[number])) out.textScale = d.textScale as "sm" | "md" | "lg";
   if (typeof d.dividers === "boolean") out.dividers = d.dividers;
+  // Pro-only looks: the save action keeps Free users from changing these
+  if (typeof d.accent === "string" && /^#[0-9a-f]{6}$/i.test(d.accent)) out.accent = d.accent.toLowerCase();
+  if (d.font === "sans" || d.font === "serif") out.font = d.font;
   const titles = obj(d.sectionTitles);
   const sectionTitles: Record<string, string> = {};
   for (const key of DEFAULT_SECTION_ORDER) {

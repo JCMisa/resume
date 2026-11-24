@@ -2,9 +2,13 @@ import React from "react";
 import { Document, Link, Page, StyleSheet, Text, View } from "@react-pdf/renderer";
 import type { ResumeContent } from "@/lib/resume-sanitize";
 import {
+  ACCENT_BAR,
+  HEADER_BAND_PAD,
   bulletsOf,
   contactParts,
   effectiveTemplate,
+  headerColors,
+  headingColor,
   groupSkills,
   linksOf,
   safeLinkUrl,
@@ -37,6 +41,7 @@ export default function ResumePdfDocument({
   const t = effectiveTemplate(template, content.design);
   const { colors, size, spacing } = t;
   const font = FONTS[t.font];
+  const hc = headerColors(t);
   const s = StyleSheet.create({
     page: {
       padding: spacing.page,
@@ -54,9 +59,10 @@ export default function ResumePdfDocument({
       fontSize: size.heading,
       textTransform: t.heading.upper ? "uppercase" : "none",
       letterSpacing: t.heading.letterSpacing,
-      color: t.heading.rule ? colors.accent : colors.text,
+      color: headingColor(t),
       borderBottomWidth: t.heading.rule ? 0.75 : 0,
       borderBottomColor: colors.rule,
+      ...(t.heading.bar ? { borderLeftWidth: ACCENT_BAR, borderLeftColor: colors.accent, paddingLeft: 6 } : {}),
       paddingBottom: 2,
       marginBottom: 4,
     },
@@ -66,6 +72,7 @@ export default function ResumePdfDocument({
     bulletDot: { width: 8 },
     bulletText: { flex: 1 },
     link: { color: colors.accent, textDecoration: "underline" },
+    headerLink: { color: hc.link, textDecoration: "underline" },
   });
 
   // Inline markup -> nested <Text> runs with the right font variant
@@ -119,18 +126,18 @@ export default function ResumePdfDocument({
       </View>
     ));
 
-  const linkRow = (list: { label: string; url: string }[] | undefined, align: "left" | "center" = "left") => {
+  const linkRow = (list: { label: string; url: string }[] | undefined, align: "left" | "center" = "left", inHeader = false) => {
     const items = linksOf(list);
     if (!items.length) return null;
     return (
-      <Text style={[s.meta, { marginTop: 2, textAlign: align }]}>
+      <Text style={[s.meta, { marginTop: 2, textAlign: align }, inHeader ? { color: hc.meta } : {}]}>
         {items.map((l, i) => {
           const href = safeLinkUrl(l.url);
           return (
             <React.Fragment key={i}>
               {i > 0 ? ` ${t.header.separator} ` : ""}
               {href ? (
-                <Link src={href} style={s.link}>
+                <Link src={href} style={inHeader ? s.headerLink : s.link}>
                   {l.label}
                 </Link>
               ) : (
@@ -217,7 +224,8 @@ export default function ResumePdfDocument({
           <View
             style={{
               marginBottom: spacing.section,
-              ...(left ? { borderLeftWidth: 3, borderLeftColor: colors.accent, paddingLeft: 8 } : {}),
+              ...(t.header.style === "bar" ? { borderLeftWidth: ACCENT_BAR, borderLeftColor: colors.accent, paddingLeft: 8 } : {}),
+              ...(hc.background ? { backgroundColor: hc.background, padding: HEADER_BAND_PAD, borderRadius: 4 } : {}),
             }}
           >
             {name ? (
@@ -225,7 +233,7 @@ export default function ResumePdfDocument({
                 style={{
                   fontFamily: font.bold,
                   fontSize: size.name,
-                  color: colors.text,
+                  color: hc.name,
                   textAlign: t.header.align,
                   textTransform: t.header.nameUpper ? "uppercase" : "none",
                   letterSpacing: t.header.nameUpper ? 0.5 : 0,
@@ -236,11 +244,11 @@ export default function ResumePdfDocument({
               </Text>
             ) : null}
             {contacts.length > 0 ? (
-              <Text style={[s.meta, { marginTop: 3, textAlign: t.header.align }]}>
+              <Text style={[s.meta, { marginTop: 3, textAlign: t.header.align, color: hc.meta }]}>
                 {contacts.join(` ${t.header.separator} `)}
               </Text>
             ) : null}
-            {linkRow(personal?.links, left ? "left" : "center")}
+            {linkRow(personal?.links, left ? "left" : "center", true)}
           </View>
         )}
 

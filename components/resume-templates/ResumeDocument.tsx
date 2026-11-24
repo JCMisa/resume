@@ -57,7 +57,7 @@ export default function ResumeDocument({
       </ul>
     );
 
-  const linkRow = (list: { label: string; url: string }[] | undefined) => {
+  const linkRow = (list: { label: string; url: string }[] | undefined, linkStyle: React.CSSProperties = s.link) => {
     const items = linksOf(list);
     if (!items.length) return null;
     return (
@@ -68,7 +68,7 @@ export default function ResumeDocument({
             <React.Fragment key={i}>
               {i > 0 && <span> {t.header.separator} </span>}
               {href ? (
-                <a href={href} target="_blank" rel="noopener noreferrer nofollow" style={s.link}>
+                <a href={href} target="_blank" rel="noopener noreferrer nofollow" style={linkStyle}>
                   {l.label}
                 </a>
               ) : (
@@ -175,7 +175,7 @@ export default function ResumeDocument({
               )}
             </div>
           )}
-          {linkRow(personal?.links)}
+          {linkRow(personal?.links, s.headerLink)}
         </header>
       )}
 

@@ -92,6 +92,15 @@ describe("computeAllowed", () => {
     expect(pro().tailor).toBe(true);
   });
 
+  it("designer looks and version history are Pro-only", () => {
+    expect(free().design).toBe(false);
+    expect(free().history).toBe(false);
+    expect(pro().design).toBe(true);
+    expect(pro().history).toBe(true);
+    expect(limitReachedMessage("design")).toMatch(/Pro features/);
+    expect(limitReachedMessage("history")).toMatch(/Version history is a Pro feature/);
+  });
+
   it("pro: unlimited analyses and resumes", () => {
     const a = pro({ analyses: 999, resumes: 999 });
     expect(a.analyze).toBe(true);
@@ -110,7 +119,16 @@ describe("computeAllowed", () => {
         isAdmin: true,
         usage: usage({ analyses: 999, interviews: 999, resumes: 999, jobMatches: 999, aiWrites: 999 }),
       }),
-    ).toEqual({ analyze: true, interview: true, create_resume: true, job_match: true, ai_write: true, tailor: true });
+    ).toEqual({
+      analyze: true,
+      interview: true,
+      create_resume: true,
+      job_match: true,
+      ai_write: true,
+      tailor: true,
+      design: true,
+      history: true,
+    });
   });
 });
 

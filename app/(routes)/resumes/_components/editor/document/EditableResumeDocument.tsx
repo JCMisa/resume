@@ -450,7 +450,7 @@ export default function EditableResumeDocument({
           onChange={(links) => setPersonal({ links })}
           separator={t.header.separator}
           style={s.linkRow}
-          linkStyle={s.link}
+          linkStyle={s.headerLink}
         />
       </header>
 

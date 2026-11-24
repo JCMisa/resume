@@ -7,13 +7,23 @@ export const PRO_PLAN_KEY = "pro";
 /** Display only. The real price is configured in Clerk Billing; keep in sync. */
 export const PRO_PRICE_MONTHLY_USD = 12;
 
-export type GatedFeature = "analyze" | "interview" | "create_resume" | "job_match" | "ai_write" | "tailor";
+export type GatedFeature =
+  | "analyze"
+  | "interview"
+  | "create_resume"
+  | "job_match"
+  | "ai_write"
+  | "tailor"
+  /** Designer templates + custom colours/fonts */
+  | "design"
+  /** Resume version history */
+  | "history";
 
 /**
  * Features Free users can't use at all: interviews (Vapi voice calls are the
- * main cost driver) and "Tailor to a job" in the editor.
+ * main cost driver), "Tailor to a job", designer looks and version history.
  */
-export const PRO_ONLY_FEATURES = ["interview", "tailor"] as const;
+export const PRO_ONLY_FEATURES = ["interview", "tailor", "design", "history"] as const;
 export type ProOnlyFeature = (typeof PRO_ONLY_FEATURES)[number];
 export type MeteredFeature = Exclude<GatedFeature, ProOnlyFeature>;
 
@@ -98,7 +108,16 @@ export function computeAllowed({
   usage: UsageCounts;
 }): Record<GatedFeature, boolean> {
   if (isAdmin) {
-    return { analyze: true, interview: true, create_resume: true, job_match: true, ai_write: true, tailor: true };
+    return {
+      analyze: true,
+      interview: true,
+      create_resume: true,
+      job_match: true,
+      ai_write: true,
+      tailor: true,
+      design: true,
+      history: true,
+    };
   }
   if (isPro) {
     return {
@@ -108,6 +127,8 @@ export function computeAllowed({
       job_match: true,
       ai_write: true,
       tailor: true,
+      design: true,
+      history: true,
     };
   }
   return {
@@ -117,6 +138,8 @@ export function computeAllowed({
     job_match: usage.jobMatches < FREE_LIMITS.job_match,
     ai_write: usage.aiWrites < FREE_LIMITS.ai_write,
     tailor: false, // Pro-only
+    design: false, // Pro-only
+    history: false, // Pro-only
   };
 }
 
@@ -149,6 +172,12 @@ export function limitReachedMessage(feature: GatedFeature) {
   }
   if (feature === "tailor") {
     return "Tailor to a job is a Pro feature. Upgrade to Pro to rewrite your resume for a specific job description.";
+  }
+  if (feature === "design") {
+    return "Designer templates and custom colours and fonts are Pro features. Upgrade to Pro to use them.";
+  }
+  if (feature === "history") {
+    return "Version history is a Pro feature. Upgrade to Pro to see and restore earlier versions of your resume.";
   }
   const period =
     LIMIT_PERIOD[feature] === "monthly"
@@ -197,6 +226,8 @@ export const PLAN_HIGHLIGHTS = {
     "Scored interview reports & transcripts",
     "Unlimited resumes in the builder",
     "Unlimited AI writing + Tailor to a job",
+    "Designer templates, custom colours & fonts",
+    "Word export, version history & share view counts",
     "PDF export",
   ],
 };

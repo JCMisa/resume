@@ -12,7 +12,7 @@ import TemplateGallery from "@/components/resume-templates/TemplateGallery";
 import UpgradeModal from "@/components/custom/UpgradeModal";
 import { createResumeDraftAction } from "@/lib/actions/resume-editor";
 import { DEFAULT_TEMPLATE, type TemplateId } from "@/lib/resume-templates";
-import { describeFreeLimit, isLimitReached } from "@/lib/plans";
+import { describeFreeLimit, isLimitReached, limitReachedMessage } from "@/lib/plans";
 
 type Starter = { id: string; title: string; status: "parsed" | "created"; updatedAt: Date; score: number | null };
 
@@ -35,7 +35,9 @@ export default function CreateResumeStart({
   const [source, setSource] = useState<"blank" | "existing">(initialFrom ? "existing" : "blank");
   const [fromId, setFromId] = useState<string | null>(initialFrom ?? resumes[0]?.id ?? null);
   const [creating, setCreating] = useState(false);
-  const [upgradeOpen, setUpgradeOpen] = useState(false);
+  const [upgrade, setUpgrade] = useState<"builds" | "design" | null>(null);
+  const setUpgradeOpen = (open: boolean) => setUpgrade(open ? "builds" : null);
+  const isPro = buildsLeft === null;
 
   async function create() {
     if (!allowed) return setUpgradeOpen(true);
@@ -50,7 +52,7 @@ export default function CreateResumeStart({
       return; // keep the spinner while the editor loads
     }
     setCreating(false);
-    if (isLimitReached(res)) setUpgradeOpen(true);
+    if (isLimitReached(res)) setUpgrade(res.error === limitReachedMessage("design") ? "design" : "builds");
     else toast.error(res.error);
   }
 
@@ -97,7 +99,7 @@ export default function CreateResumeStart({
       {/* Templates */}
       <section className="space-y-3">
         <h2 className="text-lg font-black tracking-tight">1. Choose a template</h2>
-        <TemplateGallery value={templateId} onChange={setTemplateId} />
+        <TemplateGallery value={templateId} onChange={setTemplateId} isPro={isPro} onLocked={() => setUpgrade("design")} />
       </section>
 
       {/* Starting point */}
@@ -215,10 +217,14 @@ export default function CreateResumeStart({
       </div>
 
       <UpgradeModal
-        isOpen={upgradeOpen}
-        onClose={() => setUpgradeOpen(false)}
-        title="Resume build limit reached"
-        description={`Free plans include ${describeFreeLimit("create_resume")}. Upgrade to Pro for unlimited resumes.`}
+        isOpen={upgrade !== null}
+        onClose={() => setUpgrade(null)}
+        title={upgrade === "design" ? "Designer templates are a Pro feature" : "Resume build limit reached"}
+        description={
+          upgrade === "design"
+            ? "Upgrade to Pro for designer templates plus your own colours and fonts. The Classic, Modern and Compact templates stay free."
+            : `Free plans include ${describeFreeLimit("create_resume")}. Upgrade to Pro for unlimited resumes.`
+        }
       />
     </div>
   );

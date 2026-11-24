@@ -14,6 +14,7 @@ import {
   Eye,
   FileEdit,
   FileText,
+  History,
   LayoutTemplate,
   ListChecks,
   ListOrdered,
@@ -52,6 +53,9 @@ import CustomSectionsForm from "./forms/CustomSectionsForm";
 import AiWritingProvider, { type AiAllowance } from "./ai/AiWritingProvider";
 import AtsPanel, { AtsScoreBadge, useLiveAts } from "./ai/AtsPanel";
 import TailorPanel from "./ai/TailorPanel";
+import DesignControls from "./DesignControls";
+import VersionHistory from "./VersionHistory";
+import UpgradeModal from "@/components/custom/UpgradeModal";
 
 type Mode = "assist" | "document";
 type StepKey = "personal" | "summary" | "skills" | "experience" | "projects" | "education" | "certificates" | "custom" | "arrange";
@@ -94,7 +98,18 @@ function SaveIndicator({ status, onRetry }: { status: SaveStatus; onRetry: () =>
   );
 }
 
-type PanelTab = "ats" | "tailor";
+type PanelTab = "ats" | "tailor" | "history";
+
+const UPGRADE_TEXT = {
+  design: {
+    title: "Designer looks are a Pro feature",
+    description: "Upgrade to Pro for designer templates plus your own colours and fonts. Classic, Modern and Compact stay free.",
+  },
+  history: {
+    title: "Version history is a Pro feature",
+    description: "Upgrade to Pro to go back to any earlier version of your resume, with automatic and named versions.",
+  },
+} as const;
 
 export default function ResumeEditor({ resumeId, initial, ai }: { resumeId: string; initial: Doc; ai: AiAllowance }) {
   const router = useRouter();
@@ -105,6 +120,7 @@ export default function ResumeEditor({ resumeId, initial, ai }: { resumeId: stri
   const [templatesOpen, setTemplatesOpen] = useState(false);
   const [downloading, setDownloading] = useState(false);
   const [panel, setPanel] = useState<PanelTab | null>(null);
+  const [upgrade, setUpgrade] = useState<keyof typeof UPGRADE_TEXT | null>(null);
   // Sections added in document mode this session, kept on the page while empty
   const [shown, setShown] = useState<Set<string>>(() => new Set());
 
@@ -387,6 +403,9 @@ export default function ResumeEditor({ resumeId, initial, ai }: { resumeId: stri
               <span className="hidden sm:inline">ATS</span>
               <AtsScoreBadge report={ats} />
             </Button>
+            <Button variant="outline" size="sm" className="rounded-lg gap-1.5" onClick={() => setPanel("history")} title="Version history">
+              <History className="size-4" /> <span className="hidden xl:inline">History</span>
+            </Button>
             <Button variant="outline" size="sm" className="rounded-lg gap-1.5" onClick={() => setTemplatesOpen(true)}>
               <LayoutTemplate className="size-4" /> <span className="hidden sm:inline">Template</span>
             </Button>
@@ -443,13 +462,18 @@ export default function ResumeEditor({ resumeId, initial, ai }: { resumeId: stri
         <Sheet open={panel !== null} onOpenChange={(open) => !open && setPanel(null)}>
           <SheetContent side="right" className="w-full sm:max-w-md data-[side=right]:sm:max-w-md p-0 gap-0">
             <SheetHeader className="border-b p-4 pb-3">
-              <SheetTitle>Check &amp; tailor</SheetTitle>
-              <SheetDescription>Live ATS checks as you write, and Tailor to a job (Pro).</SheetDescription>
+              <SheetTitle>{panel === "history" ? "Version history" : "Check & tailor"}</SheetTitle>
+              <SheetDescription>
+                {panel === "history"
+                  ? "Earlier versions of this resume (Pro)."
+                  : "Live ATS checks as you write, and Tailor to a job (Pro)."}
+              </SheetDescription>
             </SheetHeader>
             <Tabs value={panel ?? "ats"} onValueChange={(v) => setPanel(v as PanelTab)} className="flex-1 min-h-0 gap-0">
-              <TabsList className="mx-4 mt-3 grid grid-cols-2">
+              <TabsList className="mx-4 mt-3 grid grid-cols-3">
                 <TabsTrigger value="ats">ATS check</TabsTrigger>
-                <TabsTrigger value="tailor">Tailor to a job</TabsTrigger>
+                <TabsTrigger value="tailor">Tailor</TabsTrigger>
+                <TabsTrigger value="history">History</TabsTrigger>
               </TabsList>
               <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar p-4">
                 <TabsContent value="ats">
@@ -476,10 +500,30 @@ export default function ResumeEditor({ resumeId, initial, ai }: { resumeId: stri
                     }}
                   />
                 </TabsContent>
+                <TabsContent value="history">
+                  <VersionHistory
+                    resumeId={resumeId}
+                    isPro={ai.isPro}
+                    open={panel === "history"}
+                    saveNow={saveNow}
+                    onLocked={() => setUpgrade("history")}
+                    onRestored={(restored) => {
+                      setDoc(restored);
+                      setShown(new Set());
+                    }}
+                  />
+                </TabsContent>
               </div>
             </Tabs>
           </SheetContent>
         </Sheet>
+
+        <UpgradeModal
+          isOpen={upgrade !== null}
+          onClose={() => setUpgrade(null)}
+          title={upgrade ? UPGRADE_TEXT[upgrade].title : ""}
+          description={upgrade ? UPGRADE_TEXT[upgrade].description : ""}
+        />
 
         <Dialog open={templatesOpen} onOpenChange={setTemplatesOpen}>
           <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto custom-scrollbar">
@@ -487,9 +531,18 @@ export default function ResumeEditor({ resumeId, initial, ai }: { resumeId: stri
               <DialogTitle>Change template</DialogTitle>
               <DialogDescription>Your content stays the same; only the look changes.</DialogDescription>
             </DialogHeader>
+            <DesignControls
+              design={content.design}
+              templateAccent={template.colors.accent}
+              isPro={ai.isPro}
+              onLocked={() => setUpgrade("design")}
+              onChange={(patch) => update((c) => ({ ...c, design: { ...c.design, ...patch } }))}
+            />
             <TemplateGallery
               value={doc.templateId}
               content={content}
+              isPro={ai.isPro}
+              onLocked={() => setUpgrade("design")}
               onChange={(id) => {
                 setDoc((d) => ({ ...d, templateId: id }));
                 setTemplatesOpen(false);

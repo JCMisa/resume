@@ -8,6 +8,7 @@ import {
   LevelFormat,
   Packer,
   Paragraph,
+  ShadingType,
   TabStopType,
   TextRun,
   type ParagraphChild,
@@ -18,6 +19,8 @@ import {
   bulletsOf,
   contactParts,
   effectiveTemplate,
+  headerColors,
+  headingColor,
   groupSkills,
   linksOf,
   safeLinkUrl,
@@ -42,6 +45,14 @@ export async function buildResumeDocx(content: ResumeContent, template: Template
   const margin = twip(spacing.page);
   const contentWidth = twip(PAGE.width) - margin * 2;
   const lineSpacing = Math.round(240 * t.lineHeight); // "auto" line rule: 240 = single
+  const hc = headerColors(t);
+  // Header look: a shaded band, or an accent bar on the left (Word paragraph borders)
+  const leftBar = (color: string) => ({ left: { style: BorderStyle.SINGLE, size: 18, color: hex(color), space: 6 } });
+  const headerDeco = hc.background
+    ? { shading: { type: ShadingType.CLEAR, fill: hex(hc.background), color: "auto" }, indent: { left: twip(8), right: twip(8) } }
+    : t.header.style === "bar"
+      ? { border: leftBar(colors.accent) }
+      : {};
 
   const runs = (spans: Span[], base: { size?: number; color?: string; bold?: boolean } = {}): ParagraphChild[] =>
     spans.map((s) => {
@@ -57,24 +68,35 @@ export async function buildResumeDocx(content: ResumeContent, template: Template
       return href ? new ExternalHyperlink({ link: href, children: [run] }) : run;
     });
 
-  const para = (children: ParagraphChild[], opts: { after?: number; align?: (typeof AlignmentType)[keyof typeof AlignmentType]; bullet?: boolean; keepNext?: boolean } = {}) =>
+  const para = (
+    children: ParagraphChild[],
+    opts: {
+      after?: number;
+      align?: (typeof AlignmentType)[keyof typeof AlignmentType];
+      bullet?: boolean;
+      keepNext?: boolean;
+      /** Header paragraphs share the band/bar decoration */
+      header?: boolean;
+    } = {},
+  ) =>
     new Paragraph({
       children,
       alignment: opts.align,
       keepNext: opts.keepNext,
       spacing: { after: twip(opts.after ?? 0), line: lineSpacing },
       numbering: opts.bullet ? { reference: "bullets", level: 0 } : undefined,
+      ...(opts.header ? headerDeco : {}),
     });
 
   const headerAlign = t.header.align === "center" ? AlignmentType.CENTER : AlignmentType.LEFT;
   const sep = ` ${t.header.separator} `;
 
-  const linkRuns = (list: { label: string; url: string }[] | undefined): ParagraphChild[] => {
+  const linkRuns = (list: { label: string; url: string }[] | undefined, inHeader = false): ParagraphChild[] => {
     const out: ParagraphChild[] = [];
     linksOf(list).forEach((l, i) => {
-      if (i > 0) out.push(new TextRun({ text: sep, size: half(size.meta) }));
+      if (i > 0) out.push(new TextRun({ text: sep, size: half(size.meta), color: inHeader ? hex(hc.meta) : undefined }));
       const href = safeLinkUrl(l.url);
-      const run = new TextRun({ text: l.label, size: half(size.meta), color: hex(colors.accent), underline: {} });
+      const run = new TextRun({ text: l.label, size: half(size.meta), color: hex(inHeader ? hc.link : colors.accent), underline: {} });
       out.push(href ? new ExternalHyperlink({ link: href, children: [run] }) : run);
     });
     return out;
@@ -84,13 +106,16 @@ export async function buildResumeDocx(content: ResumeContent, template: Template
     new Paragraph({
       keepNext: true,
       spacing: { before: twip(spacing.section), after: twip(4) },
-      border: t.heading.rule ? { bottom: { style: BorderStyle.SINGLE, size: 6, color: hex(colors.rule), space: 2 } } : undefined,
+      border: {
+        ...(t.heading.rule ? { bottom: { style: BorderStyle.SINGLE, size: 6, color: hex(colors.rule), space: 2 } } : {}),
+        ...(t.heading.bar ? leftBar(colors.accent) : {}),
+      },
       children: [
         new TextRun({
           text: t.heading.upper ? text.toUpperCase() : text,
           bold: true,
           size: half(size.heading),
-          color: hex(t.heading.rule ? colors.accent : colors.text),
+          color: hex(headingColor(t)),
           characterSpacing: Math.round(t.heading.letterSpacing * 20),
         }),
       ],
@@ -125,17 +150,19 @@ export async function buildResumeDocx(content: ResumeContent, template: Template
             text: t.header.nameUpper ? p.name.trim().toUpperCase() : p.name.trim(),
             bold: true,
             size: half(size.name),
-            color: hex(colors.text),
+            color: hex(hc.name),
           }),
         ],
-        { align: headerAlign },
+        { align: headerAlign, header: true },
       ),
     );
   }
   const contacts = contactParts(p);
-  if (contacts.length) children.push(para([new TextRun({ text: contacts.join(sep), size: half(size.meta) })], { align: headerAlign }));
-  const headerLinks = linkRuns(p?.links);
-  if (headerLinks.length) children.push(para(headerLinks, { align: headerAlign }));
+  if (contacts.length) {
+    children.push(para([new TextRun({ text: contacts.join(sep), size: half(size.meta), color: hex(hc.meta) })], { align: headerAlign, header: true }));
+  }
+  const headerLinks = linkRuns(p?.links, true);
+  if (headerLinks.length) children.push(para(headerLinks, { align: headerAlign, header: true }));
 
   for (const key of visibleSections(content)) {
     if (key === "personal") continue;

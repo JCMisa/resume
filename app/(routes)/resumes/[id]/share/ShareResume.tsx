@@ -11,6 +11,7 @@ import {
   Crown,
   Download,
   ExternalLink,
+  Eye,
   FileText,
   FileType2,
   Globe,
@@ -95,7 +96,8 @@ export default function ShareResume({
   const [origin, setOrigin] = useState("");
   const [qr, setQr] = useState<string | null>(null);
   const [copied, setCopied] = useState<"link" | "text" | null>(null);
-  const [upgradeOpen, setUpgradeOpen] = useState(false);
+  const [upgrade, setUpgrade] = useState<"word" | "views" | null>(null);
+  const setUpgradeOpen = (open: boolean) => setUpgrade(open ? "word" : null);
   const [confirmNew, setConfirmNew] = useState(false);
 
   useEffect(() => {
@@ -336,6 +338,33 @@ export default function ShareResume({
                   </a>
                 </div>
 
+                {/* Views (Pro): real visits, not you or link-preview bots */}
+                <div className="flex items-center justify-between gap-3 rounded-2xl border p-3">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="size-9 shrink-0 rounded-xl border bg-muted/30 flex items-center justify-center">
+                      <Eye className="size-4" />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-sm font-bold flex items-center gap-2">
+                        {isPro ? `${share.shareViews.toLocaleString()} view${share.shareViews === 1 ? "" : "s"}` : "Link views"}
+                        {!isPro && (
+                          <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/15 px-1.5 py-0.5 text-[10px] font-black uppercase tracking-wider text-amber-700 dark:text-amber-400">
+                            <Crown className="size-3" /> Pro
+                          </span>
+                        )}
+                      </p>
+                      <p className="text-[11px] text-muted-foreground">
+                        {isPro ? "Visits to your link, not counting you or link previews. A new link starts from 0." : "See how many times recruiters opened your link."}
+                      </p>
+                    </div>
+                  </div>
+                  {!isPro && (
+                    <Button variant="outline" size="sm" className="rounded-lg shrink-0" onClick={() => setUpgrade("views")}>
+                      Unlock
+                    </Button>
+                  )}
+                </div>
+
                 <div className="flex items-center gap-4 rounded-2xl border p-3">
                   {qr ? (
                     // eslint-disable-next-line @next/next/no-img-element -- data: URL made in the browser
@@ -403,10 +432,14 @@ export default function ShareResume({
       </AlertDialog>
 
       <UpgradeModal
-        isOpen={upgradeOpen}
-        onClose={() => setUpgradeOpen(false)}
-        title="Word export is a Pro feature"
-        description="Upgrade to Pro to download an editable Word file of any resume. PDF and plain text stay free."
+        isOpen={upgrade !== null}
+        onClose={() => setUpgrade(null)}
+        title={upgrade === "views" ? "Link views are a Pro feature" : "Word export is a Pro feature"}
+        description={
+          upgrade === "views"
+            ? "Upgrade to Pro to see how many people opened your resume link. Pro also removes the \"Made with ResuMe\" footer from your public page."
+            : "Upgrade to Pro to download an editable Word file of any resume. PDF and plain text stay free."
+        }
       />
     </div>
   );

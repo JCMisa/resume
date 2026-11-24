@@ -10,7 +10,7 @@ import type { ResumeContent } from "./resume-sanitize";
 import { stripRich } from "./rich-text";
 export { safeLinkUrl } from "./rich-text";
 
-export const TEMPLATE_IDS = ["classic", "modern", "compact"] as const;
+export const TEMPLATE_IDS = ["classic", "modern", "compact", "executive", "studio", "elegant", "spotlight"] as const;
 export type TemplateId = (typeof TEMPLATE_IDS)[number];
 export const DEFAULT_TEMPLATE: TemplateId = "classic";
 
@@ -20,7 +20,7 @@ export type TemplateDef = {
   id: TemplateId;
   name: string;
   tagline: string;
-  /** Free templates for everyone; "pro" ones arrive with #33 */
+  /** "pro" = designer template (Pro plan) */
   tier: "free" | "pro";
   /** Single column, real text, standard headings: parses cleanly in ATS */
   atsSafe: boolean;
@@ -28,8 +28,13 @@ export type TemplateDef = {
   size: { name: number; heading: number; body: number; meta: number };
   /** Page margin, gap between sections, gap between entries */
   spacing: { page: number; section: number; item: number };
-  header: { align: "center" | "left"; nameUpper: boolean; separator: string };
-  heading: { upper: boolean; rule: boolean; letterSpacing: number };
+  /**
+   * style: "plain" text; "bar" = accent bar on the left; "band" = filled
+   * accent block with white text (still real, selectable text)
+   */
+  header: { align: "center" | "left"; nameUpper: boolean; separator: string; style: "plain" | "bar" | "band" };
+  /** bar: accent bar left of each section heading */
+  heading: { upper: boolean; rule: boolean; letterSpacing: number; bar?: boolean };
   colors: { text: string; muted: string; accent: string; rule: string };
   lineHeight: number;
 };
@@ -44,7 +49,7 @@ export const TEMPLATES: Record<TemplateId, TemplateDef> = {
     font: "sans",
     size: { name: 20, heading: 10, body: 9.5, meta: 9 },
     spacing: { page: 40, section: 12, item: 8 },
-    header: { align: "center", nameUpper: true, separator: "|" },
+    header: { align: "center", nameUpper: true, separator: "|", style: "plain" },
     heading: { upper: true, rule: true, letterSpacing: 0.8 },
     colors: { text: "#1c1917", muted: "#57534e", accent: "#1c1917", rule: "#d6d3d1" },
     lineHeight: 1.4,
@@ -58,7 +63,7 @@ export const TEMPLATES: Record<TemplateId, TemplateDef> = {
     font: "sans",
     size: { name: 22, heading: 10.5, body: 9.5, meta: 9 },
     spacing: { page: 42, section: 13, item: 8 },
-    header: { align: "left", nameUpper: false, separator: "•" },
+    header: { align: "left", nameUpper: false, separator: "•", style: "bar" },
     heading: { upper: false, rule: true, letterSpacing: 0.2 },
     colors: { text: "#111827", muted: "#4b5563", accent: "#1e3a8a", rule: "#1e3a8a" },
     lineHeight: 1.45,
@@ -72,12 +77,122 @@ export const TEMPLATES: Record<TemplateId, TemplateDef> = {
     font: "serif",
     size: { name: 18, heading: 9.5, body: 9, meta: 8.5 },
     spacing: { page: 32, section: 9, item: 5 },
-    header: { align: "center", nameUpper: false, separator: "·" },
+    header: { align: "center", nameUpper: false, separator: "·", style: "plain" },
     heading: { upper: true, rule: true, letterSpacing: 1 },
     colors: { text: "#1c1917", muted: "#44403c", accent: "#1c1917", rule: "#a8a29e" },
     lineHeight: 1.3,
   },
+
+  // ── Designer templates (Pro). Still one column of real text: ATS-safe.
+  executive: {
+    id: "executive",
+    name: "Executive",
+    tagline: "A deep navy header band and serif type. Confident and senior.",
+    tier: "pro",
+    atsSafe: true,
+    font: "serif",
+    size: { name: 24, heading: 10.5, body: 9.5, meta: 9 },
+    spacing: { page: 40, section: 13, item: 8 },
+    header: { align: "left", nameUpper: false, separator: "|", style: "band" },
+    heading: { upper: true, rule: true, letterSpacing: 1 },
+    colors: { text: "#0f172a", muted: "#475569", accent: "#0f2a4a", rule: "#cbd5e1" },
+    lineHeight: 1.4,
+  },
+  studio: {
+    id: "studio",
+    name: "Studio",
+    tagline: "Big name, teal accent bars. Modern and creative.",
+    tier: "pro",
+    atsSafe: true,
+    font: "sans",
+    size: { name: 26, heading: 10.5, body: 9.5, meta: 9 },
+    spacing: { page: 42, section: 14, item: 8 },
+    header: { align: "left", nameUpper: false, separator: "/", style: "bar" },
+    heading: { upper: true, rule: false, letterSpacing: 1.2, bar: true },
+    colors: { text: "#111827", muted: "#4b5563", accent: "#0f766e", rule: "#0f766e" },
+    lineHeight: 1.45,
+  },
+  elegant: {
+    id: "elegant",
+    name: "Elegant",
+    tagline: "Centered serif with wide-spaced headings in burgundy.",
+    tier: "pro",
+    atsSafe: true,
+    font: "serif",
+    size: { name: 22, heading: 9.5, body: 9.5, meta: 9 },
+    spacing: { page: 44, section: 13, item: 8 },
+    header: { align: "center", nameUpper: true, separator: "·", style: "plain" },
+    heading: { upper: true, rule: true, letterSpacing: 2.2 },
+    colors: { text: "#1c1917", muted: "#57534e", accent: "#7f1d1d", rule: "#7f1d1d" },
+    lineHeight: 1.45,
+  },
+  spotlight: {
+    id: "spotlight",
+    name: "Spotlight",
+    tagline: "A centered violet header band with accent bars. Stands out.",
+    tier: "pro",
+    atsSafe: true,
+    font: "sans",
+    size: { name: 24, heading: 10.5, body: 9.5, meta: 9 },
+    spacing: { page: 38, section: 13, item: 8 },
+    header: { align: "center", nameUpper: false, separator: "•", style: "band" },
+    heading: { upper: false, rule: false, letterSpacing: 0.3, bar: true },
+    colors: { text: "#111827", muted: "#4b5563", accent: "#5b21b6", rule: "#5b21b6" },
+    lineHeight: 1.45,
+  },
 };
+
+/** Designer (Pro) template id. */
+export const isProTemplate = (id: unknown) => isTemplateId(id) && TEMPLATES[id].tier === "pro";
+
+// ── Custom colours (Pro) ────────────────────────────────────────────────────
+
+/** Swatches offered in the editor (any other colour is allowed too). */
+export const ACCENT_PRESETS = [
+  { name: "Ink", hex: "#1c1917" },
+  { name: "Navy", hex: "#1e3a8a" },
+  { name: "Teal", hex: "#0f766e" },
+  { name: "Emerald", hex: "#047857" },
+  { name: "Burgundy", hex: "#9f1239" },
+  { name: "Violet", hex: "#6d28d9" },
+  { name: "Slate", hex: "#334155" },
+  { name: "Rust", hex: "#c2410c" },
+] as const;
+
+export const HEX_COLOR = /^#[0-9a-f]{6}$/i;
+/** Text on white needs 4.5:1 (WCAG AA); the accent colours headings and links */
+export const MIN_ACCENT_CONTRAST = 4.5;
+
+const channel = (hex: string, i: number) => parseInt(hex.slice(1 + i * 2, 3 + i * 2), 16);
+const toHex = (r: number, g: number, b: number) =>
+  "#" + [r, g, b].map((v) => Math.max(0, Math.min(255, Math.round(v))).toString(16).padStart(2, "0")).join("");
+
+/** WCAG contrast ratio of a colour against white. */
+export function contrastOnWhite(hex: string): number {
+  const lin = (v: number) => {
+    const c = v / 255;
+    return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+  };
+  const l = 0.2126 * lin(channel(hex, 0)) + 0.7152 * lin(channel(hex, 1)) + 0.0722 * lin(channel(hex, 2));
+  return 1.05 / (l + 0.05);
+}
+
+/**
+ * The colour itself if it's readable on white paper, else the same hue made
+ * darker until it is (so a pale yellow becomes a readable mustard).
+ */
+export function readableAccent(hex: string): string {
+  if (!HEX_COLOR.test(hex)) return "#1c1917";
+  let [r, g, b] = [channel(hex, 0), channel(hex, 1), channel(hex, 2)];
+  let out = toHex(r, g, b);
+  for (let i = 0; i < 40 && contrastOnWhite(out) < MIN_ACCENT_CONTRAST; i++) {
+    r *= 0.92;
+    g *= 0.92;
+    b *= 0.92;
+    out = toHex(r, g, b);
+  }
+  return out;
+}
 
 export function isTemplateId(value: unknown): value is TemplateId {
   return typeof value === "string" && (TEMPLATE_IDS as readonly string[]).includes(value);
@@ -122,16 +237,46 @@ const filled = (v?: string) => Boolean(v?.trim());
 
 const TEXT_SCALE = { sm: 0.92, md: 1, lg: 1.08 } as const;
 
-/** The template with the resume's own look settings applied (text size, divider lines). */
+/**
+ * The template with the resume's own look settings applied: text size,
+ * divider lines, and (Pro) accent colour and font.
+ */
 export function effectiveTemplate(t: TemplateDef, design?: ResumeContent["design"]): TemplateDef {
   const k = TEXT_SCALE[design?.textScale ?? "md"];
   const round = (n: number) => Math.round(n * k * 4) / 4;
+  const accent = design?.accent && HEX_COLOR.test(design.accent) ? readableAccent(design.accent) : null;
   return {
     ...t,
+    font: design?.font ?? t.font,
     size: { name: round(t.size.name), heading: round(t.size.heading), body: round(t.size.body), meta: round(t.size.meta) },
     heading: { ...t.heading, rule: design?.dividers ?? t.heading.rule },
+    colors: accent
+      ? {
+          ...t.colors,
+          accent,
+          // Coloured rules follow the accent; neutral grey rules stay grey
+          rule: t.colors.rule.toLowerCase() === t.colors.accent.toLowerCase() ? accent : t.colors.rule,
+        }
+      : t.colors,
   };
 }
+
+/** Header colours: white text on the accent for a "band" header. */
+export function headerColors(t: TemplateDef) {
+  return t.header.style === "band"
+    ? { background: t.colors.accent, name: "#ffffff", meta: "#f1f5f9", link: "#ffffff" }
+    : { background: null, name: t.colors.text, meta: t.colors.muted, link: t.colors.accent };
+}
+
+/** Section headings are accent-coloured when decorated (rule or bar). */
+export const headingColor = (t: TemplateDef) => (t.heading.rule || t.heading.bar ? t.colors.accent : t.colors.text);
+
+/** Band padding / bar width, in pt (shared so all renderers match). */
+export const HEADER_BAND_PAD = 14;
+export const ACCENT_BAR = 3;
+
+/** Whether a design uses Pro-only settings (custom colour or font). */
+export const usesProDesign = (design?: ResumeContent["design"]) => Boolean(design?.accent || design?.font);
 
 /** Heading for a section: the user's rename, a custom section's title, or the default. */
 export function sectionTitle(content: ResumeContent, key: string): string {

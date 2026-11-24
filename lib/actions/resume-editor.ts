@@ -1,11 +1,15 @@
 "use server";
 
 import { auth } from "@clerk/nextjs/server";
+import { after } from "next/server";
 import { unstable_rethrow } from "next/navigation";
 import { and, desc, eq, sql } from "drizzle-orm";
 import { db } from "@/config/db";
 import { resumes, usageEvents, users } from "@/config/schema";
-import { assertAllowed, toActionError } from "@/lib/billing-guard";
+import { assertAllowed, PlanLimitError, toActionError } from "@/lib/billing-guard";
+import { currentUserIsPro } from "@/lib/plan-tier";
+import { limitReachedMessage } from "@/lib/plans";
+import { snapshotResume } from "@/lib/resume-versions-server";
 import { notifyUsageLater } from "@/lib/notify";
 import {
   blankContent,
@@ -15,7 +19,16 @@ import {
   sanitizeEditorContent,
   DEFAULT_TITLE,
 } from "@/lib/resume-editor";
-import { DEFAULT_TEMPLATE, isTemplateId } from "@/lib/resume-templates";
+import { DEFAULT_TEMPLATE, isProTemplate, isTemplateId, usesProDesign } from "@/lib/resume-templates";
+import type { ResumeContent } from "@/lib/resume-sanitize";
+
+/** Free users can't pick a Pro colour/font: drop them from new content. */
+function withoutProDesign(content: ResumeContent): ResumeContent {
+  if (!usesProDesign(content.design)) return content;
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { accent, font, ...design } = content.design ?? {};
+  return { ...content, design };
+}
 
 // Resume editor (start screen + /resumes/[id]/edit). Built resumes are saved
 // as the user types (autosave), so there's no "Finish" step anymore.
@@ -58,6 +71,10 @@ export async function createResumeDraftAction(input: { templateId?: unknown; fro
     if (!userId) throw new Error("Not signed in.");
 
     const templateId = isTemplateId(input?.templateId) ? input.templateId : DEFAULT_TEMPLATE;
+    // Designer templates are Pro (checked before anything is created)
+    let isPro: boolean | null = null;
+    const pro = async () => (isPro ??= await currentUserIsPro());
+    if (isProTemplate(templateId) && !(await pro())) throw new PlanLimitError(limitReachedMessage("design"));
 
     // Resolve the source first, so a bad id doesn't use up a build
     let title = DEFAULT_TITLE;
@@ -73,6 +90,7 @@ export async function createResumeDraftAction(input: { templateId?: unknown; fro
       if (!source) throw new Error("That resume wasn't found.");
       title = copyTitle(source.title);
       content = cloneContent(source.content);
+      if (usesProDesign(content.design) && !(await pro())) content = withoutProDesign(content);
     } else {
       const [me] = await db
         .select({ name: users.name, email: users.email })
@@ -167,12 +185,48 @@ export async function saveResumeDraftAction(
       set.templateId = changes.templateId;
     }
 
+    // Pro looks (designer templates, custom colour/font). Checked only when
+    // the save touches them, so ordinary autosaves stay one query.
+    const touchesPro = (set.templateId && isProTemplate(set.templateId)) || (set.content && usesProDesign(set.content.design));
+    if (touchesPro && !(await currentUserIsPro())) {
+      const [stored] = await db
+        .select({ templateId: resumes.templateId, design: sql<ResumeContent["design"]>`${resumes.content}->'design'` })
+        .from(resumes)
+        .where(and(eq(resumes.id, resumeId), eq(resumes.userId, userId)));
+      if (!stored) return { success: false as const, error: "Resume not found." };
+      // A Free user can't switch to a designer template...
+      if (set.templateId && isProTemplate(set.templateId) && set.templateId !== stored.templateId) {
+        return { success: false as const, error: limitReachedMessage("design") };
+      }
+      // ...or change the colour/font. What they already have (e.g. from
+      // before a downgrade) is kept as it is.
+      if (set.content) {
+        const { accent, font, ...rest } = set.content.design ?? {};
+        void accent;
+        void font;
+        set.content = {
+          ...set.content,
+          design: { ...rest, ...(stored.design?.accent ? { accent: stored.design.accent } : {}), ...(stored.design?.font ? { font: stored.design.font } : {}) },
+        };
+      }
+    }
+
     const [saved] = await db
       .update(resumes)
       .set(set)
       .where(and(eq(resumes.id, resumeId), eq(resumes.userId, userId), eq(resumes.status, "created")))
       .returning({ updatedAt: resumes.updatedAt, title: resumes.title });
     if (!saved) return { success: false as const, error: "This resume can't be edited." };
+
+    // Pro version history: an automatic snapshot at most every few minutes,
+    // after the response (never slows saving down, never fails the save)
+    after(async () => {
+      try {
+        if (await currentUserIsPro()) await snapshotResume(userId, resumeId, "auto");
+      } catch (error) {
+        console.error("Auto Version Failure:", error);
+      }
+    });
 
     return { success: true as const, data: saved };
   } catch (error) {
