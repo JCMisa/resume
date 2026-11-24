@@ -7,10 +7,13 @@ export const PRO_PLAN_KEY = "pro";
 /** Display only. The real price is configured in Clerk Billing; keep in sync. */
 export const PRO_PRICE_MONTHLY_USD = 12;
 
-export type GatedFeature = "analyze" | "interview" | "create_resume" | "job_match";
+export type GatedFeature = "analyze" | "interview" | "create_resume" | "job_match" | "ai_write" | "tailor";
 
-/** Features Free users can't use at all (Vapi voice calls are the main cost driver). */
-export const PRO_ONLY_FEATURES = ["interview"] as const;
+/**
+ * Features Free users can't use at all: interviews (Vapi voice calls are the
+ * main cost driver) and "Tailor to a job" in the editor.
+ */
+export const PRO_ONLY_FEATURES = ["interview", "tailor"] as const;
 export type ProOnlyFeature = (typeof PRO_ONLY_FEATURES)[number];
 export type MeteredFeature = Exclude<GatedFeature, ProOnlyFeature>;
 
@@ -26,12 +29,15 @@ export const FREE_LIMITS = {
   create_resume: 10,
   /** Resume vs job description matches */
   job_match: 3,
+  /** AI writing actions in the editor (write/improve summary, bullets, skill ideas) */
+  ai_write: 10,
 } as const satisfies Record<MeteredFeature, number>;
 
 export const LIMIT_PERIOD: Record<MeteredFeature, "lifetime" | "monthly"> = {
   analyze: "monthly",
   create_resume: "monthly",
   job_match: "monthly",
+  ai_write: "monthly",
 };
 
 /**
@@ -78,6 +84,7 @@ export type UsageCounts = {
   interviews: number;
   resumes: number;
   jobMatches: number;
+  aiWrites: number;
 };
 
 /** What a user may start right now, given their plan and this period's usage. */
@@ -90,13 +97,17 @@ export function computeAllowed({
   isAdmin: boolean;
   usage: UsageCounts;
 }): Record<GatedFeature, boolean> {
-  if (isAdmin) return { analyze: true, interview: true, create_resume: true, job_match: true };
+  if (isAdmin) {
+    return { analyze: true, interview: true, create_resume: true, job_match: true, ai_write: true, tailor: true };
+  }
   if (isPro) {
     return {
       analyze: true,
       interview: usage.interviews < PRO_LIMITS.interview,
       create_resume: true,
       job_match: true,
+      ai_write: true,
+      tailor: true,
     };
   }
   return {
@@ -104,6 +115,8 @@ export function computeAllowed({
     interview: false, // Pro-only (PRO_ONLY_FEATURES)
     create_resume: usage.resumes < FREE_LIMITS.create_resume,
     job_match: usage.jobMatches < FREE_LIMITS.job_match,
+    ai_write: usage.aiWrites < FREE_LIMITS.ai_write,
+    tailor: false, // Pro-only
   };
 }
 
@@ -114,6 +127,7 @@ const NOUNS: Record<MeteredFeature, string> = {
   analyze: "AI resume analyses",
   create_resume: "resume builds",
   job_match: "job matches",
+  ai_write: "AI writing actions",
 };
 
 /** Human-readable allowance, e.g. "5 AI resume analyses per month". */
@@ -130,8 +144,11 @@ export function isLimitReached(result: object): boolean {
 
 /** Message for a Free user blocked by their plan. */
 export function limitReachedMessage(feature: GatedFeature) {
-  if (isProOnly(feature)) {
+  if (feature === "interview") {
     return "AI mock interviews are a Pro feature. Upgrade to Pro to practice with the AI interviewer.";
+  }
+  if (feature === "tailor") {
+    return "Tailor to a job is a Pro feature. Upgrade to Pro to rewrite your resume for a specific job description.";
   }
   const period =
     LIMIT_PERIOD[feature] === "monthly"
@@ -167,6 +184,8 @@ export const PLAN_HIGHLIGHTS = {
     `${FREE_REPORT.bulletRewrites} bullet rewrites per report`,
     `${FREE_LIMITS.job_match} job description matches / month`,
     `${FREE_LIMITS.create_resume} resumes / month in the builder`,
+    `${FREE_LIMITS.ai_write} AI writing actions / month`,
+    "Live ATS checks while you write",
     "PDF export",
   ],
   pro: [
@@ -177,6 +196,7 @@ export const PLAN_HIGHLIGHTS = {
     `${PRO_LIMITS.interview} AI mock interviews / month`,
     "Scored interview reports & transcripts",
     "Unlimited resumes in the builder",
+    "Unlimited AI writing + Tailor to a job",
     "PDF export",
   ],
 };

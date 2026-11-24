@@ -127,12 +127,13 @@ export function pushPayload(n: { title: string; body: string; href: string | nul
 
 // ── Plan usage warnings ─────────────────────────────────────────────────────
 
-export type UsageFeature = "analyze" | "create_resume" | "job_match" | "interview";
+export type UsageFeature = "analyze" | "create_resume" | "job_match" | "ai_write" | "interview";
 
 const FEATURE_TEXT: Record<UsageFeature, { one: string; many: string; href: string }> = {
   analyze: { one: "AI analysis", many: "AI analyses", href: "/resumes/analyze" },
   create_resume: { one: "resume build", many: "resume builds", href: "/resumes/create" },
   job_match: { one: "job match", many: "job matches", href: "/resumes" },
+  ai_write: { one: "AI writing action", many: "AI writing actions", href: "/resumes" },
   interview: { one: "mock interview", many: "mock interviews", href: "/interviews" },
 };
 
@@ -140,6 +141,7 @@ const USAGE_COUNT_KEY: Record<UsageFeature, keyof UsageCounts> = {
   analyze: "analyses",
   create_resume: "resumes",
   job_match: "jobMatches",
+  ai_write: "aiWrites",
   interview: "interviews",
 };
 

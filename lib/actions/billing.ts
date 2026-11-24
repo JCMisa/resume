@@ -17,12 +17,14 @@ export async function getUserBillingStatus() {
     return {
       isPro: false,
       isAdmin: false,
-      limits: { analyses: 0, interviews: 0, resumes: 0, jobMatches: 0 },
+      limits: { analyses: 0, interviews: 0, resumes: 0, jobMatches: 0, aiWrites: 0 },
       allowed: {
         analyze: false,
         interview: false,
         create_resume: false,
         job_match: false,
+        ai_write: false,
+        tailor: false,
       },
     };
 
@@ -33,8 +35,9 @@ export async function getUserBillingStatus() {
   const analyzeSince = since("analyze");
   const resumeSince = since("create_resume");
   const jobMatchSince = since("job_match");
+  const aiWriteSince = since("ai_write");
 
-  const [[userRecord], [analysesRow], [resumesRow], [interviewsRow], [jobMatchesRow]] =
+  const [[userRecord], [analysesRow], [resumesRow], [interviewsRow], [jobMatchesRow], [aiWritesRow]] =
     await Promise.all([
       db
         .select({ role: users.role })
@@ -87,6 +90,17 @@ export async function getUserBillingStatus() {
             jobMatchSince ? gte(usageEvents.createdAt, jobMatchSince) : undefined,
           ),
         ),
+      // AI writing actions in the editor (usage log)
+      db
+        .select({ value: count() })
+        .from(usageEvents)
+        .where(
+          and(
+            eq(usageEvents.userId, userId),
+            eq(usageEvents.kind, "ai_write"),
+            aiWriteSince ? gte(usageEvents.createdAt, aiWriteSince) : undefined,
+          ),
+        ),
     ]);
 
   const usage = {
@@ -94,6 +108,7 @@ export async function getUserBillingStatus() {
     interviews: interviewsRow?.value ?? 0,
     resumes: resumesRow?.value ?? 0,
     jobMatches: jobMatchesRow?.value ?? 0,
+    aiWrites: aiWritesRow?.value ?? 0,
   };
 
   // Pro is checked by Clerk plan key (not a Clerk feature) so it stays correct

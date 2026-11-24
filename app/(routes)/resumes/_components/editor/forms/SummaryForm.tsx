@@ -2,6 +2,7 @@
 
 import React from "react";
 import RichField from "../rich/RichField";
+import { AiSummaryAssist } from "../ai/AiAssists";
 
 interface SummaryFormProps {
   data: string;
@@ -28,6 +29,7 @@ export default function SummaryForm({ data, onChange }: SummaryFormProps) {
           Tip: Write a short, punchy paragraph (3-4 sentences) highlighting your
           core expertise and engineering focus.
         </p>
+        <AiSummaryAssist hasSummary={!!data.trim()} onUse={onChange} />
       </div>
     </div>
   );

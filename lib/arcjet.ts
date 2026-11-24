@@ -20,6 +20,16 @@ export const RATE_LIMITS = {
     free: { capacity: 3, refillRate: 3, interval: "1h" },
     pro: { capacity: 10, refillRate: 10, interval: "1h" },
   },
+  // Editor AI writing (one small Gemini call each). Free users also have a
+  // monthly cap; this only stops rapid-fire clicking or scripts.
+  ai_write: {
+    free: { capacity: 5, refillRate: 10, interval: "1h" },
+    pro: { capacity: 15, refillRate: 60, interval: "1h" },
+  },
+  // Tailor to a job (Pro-only; a bigger Gemini call)
+  tailor: {
+    pro: { capacity: 5, refillRate: 15, interval: "1h" },
+  },
   // Pro-only feature: Free users are rejected by assertAllowed() before this.
   interview: {
     pro: { capacity: 3, refillRate: 6, interval: "1h" },
@@ -67,6 +77,13 @@ const limiters = {
   job_match: {
     free: bucket(RATE_LIMITS.job_match.free),
     pro: bucket(RATE_LIMITS.job_match.pro),
+  },
+  ai_write: {
+    free: bucket(RATE_LIMITS.ai_write.free),
+    pro: bucket(RATE_LIMITS.ai_write.pro),
+  },
+  tailor: {
+    pro: bucket(RATE_LIMITS.tailor.pro),
   },
   interview: {
     pro: bucket(RATE_LIMITS.interview.pro),

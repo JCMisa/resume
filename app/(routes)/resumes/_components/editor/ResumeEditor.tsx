@@ -20,10 +20,12 @@ import {
   Loader2,
   Save,
   Share2,
+  Sparkles,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 import ResumeDocument from "@/components/resume-templates/ResumeDocument";
@@ -47,6 +49,9 @@ import ProjectsForm from "./forms/ProjectsForm";
 import EducationForm from "./forms/EducationForm";
 import CertificatesForm from "./forms/CertificatesForm";
 import CustomSectionsForm from "./forms/CustomSectionsForm";
+import AiWritingProvider, { type AiAllowance } from "./ai/AiWritingProvider";
+import AtsPanel, { AtsScoreBadge, useLiveAts } from "./ai/AtsPanel";
+import TailorPanel from "./ai/TailorPanel";
 
 type Mode = "assist" | "document";
 type StepKey = "personal" | "summary" | "skills" | "experience" | "projects" | "education" | "certificates" | "custom" | "arrange";
@@ -89,7 +94,9 @@ function SaveIndicator({ status, onRetry }: { status: SaveStatus; onRetry: () =>
   );
 }
 
-export default function ResumeEditor({ resumeId, initial }: { resumeId: string; initial: Doc }) {
+type PanelTab = "ats" | "tailor";
+
+export default function ResumeEditor({ resumeId, initial, ai }: { resumeId: string; initial: Doc; ai: AiAllowance }) {
   const router = useRouter();
   const [doc, setDoc] = useState<Doc>(initial);
   const [leaving, setLeaving] = useState(false);
@@ -97,6 +104,7 @@ export default function ResumeEditor({ resumeId, initial }: { resumeId: string; 
   const [step, setStep] = useState<StepKey>("personal");
   const [templatesOpen, setTemplatesOpen] = useState(false);
   const [downloading, setDownloading] = useState(false);
+  const [panel, setPanel] = useState<PanelTab | null>(null);
   // Sections added in document mode this session, kept on the page while empty
   const [shown, setShown] = useState<Set<string>>(() => new Set());
 
@@ -141,6 +149,8 @@ export default function ResumeEditor({ resumeId, initial }: { resumeId: string; 
     update(fn);
     toast(message, { action: { label: "Undo", onClick: () => setDoc((d) => ({ ...d, content: before })) } });
   };
+
+  const ats = useLiveAts(content);
 
   const stepIndex = STEPS.findIndex((s) => s.key === step);
   const filled = (key: string) => sectionHasContent(content, key);
@@ -311,6 +321,7 @@ export default function ResumeEditor({ resumeId, initial }: { resumeId: string; 
   );
 
   return (
+    <AiWritingProvider resumeId={resumeId} content={content} allowance={ai}>
     <ActiveEditorProvider>
       <div className="w-full flex flex-col gap-4 lg:h-full lg:min-h-0">
         {/* Top bar: back, title (like Google Docs), save state, mode, actions */}
@@ -364,6 +375,18 @@ export default function ResumeEditor({ resumeId, initial }: { resumeId: string; 
           </div>
 
           <div className="flex items-center gap-2 ml-auto">
+            {/* Live ATS score; opens the ATS check + Tailor panel */}
+            <Button
+              variant="outline"
+              size="sm"
+              className="rounded-lg gap-1.5"
+              onClick={() => setPanel("ats")}
+              title="ATS check and Tailor to a job"
+            >
+              <Sparkles className="size-4 text-brand-strong dark:text-brand" />
+              <span className="hidden sm:inline">ATS</span>
+              <AtsScoreBadge report={ats} />
+            </Button>
             <Button variant="outline" size="sm" className="rounded-lg gap-1.5" onClick={() => setTemplatesOpen(true)}>
               <LayoutTemplate className="size-4" /> <span className="hidden sm:inline">Template</span>
             </Button>
@@ -417,6 +440,47 @@ export default function ResumeEditor({ resumeId, initial }: { resumeId: string; 
           </>
         )}
 
+        <Sheet open={panel !== null} onOpenChange={(open) => !open && setPanel(null)}>
+          <SheetContent side="right" className="w-full sm:max-w-md data-[side=right]:sm:max-w-md p-0 gap-0">
+            <SheetHeader className="border-b p-4 pb-3">
+              <SheetTitle>Check &amp; tailor</SheetTitle>
+              <SheetDescription>Live ATS checks as you write, and Tailor to a job (Pro).</SheetDescription>
+            </SheetHeader>
+            <Tabs value={panel ?? "ats"} onValueChange={(v) => setPanel(v as PanelTab)} className="flex-1 min-h-0 gap-0">
+              <TabsList className="mx-4 mt-3 grid grid-cols-2">
+                <TabsTrigger value="ats">ATS check</TabsTrigger>
+                <TabsTrigger value="tailor">Tailor to a job</TabsTrigger>
+              </TabsList>
+              <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar p-4">
+                <TabsContent value="ats">
+                  <AtsPanel
+                    report={ats}
+                    onFix={(target) => {
+                      switchMode("assist");
+                      setStep(target as StepKey);
+                      setPanel(null);
+                    }}
+                  />
+                </TabsContent>
+                <TabsContent value="tailor">
+                  <TailorPanel
+                    content={content}
+                    onApply={(next, applied, skipped) => {
+                      const before = doc.content;
+                      update(() => next);
+                      setPanel("ats");
+                      toast.success(
+                        `Applied ${applied} change${applied === 1 ? "" : "s"}.${skipped ? ` ${skipped} skipped because you edited ${skipped === 1 ? "that bullet" : "those bullets"} meanwhile.` : ""}`,
+                        { action: { label: "Undo", onClick: () => setDoc((d) => ({ ...d, content: before })) } },
+                      );
+                    }}
+                  />
+                </TabsContent>
+              </div>
+            </Tabs>
+          </SheetContent>
+        </Sheet>
+
         <Dialog open={templatesOpen} onOpenChange={setTemplatesOpen}>
           <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto custom-scrollbar">
             <DialogHeader>
@@ -436,5 +500,6 @@ export default function ResumeEditor({ resumeId, initial }: { resumeId: string; 
         </Dialog>
       </div>
     </ActiveEditorProvider>
+    </AiWritingProvider>
   );
 }

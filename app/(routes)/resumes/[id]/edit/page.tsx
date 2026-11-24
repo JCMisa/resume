@@ -4,13 +4,15 @@ import { Copy, UploadCloud } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { getResumeForEditorAction } from "@/lib/actions/resume-editor";
+import { getUserBillingStatus } from "@/lib/actions/billing";
+import { FREE_LIMITS } from "@/lib/plans";
 import ResumeEditor from "../../_components/editor/ResumeEditor";
 
 export const metadata = { title: "Edit resume · ResuMe" };
 
 export default async function EditResumePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const res = await getResumeForEditorAction(id);
+  const [res, billing] = await Promise.all([getResumeForEditorAction(id), getUserBillingStatus()]);
   if (!res.success) notFound();
   const resume = res.data;
 
@@ -46,6 +48,11 @@ export default async function EditResumePage({ params }: { params: Promise<{ id:
     <ResumeEditor
       resumeId={resume.id}
       initial={{ title: resume.title, templateId: resume.templateId, content: resume.content }}
+      ai={{
+        isPro: billing.isPro,
+        // null = unlimited (Pro/admin)
+        remaining: billing.isPro ? null : Math.max(0, FREE_LIMITS.ai_write - billing.limits.aiWrites),
+      }}
     />
   );
 }

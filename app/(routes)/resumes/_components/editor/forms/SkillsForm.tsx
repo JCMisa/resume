@@ -5,6 +5,8 @@ import React from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Plus, Trash2 } from "lucide-react";
+import { addSkills } from "@/lib/ai-writing";
+import { AiSkillsAssist } from "../ai/AiAssists";
 
 interface SkillsFormProps {
   data: any[];
@@ -50,6 +52,8 @@ export default function SkillsForm({ data, onChange }: SkillsFormProps) {
           <Plus className="h-3 w-3" /> Add Skill Entry
         </Button>
       </div>
+
+      <AiSkillsAssist onAdd={(picks) => onChange(addSkills(data, picks))} />
 
       {data.length === 0 ? (
         <div className="border border-dashed rounded-xl p-8 text-center text-xs text-muted-foreground bg-muted/10">

@@ -34,6 +34,7 @@ export const usageKindEnum = pgEnum("usage_kind", [
   "resume_analysis", // AI analysis (new upload or re-analysis)
   "resume_create", // resume built in the editor
   "job_match", // resume vs job description match
+  "ai_write", // AI writing help in the editor (summary, bullets, skills, tailor)
 ]);
 
 // USERS

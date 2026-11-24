@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/accordion";
 import { Plus, Trash2, Briefcase } from "lucide-react";
 import RichField from "../rich/RichField";
+import { AiBulletsAssist } from "../ai/AiAssists";
 
 interface ExperienceFormProps {
   data: any[];
@@ -166,6 +167,14 @@ export default function ExperienceForm({
                     placeholder="Reduced load times by 30% by…"
                   />
                   <p className="text-[11px] text-muted-foreground">Press Enter for a new bullet. Start with a verb and add a number.</p>
+                  <AiBulletsAssist
+                    section="experience"
+                    index={index}
+                    hasBullets={(exp.bullets ?? []).some((b: string) => b.trim())}
+                    onUse={(bullets, mode) =>
+                      setBullets(index, mode === "add" ? [...(exp.bullets ?? []).filter((b: string) => b.trim()), ...bullets] : bullets)
+                    }
+                  />
                 </div>
               </AccordionContent>
             </AccordionItem>

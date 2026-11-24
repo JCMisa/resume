@@ -14,8 +14,11 @@ export async function generateStructured<T>({
   parse,
   label,
   files,
+  temperature = 0,
 }: {
   model: string;
+  /** 0 (default) for judgments; a little higher for writing, so "Try again" differs */
+  temperature?: number;
   prompt: string;
   /** Inline files sent before the prompt (e.g. a scanned PDF), base64 */
   files?: { mimeType: string; data: string }[];
@@ -45,7 +48,7 @@ export async function generateStructured<T>({
         config: {
           responseMimeType: "application/json",
           responseJsonSchema: schema,
-          temperature: 0,
+          temperature,
         },
       });
       if (!response.text) throw new Error("Empty response from Gemini.");

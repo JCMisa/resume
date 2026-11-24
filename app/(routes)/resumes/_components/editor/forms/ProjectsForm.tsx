@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/accordion";
 import { Plus, Trash2, Code, Link2 } from "lucide-react";
 import RichField from "../rich/RichField";
+import { AiBulletsAssist } from "../ai/AiAssists";
 
 interface ProjectsFormProps {
   data: any[];
@@ -157,6 +158,17 @@ export default function ProjectsForm({ data, onChange }: ProjectsFormProps) {
                     onChange={(v) => setDescription(index, v as string[])}
                     ariaLabel={`${proj.title || "Project"} bullet points`}
                     placeholder="Built … that … (result)"
+                  />
+                  <AiBulletsAssist
+                    section="projects"
+                    index={index}
+                    hasBullets={(proj.description ?? []).some((b: string) => b.trim())}
+                    onUse={(bullets, mode) =>
+                      setDescription(
+                        index,
+                        mode === "add" ? [...(proj.description ?? []).filter((b: string) => b.trim()), ...bullets] : bullets,
+                      )
+                    }
                   />
                 </div>
 
