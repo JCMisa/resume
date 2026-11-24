@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   AlertCircle,
   ArrowLeft,
@@ -18,6 +19,7 @@ import {
   ListOrdered,
   Loader2,
   Save,
+  Share2,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -27,6 +29,7 @@ import { cn } from "@/lib/utils";
 import ResumeDocument from "@/components/resume-templates/ResumeDocument";
 import ScaledPage from "@/components/resume-templates/ScaledPage";
 import TemplateGallery from "@/components/resume-templates/TemplateGallery";
+import { downloadResumePdf } from "@/components/resume-templates/downloads";
 import { saveResumeDraftAction } from "@/lib/actions/resume-editor";
 import { addCustomSection, addEntry, groupsToSkills, normalizeResumeTitle, skillsToGroups, TITLE_MAX, type EntrySection } from "@/lib/resume-editor";
 import { resolveTemplate, sectionHasContent, sectionTitle, TEMPLATES, type TemplateId } from "@/lib/resume-templates";
@@ -86,12 +89,10 @@ function SaveIndicator({ status, onRetry }: { status: SaveStatus; onRetry: () =>
   );
 }
 
-function slug(title: string) {
-  return title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 60) || "resume";
-}
-
 export default function ResumeEditor({ resumeId, initial }: { resumeId: string; initial: Doc }) {
+  const router = useRouter();
   const [doc, setDoc] = useState<Doc>(initial);
+  const [leaving, setLeaving] = useState(false);
   const [mode, setMode] = useState<Mode>("assist");
   const [step, setStep] = useState<StepKey>("personal");
   const [templatesOpen, setTemplatesOpen] = useState(false);
@@ -169,18 +170,7 @@ export default function ResumeEditor({ resumeId, initial }: { resumeId: string; 
   async function downloadPdf() {
     setDownloading(true);
     try {
-      // Loaded on demand: the PDF engine is large
-      const [{ pdf }, { default: ResumePdfDocument }] = await Promise.all([
-        import("@react-pdf/renderer"),
-        import("@/components/resume-templates/ResumePdfDocument"),
-      ]);
-      const blob = await pdf(<ResumePdfDocument content={content} template={template} title={doc.title} />).toBlob();
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `${slug(doc.title)}.pdf`;
-      a.click();
-      setTimeout(() => URL.revokeObjectURL(url), 10_000);
+      await downloadResumePdf(content, template, doc.title);
     } catch (error) {
       console.error("PDF export failed:", error);
       toast.error("Couldn't create the PDF. Try again.");
@@ -380,9 +370,23 @@ export default function ResumeEditor({ resumeId, initial }: { resumeId: string; 
             <Button variant="outline" size="sm" className="rounded-lg gap-1.5" onClick={() => void saveNow()} disabled={status === "saving"} title="Save (Ctrl+S)">
               <Save className="size-4" /> <span className="hidden sm:inline">Save</span>
             </Button>
-            <Button size="sm" className="rounded-lg gap-1.5 font-bold" onClick={() => void downloadPdf()} disabled={downloading}>
+            <Button variant="outline" size="sm" className="rounded-lg gap-1.5" onClick={() => void downloadPdf()} disabled={downloading}>
               {downloading ? <Loader2 className="size-4 animate-spin" /> : <Download className="size-4" />}
               <span className="hidden sm:inline">PDF</span>
+            </Button>
+            {/* Step 3: save first, then Download & share */}
+            <Button
+              size="sm"
+              className="rounded-lg gap-1.5 font-bold"
+              disabled={leaving}
+              onClick={async () => {
+                setLeaving(true);
+                await saveNow();
+                router.push(`/resumes/${resumeId}/share`);
+              }}
+            >
+              {leaving ? <Loader2 className="size-4 animate-spin" /> : <Share2 className="size-4" />}
+              <span className="hidden sm:inline">Share</span>
             </Button>
           </div>
         </div>

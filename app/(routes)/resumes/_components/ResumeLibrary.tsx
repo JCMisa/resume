@@ -10,6 +10,7 @@ import {
   Check,
   Copy,
   FilePen,
+  Share2,
   Download,
   FilePlus2,
   FileText,
@@ -178,6 +179,13 @@ function ResumeCard({
                 </Link>
               )}
             </DropdownMenuItem>
+            {item.status === "created" && (
+              <DropdownMenuItem asChild>
+                <Link href={`/resumes/${item.id}/share`}>
+                  <Share2 className="size-4" /> Download & share
+                </Link>
+              </DropdownMenuItem>
+            )}
             <DropdownMenuItem asChild>
               <Link href={`/resumes/${item.id}?tab=match`}>
                 <Target className="size-4" /> Tailor for a job

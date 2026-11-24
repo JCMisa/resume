@@ -20,6 +20,7 @@ import {
   Target,
   FilePen,
   Copy,
+  Share2,
 } from "lucide-react";
 import Link from "next/link";
 import { getResumeDetailsAction } from "@/lib/actions/resume";
@@ -157,6 +158,14 @@ export default async function ResumeDetailsPage({ params, searchParams }: PagePr
               {builtInEditor ? <FilePen className="size-3.5" /> : <Copy className="size-3.5" />}
               {builtInEditor ? "Edit resume" : "Edit a copy"}
             </Link>
+            {builtInEditor && (
+              <Link
+                href={`/resumes/${resumeId}/share`}
+                className={cn(buttonVariants({ size: "sm", variant: "outline" }), "rounded-lg gap-1.5 h-7")}
+              >
+                <Share2 className="size-3.5" /> Download & share
+              </Link>
+            )}
           </div>
         </div>
 

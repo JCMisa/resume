@@ -130,6 +130,14 @@ export const resumes = pgTable("resumes", {
   // Editor template id (lib/resume-templates.ts); null = default (Classic)
   templateId: text("template_id"),
 
+  // Public share link (/r/<shareCode>). Off by default; the code is made the
+  // first time sharing is turned on and can be regenerated (old link dies).
+  shareCode: text("share_code").unique(),
+  shareEnabled: boolean("share_enabled").default(false).notNull(),
+  // Privacy: hide phone + address on the public page (on by default)
+  shareHideContact: boolean("share_hide_contact").default(true).notNull(),
+  shareViews: integer("share_views").default(0).notNull(),
+
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
