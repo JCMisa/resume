@@ -334,11 +334,11 @@ export function linksOf(list: { label: string; url: string }[] | undefined) {
 
 export const SAMPLE_CONTENT: ResumeContent = {
   personalDetails: {
-    name: "Alex Rivera",
+    name: "John Carlo Misa",
     phone: "+1 555 0142",
-    email: "alex.rivera@example.com",
+    email: "johncarlo.misa@example.com",
     address: "Austin, TX",
-    links: [{ label: "linkedin.com/in/alexrivera", url: "https://linkedin.com/in/alexrivera" }],
+    links: [{ label: "linkedin.com/in/johncarlomisa", url: "https://linkedin.com/in/johncarlomisa" }],
   },
   professionalSummary:
     "Product-minded software engineer with 6 years building web platforms used by 2M+ people. Led migrations that cut page load times by 40%.",

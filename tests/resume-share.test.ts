@@ -85,7 +85,7 @@ describe("resumeToPlainText", () => {
         sectionOrder: ["personal", "summary", "custom:c1", "experience"],
       }),
     );
-    expect(text.startsWith("ALEX RIVERA\n+1 555 0142 | alex.rivera@example.com | Austin, TX\n")).toBe(true);
+    expect(text.startsWith("JOHN CARLO MISA\n+1 555 0142 | johncarlo.misa@example.com | Austin, TX\n")).toBe(true);
     expect(text).toContain("\nPROFESSIONAL SUMMARY\nBuilder of things.\n");
     expect(text).toContain("\nLANGUAGES\n- English\n- Spanish\n");
     expect(text).toContain("\nWORK HISTORY\nSenior Software Engineer, Northwind Labs | 2022 - Present\n- Led checkout rebuild");
