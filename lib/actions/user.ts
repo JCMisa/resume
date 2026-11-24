@@ -74,30 +74,3 @@ export const getCurrentUser = async () => {
     data: data,
   };
 };
-
-// Admin-only: returns every user's row (incl. emails). Server actions are
-// callable directly from the browser, so the role check must live here.
-export const getAllUsersAction = async () => {
-  try {
-    const { userId } = await auth();
-    if (!userId) {
-      return { success: false as const, data: null, error: "Unauthorized access." };
-    }
-
-    const [caller] = await db
-      .select({ role: users.role })
-      .from(users)
-      .where(eq(users.id, userId))
-      .limit(1);
-
-    if (caller?.role !== "admin") {
-      return { success: false as const, data: null, error: "Forbidden." };
-    }
-
-    const data = await db.select().from(users);
-    return { success: true as const, data };
-  } catch (error) {
-    console.error("Get All Users Failure:", error);
-    return { success: false as const, data: null, error: "Failed to load users." };
-  }
-};

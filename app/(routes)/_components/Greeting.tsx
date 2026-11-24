@@ -34,7 +34,7 @@ const Greeting = () => {
     return <div className="w-24 h-5 animate-pulse bg-muted rounded" />;
 
   return (
-    <span className="text-md font-extrabold tracking-wide text-foreground animate-fade-in">
+    <span className="block min-w-0 truncate text-sm sm:text-base font-extrabold tracking-wide text-foreground animate-fade-in">
       <span className="text-primary">{greeting},</span> {user?.name}
     </span>
   );
