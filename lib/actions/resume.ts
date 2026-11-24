@@ -210,60 +210,6 @@ export async function getResumeDetailsAction(resumeId: string) {
   }
 }
 
-export async function createManualResumeAction(payload: {
-  title: string;
-  category: string;
-  content: {
-    personalDetails?: any;
-    professionalSummary?: string;
-    skills?: any[];
-    experiences?: any[];
-    projects?: any[];
-    educations?: any[];
-    certificates?: any[];
-    sectionOrder: string[];
-  };
-}) {
-  try {
-    const { userId } = await auth();
-    if (!userId) throw new Error("Unauthorized access profile configuration.");
-
-    const billing = await assertAllowed("create_resume");
-
-    // Insert the resume and log the build atomically (the log is what the
-    // monthly limit counts, so deleting a resume doesn't give a build back)
-    const resumeId = globalThis.crypto.randomUUID();
-    const [[newRecord]] = await db.batch([
-      db
-        .insert(resumes)
-        .values({
-          id: resumeId,
-          userId: userId,
-          title: payload.title || "Untitled Form Resume",
-          category: payload.category || "General",
-          // fileUrl block remains null initially since this is a manual form creation flow without file upload
-          status: "created", // Tags this item explicitly as a custom built form
-          content: payload.content, // Injects your nested structural forms state arrays
-          // Analysis block remains undefined initially until they trigger an explicit AI review request
-        })
-        .returning(),
-      db
-        .insert(usageEvents)
-        .values({ userId, kind: "resume_create", resumeId }),
-    ]);
-
-    notifyUsageLater(userId, "create_resume", billing);
-
-    return { success: true as const, data: newRecord };
-  } catch (error) {
-    console.error("Studio Creation Pipeline failure:", error);
-    return toActionError(
-      error,
-      "Failed to catalog manual resume data records.",
-    );
-  }
-}
-
 export async function updateResumeFileUrlAction(
   resumeId: string,
   fileUrl: string,

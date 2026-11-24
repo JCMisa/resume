@@ -8,6 +8,8 @@ import { toast } from "sonner";
 import {
   ArrowDownUp,
   Check,
+  Copy,
+  FilePen,
   Download,
   FilePlus2,
   FileText,
@@ -164,6 +166,17 @@ function ResumeCard({
               <Link href={`/resumes/${item.id}`}>
                 <FolderOpen className="size-4" /> Open
               </Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              {item.status === "created" ? (
+                <Link href={`/resumes/${item.id}/edit`}>
+                  <FilePen className="size-4" /> Edit
+                </Link>
+              ) : (
+                <Link href={`/resumes/create?from=${item.id}`}>
+                  <Copy className="size-4" /> Edit a copy
+                </Link>
+              )}
             </DropdownMenuItem>
             <DropdownMenuItem asChild>
               <Link href={`/resumes/${item.id}?tab=match`}>

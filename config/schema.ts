@@ -118,7 +118,8 @@ export const resumes = pgTable("resumes", {
   analysis: jsonb("analysis").$type<ResumeAnalysisData>(),
 
   isDefault: boolean("is_default").default(false),
-  templateId: text("template_id").default("modern"),
+  // Editor template id (lib/resume-templates.ts); null = default (Classic)
+  templateId: text("template_id"),
 
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),

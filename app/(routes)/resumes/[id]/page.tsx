@@ -1,7 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { Progress } from "@/components/ui/progress";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
@@ -16,6 +17,8 @@ import {
   Code,
   FolderGit2,
   Target,
+  FilePen,
+  Copy,
 } from "lucide-react";
 import Link from "next/link";
 import { getResumeDetailsAction } from "@/lib/actions/resume";
@@ -101,6 +104,7 @@ export default async function ResumeDetailsPage({ params, searchParams }: PagePr
   }
 
   const title = result.data.title;
+  const builtInEditor = result.data.status === "created";
   const category = result.data.category;
   const fileUrl = result.data.fileUrl || null;
 
@@ -139,9 +143,19 @@ export default async function ResumeDetailsPage({ params, searchParams }: PagePr
           <h1 className="text-2xl lg:text-3xl font-extrabold tracking-tight">
             {title}
           </h1>
-          <span className="inline-flex items-center text-xs font-bold px-3 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20 uppercase tracking-wider">
-            {category}
-          </span>
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="inline-flex items-center text-xs font-bold px-3 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20 uppercase tracking-wider">
+              {category}
+            </span>
+            {/* Built resumes open in the editor; uploads are edited as a copy */}
+            <Link
+              href={builtInEditor ? `/resumes/${resumeId}/edit` : `/resumes/create?from=${resumeId}`}
+              className={cn(buttonVariants({ size: "sm", variant: builtInEditor ? "default" : "outline" }), "rounded-lg gap-1.5 h-7")}
+            >
+              {builtInEditor ? <FilePen className="size-3.5" /> : <Copy className="size-3.5" />}
+              {builtInEditor ? "Edit resume" : "Edit a copy"}
+            </Link>
+          </div>
         </div>
 
         {analysis?.overallScore && (
