@@ -12,6 +12,7 @@ import {
 } from "drizzle-orm/pg-core";
 import type { ResumeAnalysisData } from "../lib/analysis-types";
 import type { JobMatchData } from "../lib/job-match";
+import type { TailoredFor } from "../lib/resume-tailor";
 import type {
   NotificationCategory,
   NotificationKind,
@@ -35,6 +36,7 @@ export const usageKindEnum = pgEnum("usage_kind", [
   "resume_create", // resume built in the editor
   "job_match", // resume vs job description match
   "ai_write", // AI writing help in the editor (summary, bullets, skills, tailor)
+  "resume_tailor", // "Tailor to a job" on the Create screen (Free: 3 ever, Pro: 30/month)
 ]);
 
 // USERS
@@ -142,6 +144,9 @@ export const resumes = pgTable("resumes", {
   // Privacy: hide phone + address on the public page (on by default)
   shareHideContact: boolean("share_hide_contact").default(true).notNull(),
   shareViews: integer("share_views").default(0).notNull(),
+  // Set on resumes made by "Tailor to a job": the job, before/after score and
+  // what changed (lib/resume-tailor.ts). Null for every other resume.
+  tailoredFor: jsonb("tailored_for").$type<TailoredFor>(),
 
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),

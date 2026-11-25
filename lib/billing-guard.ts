@@ -4,6 +4,7 @@ import { getUserBillingStatus } from "@/lib/actions/billing";
 import { RateLimitError } from "@/lib/arcjet";
 import {
   LIMIT_REACHED,
+  isProCapped,
   limitReachedMessage,
   proCapReachedMessage,
   type GatedFeature,
@@ -27,7 +28,7 @@ export async function assertAllowed(feature: GatedFeature) {
   if (!billing.allowed[feature]) {
     // Pro users are only ever blocked by a monthly fair-use cap
     throw new PlanLimitError(
-      billing.isPro ? proCapReachedMessage() : limitReachedMessage(feature),
+      billing.isPro && isProCapped(feature) ? proCapReachedMessage(feature) : limitReachedMessage(feature),
     );
   }
   return billing;

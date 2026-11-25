@@ -26,6 +26,12 @@ export const RATE_LIMITS = {
     free: { capacity: 5, refillRate: 10, interval: "1h" },
     pro: { capacity: 15, refillRate: 60, interval: "1h" },
   },
+  // Tailored resume from the Create screen (2 Gemini calls). Plan limits do
+  // the real capping; this stops bursts.
+  resume_tailor: {
+    free: { capacity: 2, refillRate: 3, interval: "1h" },
+    pro: { capacity: 5, refillRate: 15, interval: "1h" },
+  },
   // Tailor to a job (Pro-only; a bigger Gemini call)
   tailor: {
     pro: { capacity: 5, refillRate: 15, interval: "1h" },
@@ -84,6 +90,10 @@ const limiters = {
   },
   tailor: {
     pro: bucket(RATE_LIMITS.tailor.pro),
+  },
+  resume_tailor: {
+    free: bucket(RATE_LIMITS.resume_tailor.free),
+    pro: bucket(RATE_LIMITS.resume_tailor.pro),
   },
   interview: {
     pro: bucket(RATE_LIMITS.interview.pro),
