@@ -70,7 +70,7 @@ export default function ExperienceForm({
       </div>
 
       {data.length === 0 ? (
-        <div className="border border-dashed rounded-xl p-8 text-center text-xs text-muted-foreground bg-muted/10">
+        <div className="border border-dashed rounded-xl p-5 sm:p-8 text-center text-xs text-muted-foreground bg-muted/10">
           No work experiences added. Click above to record a job role.
         </div>
       ) : (
@@ -88,7 +88,7 @@ export default function ExperienceForm({
               <AccordionTrigger className="hover:no-underline py-3">
                 <div className="flex items-center justify-between w-full pr-4 text-left">
                   <div className="flex items-center gap-3 truncate">
-                    <div className="p-2 bg-primary/10 rounded-lg text-primary shrink-0">
+                    <div className="p-2 bg-primary/10 rounded-lg text-brand-strong dark:text-brand shrink-0">
                       <Briefcase className="h-4 w-4" />
                     </div>
                     <div className="truncate">
@@ -155,7 +155,7 @@ export default function ExperienceForm({
 
                 {/* Bullets: one rich field (bold/italic/underline/links) */}
                 <div className="space-y-1.5 pt-2">
-                  <span className="text-[11px] font-bold text-primary uppercase tracking-wider">
+                  <span className="text-[11px] font-bold text-brand-strong dark:text-brand uppercase tracking-wider">
                     Responsibilities & Key Metrics
                   </span>
                   <RichField

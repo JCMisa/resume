@@ -73,7 +73,7 @@ function Avatar({ user }: { user: AdminUserRow }) {
 
 function RoleBadge({ role }: { role: Role }) {
   return role === "admin" ? (
-    <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 text-primary border border-primary/20 px-2 py-0.5 text-[11px] font-black uppercase tracking-wider">
+    <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 text-brand-strong dark:text-brand border border-primary/20 px-2 py-0.5 text-[11px] font-black uppercase tracking-wider">
       <ShieldCheck className="size-3" /> Admin
     </span>
   ) : (
@@ -251,7 +251,7 @@ export default function AdminUsers({
       </div>
 
       {users.length === 0 ? (
-        <div className="rounded-2xl border border-dashed p-10 text-center space-y-2">
+        <div className="rounded-2xl border border-dashed p-6 sm:p-10 text-center space-y-2">
           <Users className="size-8 mx-auto text-muted-foreground" />
           <p className="text-sm font-bold">No users found</p>
           <p className="text-xs text-muted-foreground">

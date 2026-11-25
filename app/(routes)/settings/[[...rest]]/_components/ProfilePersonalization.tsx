@@ -221,7 +221,7 @@ export default function ProfilePersonalization() {
 
             {/* Name */}
             <form onSubmit={handleSaveName} className="space-y-4">
-              <div className="grid gap-4 sm:grid-cols-2">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <label className="space-y-1.5">
                   <span className="text-xs font-bold text-stone-600 dark:text-stone-300">
                     First name

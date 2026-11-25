@@ -17,12 +17,12 @@ export default function ResumesLoading() {
         className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3 sm:gap-4"
       />
 
-      <div className="grid gap-6 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         <CardSkeleton className="lg:col-span-2" />
         <CardSkeleton lines={6} />
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
         <CardSkeleton />
         <CardSkeleton />
         <CardSkeleton lines={8} className="md:col-span-2 xl:col-span-1" />
@@ -41,7 +41,7 @@ export default function ResumesLoading() {
             <Skeleton key={i} className="h-7 w-20 shrink-0 rounded-full" />
           ))}
         </div>
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {Array.from({ length: 6 }).map((_, i) => (
             <Skeleton key={i} className="h-56 rounded-2xl" />
           ))}

@@ -177,7 +177,7 @@ export default function VersionHistory({
               {g.items.map((v) => (
                 <li key={v.id} className="rounded-xl border p-2.5 flex items-center gap-2">
                   <div className="min-w-0 flex-1">
-                    <p className={cn("text-xs font-bold truncate", v.kind === "manual" && "text-primary")}>
+                    <p className={cn("text-xs font-bold truncate", v.kind === "manual" && "text-brand-strong dark:text-brand")}>
                       {v.kind === "manual" && <Bookmark className="inline size-3 mr-1 -mt-0.5" />}
                       {versionName(v)}
                     </p>

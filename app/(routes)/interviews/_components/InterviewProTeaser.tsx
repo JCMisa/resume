@@ -38,10 +38,10 @@ const PERKS = [
 
 export default function InterviewProTeaser() {
   return (
-    <div className="grid gap-6 lg:grid-cols-2 items-start animate-in fade-in zoom-in-95 duration-300">
+    <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 items-start animate-in fade-in zoom-in-95 duration-300">
       {/* Pitch */}
-      <div className="border rounded-3xl bg-card p-8 space-y-6 shadow-sm">
-        <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 border border-primary/20 px-3 py-1 text-[11px] font-black uppercase tracking-widest text-primary">
+      <div className="border rounded-3xl bg-card p-5 sm:p-8 space-y-6 shadow-sm">
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 border border-primary/20 px-3 py-1 text-[11px] font-black uppercase tracking-widest text-brand-strong dark:text-brand">
           <Crown className="size-3" /> Pro feature
         </span>
 
@@ -58,7 +58,7 @@ export default function InterviewProTeaser() {
         <ul className="space-y-4">
           {PERKS.map(({ icon: Icon, title, text }) => (
             <li key={title} className="flex gap-3">
-              <div className="size-9 shrink-0 rounded-xl border bg-muted/30 flex items-center justify-center text-primary">
+              <div className="size-9 shrink-0 rounded-xl border bg-muted/30 flex items-center justify-center text-brand-strong dark:text-brand">
                 <Icon className="size-4" />
               </div>
               <div>
@@ -84,7 +84,7 @@ export default function InterviewProTeaser() {
       </div>
 
       {/* Sample report preview */}
-      <div className="relative border rounded-3xl bg-card p-8 space-y-6 shadow-sm overflow-hidden">
+      <div className="relative border rounded-3xl bg-card p-5 sm:p-8 space-y-6 shadow-sm overflow-hidden">
         <div className="flex items-center justify-between">
           <p className="text-[11px] font-black uppercase tracking-widest text-muted-foreground">
             Sample report
@@ -95,7 +95,7 @@ export default function InterviewProTeaser() {
         </div>
 
         <div className="flex items-end gap-2">
-          <span className="text-5xl font-black tracking-tight text-primary">
+          <span className="text-5xl font-black tracking-tight text-brand-strong dark:text-brand">
             80
           </span>
           <span className="text-sm text-muted-foreground mb-1.5">
@@ -122,7 +122,7 @@ export default function InterviewProTeaser() {
 
         <div className="space-y-2 border-t pt-4">
           <p className="text-xs font-bold flex items-center gap-1.5">
-            <CheckCircle2 className="size-3.5 text-primary" /> Strength
+            <CheckCircle2 className="size-3.5 text-brand-strong dark:text-brand" /> Strength
           </p>
           <p className="text-xs text-muted-foreground leading-relaxed">
             Explained trade-offs in your state management choices clearly, with

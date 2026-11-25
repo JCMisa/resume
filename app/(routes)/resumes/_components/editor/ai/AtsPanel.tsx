@@ -101,7 +101,7 @@ export default function AtsPanel({
                       <button
                         type="button"
                         onClick={() => onFix(step)}
-                        className="text-[11px] font-bold text-primary hover:underline inline-flex items-center gap-0.5"
+                        className="text-[11px] font-bold text-brand-strong dark:text-brand hover:underline inline-flex items-center gap-0.5"
                       >
                         Fix it <ArrowRight className="size-3" />
                       </button>

@@ -10,7 +10,7 @@ export default function TailoredReviewStep({ data, isPro }: { data: TailorReview
   const router = useRouter();
   const [locked, setLocked] = useState(false);
   return (
-    <div className="w-full space-y-6 pb-24 sm:pb-8">
+    <div className="w-full space-y-6 sm:pb-8">
       <header className="border-b pb-5">
         <h1 className="text-2xl font-black tracking-tight">Finish your tailored resume</h1>
         <p className="text-sm text-muted-foreground mt-0.5">One last step: tick the skills you really have and pick a look.</p>

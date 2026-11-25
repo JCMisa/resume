@@ -19,7 +19,7 @@ export default async function ShareResumePage({ params }: { params: Promise<{ id
   if (resume.data.status !== "created") {
     return (
       <div className="w-full flex items-center justify-center p-4">
-        <div className="max-w-md w-full rounded-3xl border bg-card p-8 text-center space-y-4">
+        <div className="max-w-md w-full rounded-3xl border bg-card p-5 sm:p-8 text-center space-y-4">
           <div className="mx-auto size-12 rounded-2xl bg-brand/10 flex items-center justify-center">
             <UploadCloud className="size-6 text-brand-strong dark:text-brand" />
           </div>

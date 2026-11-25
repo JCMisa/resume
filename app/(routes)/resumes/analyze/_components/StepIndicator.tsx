@@ -21,7 +21,7 @@ const StepIndicator = ({ currentStep }: { currentStep: ViewStep }) => {
                 currentStep === step.id
                   ? "border-primary bg-primary text-primary-foreground shadow-lg shadow-primary/30"
                   : steps.findIndex((s) => s.id === currentStep) > index
-                    ? "border-primary bg-primary/20 text-primary"
+                    ? "border-primary bg-primary/20 text-brand-strong dark:text-brand"
                     : "border-muted text-muted-foreground",
               )}
             >

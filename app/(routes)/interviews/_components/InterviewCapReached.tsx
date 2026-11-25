@@ -6,8 +6,8 @@ import { PRO_LIMITS, formatResetDate } from "@/lib/plans";
 // Shown to Pro users who used their monthly interview allowance.
 export default function InterviewCapReached() {
   return (
-    <div className="flex flex-col items-center justify-center p-8 border rounded-3xl bg-muted/10 space-y-4 w-full text-center border-dashed animate-in fade-in zoom-in-95">
-      <div className="p-4 bg-primary/10 text-primary rounded-full border border-primary/20">
+    <div className="flex flex-col items-center justify-center p-5 sm:p-8 border rounded-3xl bg-muted/10 space-y-4 w-full text-center border-dashed animate-in fade-in zoom-in-95">
+      <div className="p-4 bg-primary/10 text-brand-strong dark:text-brand rounded-full border border-primary/20">
         <CalendarClock className="h-6 w-6" />
       </div>
       <h3 className="text-base font-black tracking-tight">

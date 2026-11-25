@@ -168,7 +168,7 @@ export default function TailorPanel({
             >
               <p className="text-[11px] text-muted-foreground line-through decoration-muted-foreground/50">{b.original}</p>
               <p className="text-xs leading-relaxed">{b.rewrite}</p>
-              {b.reason && <p className="text-[11px] text-primary">{b.reason}</p>}
+              {b.reason && <p className="text-[11px] text-brand-strong dark:text-brand">{b.reason}</p>}
             </Pick>
           ))}
         </section>

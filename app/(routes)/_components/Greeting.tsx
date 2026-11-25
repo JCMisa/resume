@@ -35,7 +35,7 @@ const Greeting = () => {
 
   return (
     <span className="block min-w-0 truncate text-sm sm:text-base font-extrabold tracking-wide text-foreground animate-fade-in">
-      <span className="text-primary">{greeting},</span> {user?.name}
+      <span className="text-brand-strong dark:text-brand">{greeting},</span> {user?.name}
     </span>
   );
 };

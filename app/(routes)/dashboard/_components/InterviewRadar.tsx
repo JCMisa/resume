@@ -29,12 +29,14 @@ export default function InterviewRadar({ data }: { data: any[] }) {
 
       <div className="flex-1 w-full min-h-0 relative flex items-center justify-center">
         <ResponsiveContainer width="100%" height="100%">
-          <RadarChart cx="50%" cy="50%" outerRadius="70%" data={data}>
-            <PolarGrid className="stroke-stone-100 dark:stroke-stone-800" />
+          {/* margin + 62% radius leave room for side labels ("Technical") on phones */}
+          <RadarChart cx="50%" cy="50%" outerRadius="62%" margin={{ top: 8, right: 28, bottom: 8, left: 28 }} data={data}>
+            {/* stone-300 / stone-700: visible on white and on dark cards (stone-100 vanished in light mode) */}
+            <PolarGrid className="stroke-stone-300 dark:stroke-stone-700" />
             <PolarAngleAxis
               dataKey="subject"
               tick={{ fontSize: 10, fontWeight: 700, fill: "currentColor" }}
-              className="text-stone-500 dark:text-stone-400"
+              className="text-stone-600 dark:text-stone-400"
             />
             <Radar
               name="Averages"

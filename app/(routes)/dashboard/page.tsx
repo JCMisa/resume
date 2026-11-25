@@ -21,18 +21,20 @@ function SummaryStatCard({
   description: string;
 }) {
   return (
-    <div className="bg-white dark:bg-stone-900 border border-stone-100 dark:border-stone-800/80 p-5 rounded-3xl shadow-sm flex items-center gap-4 group hover:border-primary/20 transition-all">
-      <div className="size-11 rounded-2xl bg-stone-50 dark:bg-stone-800 border flex items-center justify-center text-muted-foreground group-hover:bg-brand/8 group-hover:text-primary transition-colors shrink-0">
-        <Icon className="size-5 stroke-[2]" />
+    // Phones: icon on top so the text gets the card's full width (two cards per
+    // row leave ~70px beside an icon). sm+: icon beside the text as before.
+    <div className="bg-white dark:bg-stone-900 border border-stone-100 dark:border-stone-800/80 p-4 sm:p-5 rounded-3xl shadow-sm flex flex-col items-start sm:flex-row sm:items-center gap-3 sm:gap-4 group hover:border-primary/20 transition-all">
+      <div className="size-9 sm:size-11 rounded-xl sm:rounded-2xl bg-stone-50 dark:bg-stone-800 border flex items-center justify-center text-muted-foreground group-hover:bg-brand/8 group-hover:text-primary transition-colors shrink-0">
+        <Icon className="size-4 sm:size-5 stroke-[2]" />
       </div>
-      <div className="min-w-0 text-left">
-        <p className="text-[11px] font-black uppercase tracking-wider text-muted-foreground leading-none mb-1.5">
+      <div className="min-w-0 w-full text-left">
+        <p className="text-[11px] font-black uppercase tracking-wider text-muted-foreground leading-tight mb-1.5 break-words">
           {title}
         </p>
         <h4 className="text-xl font-black tracking-tight text-foreground leading-none tabular-nums mb-1">
           {value}
         </h4>
-        <p className="text-[11px] text-muted-foreground truncate">
+        <p className="text-[11px] leading-snug text-muted-foreground line-clamp-2" title={description}>
           {description}
         </p>
       </div>
@@ -45,7 +47,7 @@ export default async function DashboardPage() {
 
   if (!response.success || !response.data) {
     return (
-      <div className="p-8 text-center text-xs text-muted-foreground">
+      <div className="p-5 sm:p-8 text-center text-xs text-muted-foreground">
         Failed to initialize dashboard analytics hub layout.
       </div>
     );

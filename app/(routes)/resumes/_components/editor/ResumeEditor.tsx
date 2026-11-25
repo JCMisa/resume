@@ -422,7 +422,7 @@ export default function ResumeEditor({ resumeId, initial, ai }: { resumeId: stri
                 title={m.hint}
                 onClick={() => switchMode(m.id)}
                 className={cn(
-                  "flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-3 py-1 rounded-lg text-xs font-bold transition-colors",
+                  "flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-bold transition-colors",
                   mode === m.id ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground",
                 )}
               >
@@ -431,7 +431,7 @@ export default function ResumeEditor({ resumeId, initial, ai }: { resumeId: stri
             ))}
           </div>
 
-          <div className="flex items-center gap-2 ml-auto">
+          <div className="flex flex-wrap items-center justify-end gap-2 ml-auto">
             {/* Live ATS score; opens the ATS check + Tailor panel */}
             <Button
               variant="outline"

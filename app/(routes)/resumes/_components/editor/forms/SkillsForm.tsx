@@ -56,7 +56,7 @@ export default function SkillsForm({ data, onChange }: SkillsFormProps) {
       <AiSkillsAssist onAdd={(picks) => onChange(addSkills(data, picks))} />
 
       {data.length === 0 ? (
-        <div className="border border-dashed rounded-xl p-8 text-center text-xs text-muted-foreground bg-muted/10">
+        <div className="border border-dashed rounded-xl p-5 sm:p-8 text-center text-xs text-muted-foreground bg-muted/10">
           No technical skills added yet. Click above to include your first tech
           stack node.
         </div>

@@ -12,7 +12,7 @@ export default function ShareLoading() {
           <Skeleton className="h-4 w-72 max-w-[60vw]" />
         </div>
       </div>
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_420px]">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_420px]">
         <Skeleton className="hidden lg:block aspect-[210/297] w-full max-w-xl mx-auto rounded-2xl" />
         <div className="space-y-6">
           <Skeleton className="h-56 rounded-3xl" />

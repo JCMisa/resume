@@ -93,12 +93,12 @@ export default function ResumeFileUploader({ resumeId }: UploaderProps) {
       >
         {isUploading ? (
           <>
-            <Loader2 className="h-4 w-4 animate-spin text-primary" />
+            <Loader2 className="h-4 w-4 animate-spin text-brand-strong dark:text-brand" />
             Uploading PDF Archive...
           </>
         ) : (
           <>
-            <UploadCloud className="h-4 w-4 text-primary" />
+            <UploadCloud className="h-4 w-4 text-brand-strong dark:text-brand" />
             Attach Original PDF Document
           </>
         )}

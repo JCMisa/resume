@@ -34,7 +34,7 @@ export default function RetryGradingPanel({
 
   if (!canRetry) {
     return (
-      <div className="border border-dashed p-12 text-center rounded-3xl bg-muted/10 space-y-3">
+      <div className="border border-dashed p-6 sm:p-12 text-center rounded-3xl bg-muted/10 space-y-3">
         <AlertTriangle className="h-8 w-8 text-muted-foreground mx-auto" />
         <p className="text-sm font-bold text-foreground">
           No report for this session
@@ -57,7 +57,7 @@ export default function RetryGradingPanel({
   }
 
   return (
-    <div className="border border-dashed p-12 text-center rounded-3xl bg-muted/10 space-y-3">
+    <div className="border border-dashed p-6 sm:p-12 text-center rounded-3xl bg-muted/10 space-y-3">
       <AlertTriangle className="h-8 w-8 text-amber-500 mx-auto" />
       <p className="text-sm font-bold text-foreground">
         Grading didn&apos;t finish

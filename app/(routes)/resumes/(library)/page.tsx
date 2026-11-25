@@ -23,7 +23,7 @@ export default async function ResumesPage() {
   const header = (
     <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b pb-5">
       <div className="flex items-center gap-3">
-        <div className="p-3 bg-primary/10 text-primary rounded-2xl border">
+        <div className="p-3 bg-primary/10 text-brand-strong dark:text-brand rounded-2xl border">
           <FileStack className="h-6 w-6" />
         </div>
         <div>
@@ -51,7 +51,7 @@ export default async function ResumesPage() {
     return (
       <div className="w-full space-y-6">
         {header}
-        <div className="rounded-3xl border bg-card p-10 text-center text-sm text-muted-foreground">
+        <div className="rounded-3xl border bg-card p-6 sm:p-10 text-center text-sm text-muted-foreground">
           {library.error} Refresh the page to try again.
         </div>
       </div>
@@ -65,7 +65,7 @@ export default async function ResumesPage() {
       {header}
 
       {items.length === 0 ? (
-        <section className="rounded-3xl border border-dashed bg-card p-10 sm:p-16 text-center space-y-4">
+        <section className="rounded-3xl border border-dashed bg-card p-6 sm:p-16 text-center space-y-4">
           <div className="mx-auto size-14 rounded-2xl bg-brand/10 flex items-center justify-center">
             <FileStack className="size-7 text-brand-strong dark:text-brand" />
           </div>
@@ -85,12 +85,12 @@ export default async function ResumesPage() {
             usage={{ isPro: billing.isPro, used: billing.limits.analyses }}
           />
 
-          <div className="grid gap-6 lg:grid-cols-3">
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
             <ScoreTrendChart data={trend} className="lg:col-span-2" />
             <NextActionCard action={nextAction} />
           </div>
 
-          <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
             <ActivityChart data={activity} />
             <ScoreDistributionChart data={distribution} />
             <TopKeywordsCard

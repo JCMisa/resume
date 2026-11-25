@@ -164,7 +164,7 @@ export default function TailorWizard({
 
   if (step === "working") {
     return (
-      <div className="rounded-3xl border bg-card p-8 sm:p-12 max-w-lg mx-auto text-center space-y-6 animate-in fade-in duration-300" aria-live="polite">
+      <div className="rounded-3xl border bg-card p-5 sm:p-12 max-w-lg mx-auto text-center space-y-6 animate-in fade-in duration-300" aria-live="polite">
         <div className="mx-auto size-14 rounded-2xl bg-brand/10 flex items-center justify-center">
           <WandSparkles className="size-7 text-brand-strong dark:text-brand animate-pulse" />
         </div>
@@ -176,7 +176,7 @@ export default function TailorWizard({
           {WORK_STEPS.map((s, i) => (
             <li key={s} className={cn("flex items-center gap-2.5 text-sm", i > workIndex && "text-muted-foreground")}>
               {i < workIndex ? (
-                <Check className="size-4 text-primary" />
+                <Check className="size-4 text-brand-strong dark:text-brand" />
               ) : i === workIndex ? (
                 <Loader2 className="size-4 animate-spin" />
               ) : (
@@ -267,7 +267,7 @@ export default function TailorWizard({
                 void pickFile(e.dataTransfer.files?.[0]);
               }}
               className={cn(
-                "w-full rounded-2xl border-2 border-dashed p-8 text-center transition-colors",
+                "w-full rounded-2xl border-2 border-dashed p-5 sm:p-8 text-center transition-colors",
                 dragging ? "border-primary bg-primary/5" : "hover:border-primary/50 hover:bg-muted/30",
               )}
             >
@@ -322,7 +322,7 @@ export default function TailorWizard({
       {/* 2. Job */}
       <section className="space-y-3">
         <h2 className="text-lg font-black tracking-tight">2. The job you&apos;re applying for</h2>
-        <div className="grid gap-3 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <Input value={jobTitle} onChange={(e) => setJobTitle(e.target.value)} maxLength={120} placeholder="Job title (optional)" aria-label="Job title" className="rounded-xl" />
           <Input value={company} onChange={(e) => setCompany(e.target.value)} maxLength={120} placeholder="Company (optional)" aria-label="Company" className="rounded-xl" />
         </div>
@@ -340,7 +340,7 @@ export default function TailorWizard({
       </section>
 
       {/* Start bar (sticky on phones) */}
-      <div className="fixed sm:static bottom-0 inset-x-0 z-20 border-t sm:border-0 bg-background/95 sm:bg-transparent backdrop-blur sm:backdrop-blur-none p-3 sm:p-0 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+      <div className="sticky sm:static bottom-0 z-20 -mx-4 sm:mx-0 border-t sm:border-0 bg-background/95 sm:bg-transparent backdrop-blur sm:backdrop-blur-none px-4 py-3 sm:p-0 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
         <p className="text-xs text-muted-foreground text-center sm:text-left">{usageLine(usage)}</p>
         <Button onClick={() => void start()} disabled={usage.allowed && !canStart} className="rounded-lg font-bold gap-1.5 w-full sm:w-auto">
           <Sparkles className="size-4" /> Tailor my resume

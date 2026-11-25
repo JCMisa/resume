@@ -15,7 +15,7 @@ export default function EditResumeLoading() {
         <Skeleton className="h-8 w-20 rounded-lg" />
       </div>
       <Skeleton className="h-9 w-full rounded-lg lg:hidden" />
-      <div className="grid gap-4 lg:grid-cols-[minmax(360px,460px)_minmax(0,1fr)]">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(360px,460px)_minmax(0,1fr)]">
         <div className="rounded-3xl border bg-card p-4 space-y-4">
           <div className="flex gap-1.5 overflow-hidden">
             {Array.from({ length: 6 }).map((_, i) => (

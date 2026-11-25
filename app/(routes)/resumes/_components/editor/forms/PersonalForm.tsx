@@ -91,7 +91,7 @@ export default function PersonalForm({ data, onChange }: PersonalFormProps) {
       {/* REPEATABLE LINKS ROW */}
       <div className="space-y-3 pt-2">
         <div className="flex items-center justify-between">
-          <span className="text-xs font-black uppercase tracking-widest text-primary/80">
+          <span className="text-xs font-black uppercase tracking-widest text-brand-strong/80 dark:text-brand/80">
             Profile Links
           </span>
           <Button

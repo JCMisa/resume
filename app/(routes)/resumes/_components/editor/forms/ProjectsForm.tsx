@@ -83,7 +83,7 @@ export default function ProjectsForm({ data, onChange }: ProjectsFormProps) {
       </div>
 
       {data.length === 0 ? (
-        <div className="border border-dashed rounded-xl p-8 text-center text-xs text-muted-foreground bg-muted/10">
+        <div className="border border-dashed rounded-xl p-5 sm:p-8 text-center text-xs text-muted-foreground bg-muted/10">
           No engineering projects added. Click above to log an app build.
         </div>
       ) : (
@@ -101,7 +101,7 @@ export default function ProjectsForm({ data, onChange }: ProjectsFormProps) {
               <AccordionTrigger className="hover:no-underline py-3">
                 <div className="flex items-center justify-between w-full pr-4 text-left">
                   <div className="flex items-center gap-3 truncate">
-                    <div className="p-2 bg-primary/10 rounded-lg text-primary shrink-0">
+                    <div className="p-2 bg-primary/10 rounded-lg text-brand-strong dark:text-brand shrink-0">
                       <Code className="h-4 w-4" />
                     </div>
                     <span className="text-sm font-bold truncate">
@@ -148,7 +148,7 @@ export default function ProjectsForm({ data, onChange }: ProjectsFormProps) {
 
                 {/* Bullets: one rich field */}
                 <div className="space-y-1.5">
-                  <span className="text-[11px] font-bold text-primary uppercase">
+                  <span className="text-[11px] font-bold text-brand-strong dark:text-brand uppercase">
                     Feature Scope Bullet Points
                   </span>
                   <RichField

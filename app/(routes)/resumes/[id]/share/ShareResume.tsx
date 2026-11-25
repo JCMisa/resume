@@ -232,7 +232,7 @@ export default function ShareResume({
         </ol>
       </header>
 
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_420px] items-start">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_420px] items-start">
         {/* Preview of what's shared (contact details hidden when chosen) */}
         <div className="rounded-3xl border bg-stone-100 dark:bg-stone-900/60 p-3 sm:p-6 order-last lg:order-none">
           <p className="mb-3 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">

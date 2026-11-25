@@ -11,7 +11,7 @@ export default function SettingsLoading() {
       </div>
 
       <div className="px-5 sm:px-8 pt-8 pb-10">
-        <div className="grid lg:grid-cols-[260px_1fr] gap-8 items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-[260px_1fr] gap-8 items-start">
           {/* Left: title, tabs, usage cards */}
           <aside className="space-y-6">
             <div className="space-y-2">
@@ -47,7 +47,7 @@ export default function SettingsLoading() {
                 <Skeleton className="h-3 w-48 max-w-full" />
               </div>
             </div>
-            <div className="grid sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {Array.from({ length: 4 }).map((_, i) => (
                 <div key={i} className="space-y-2">
                   <Skeleton className="h-3 w-24" />

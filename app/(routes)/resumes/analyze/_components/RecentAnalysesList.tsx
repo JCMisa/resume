@@ -107,7 +107,7 @@ export default function RecentAnalysesList({
           ))}
         </div>
       ) : items.length === 0 ? (
-        <div className="p-8 text-center space-y-2">
+        <div className="p-5 sm:p-8 text-center space-y-2">
           <FileSearch className="size-6 text-muted-foreground/50 mx-auto" />
           <p className="text-sm font-bold">No analyses yet</p>
           <p className="text-xs text-muted-foreground max-w-[220px] mx-auto">

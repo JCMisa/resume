@@ -94,7 +94,7 @@ export default function TailorReview({
             Keyword match: how many of the job&apos;s key terms your resume contains, the way an ATS checks.
           </p>
         </div>
-        <div className="grid gap-4 sm:grid-cols-[1fr_auto_1fr] sm:items-center">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-[1fr_auto_1fr] sm:items-center">
           <ScoreBar label="Your original" value={data.score.before} muted />
           <ArrowRight className="size-5 text-muted-foreground hidden sm:block" />
           <ScoreBar label="Tailored" value={after} />
@@ -111,7 +111,7 @@ export default function TailorReview({
                     found ? "border-primary/40 bg-primary/10" : "text-muted-foreground",
                   )}
                 >
-                  {found ? <CheckCircle2 className="size-3 text-primary" /> : <Circle className="size-3" />}
+                  {found ? <CheckCircle2 className="size-3 text-brand-strong dark:text-brand" /> : <Circle className="size-3" />}
                   {k.term}
                   {k.importance === "required" && <span className="sr-only">(required)</span>}
                 </li>
@@ -164,7 +164,7 @@ export default function TailorReview({
         <TemplateGallery value={templateId} onChange={setTemplateId} isPro={isPro} onLocked={onLocked} />
       </section>
 
-      <div className="fixed sm:static bottom-0 inset-x-0 z-20 border-t sm:border-0 bg-background/95 sm:bg-transparent backdrop-blur sm:backdrop-blur-none p-3 sm:p-0 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+      <div className="sticky sm:static bottom-0 z-20 -mx-4 sm:mx-0 border-t sm:border-0 bg-background/95 sm:bg-transparent backdrop-blur sm:backdrop-blur-none px-4 py-3 sm:p-0 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
         <p className="text-xs text-muted-foreground flex items-center gap-1.5 justify-center sm:justify-start">
           <ShieldCheck className="size-3.5 shrink-0" />
           Employers, titles, dates and numbers are kept exactly as in your resume.

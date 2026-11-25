@@ -44,7 +44,7 @@ function ChangeCard({ change }: { change: TailorChange }) {
       <div className="flex items-start justify-between gap-2">
         <p className="text-sm font-bold">{change.label}</p>
       </div>
-      <p className="text-[11px] text-primary">{change.reason}</p>
+      <p className="text-[11px] text-brand-strong dark:text-brand">{change.reason}</p>
       {list ? (
         <div className="space-y-1 text-xs">
           {change.before.length > 0 && <p className="text-muted-foreground line-through decoration-muted-foreground/50">{change.before.join(" · ")}</p>}
@@ -64,7 +64,7 @@ function ChangeCard({ change }: { change: TailorChange }) {
           <ul className="space-y-1">
             {change.after.map((b, i) => (
               <li key={i} className="flex gap-1.5">
-                <span className="text-primary" aria-hidden>
+                <span className="text-brand-strong dark:text-brand" aria-hidden>
                   •
                 </span>
                 {b}
@@ -177,7 +177,7 @@ export default function TailoredResult({
         </div>
       </header>
 
-      <div className="grid gap-6 lg:grid-cols-[400px_minmax(0,1fr)] items-start">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[400px_minmax(0,1fr)] items-start">
         {/* Left: score, actions, changes */}
         <div className="space-y-6 min-w-0">
           <section className="rounded-3xl border bg-card p-5 space-y-4">
@@ -192,7 +192,7 @@ export default function TailoredResult({
                 <p className="text-3xl font-black tabular-nums">{score.after}%</p>
               </div>
               {gained > 0 && (
-                <span className="ml-auto rounded-full bg-primary/10 text-primary px-2.5 py-1 text-xs font-black tabular-nums">+{gained}</span>
+                <span className="ml-auto rounded-full bg-primary/10 text-brand-strong dark:text-brand px-2.5 py-1 text-xs font-black tabular-nums">+{gained}</span>
               )}
             </div>
             <p className="text-[11px] text-muted-foreground">Keyword match: how many of the job&apos;s key terms your resume contains, the way an ATS checks.</p>
@@ -206,9 +206,9 @@ export default function TailoredResult({
                       k.after ? "border-primary/40 bg-primary/10" : "text-muted-foreground",
                     )}
                   >
-                    {k.after ? <CheckCircle2 className="size-3 text-primary" /> : <Circle className="size-3" />}
+                    {k.after ? <CheckCircle2 className="size-3 text-brand-strong dark:text-brand" /> : <Circle className="size-3" />}
                     {k.term}
-                    {!k.before && k.after && <span className="text-primary text-[10px] font-black uppercase">new</span>}
+                    {!k.before && k.after && <span className="text-brand-strong dark:text-brand text-[10px] font-black uppercase">new</span>}
                   </li>
                 ))}
               </ul>
@@ -221,7 +221,7 @@ export default function TailoredResult({
           </section>
 
           {/* Actions */}
-          <section className="grid gap-2 sm:grid-cols-2 lg:grid-cols-1">
+          <section className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-1">
             <Button onClick={() => void downloadPdf()} disabled={busy !== null} className="rounded-lg gap-1.5 font-bold justify-start">
               {busy === "pdf" ? <Loader2 className="size-4 animate-spin" /> : <Download className="size-4" />} Download PDF
             </Button>

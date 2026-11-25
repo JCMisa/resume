@@ -242,7 +242,7 @@ export default function Agent({
   };
 
   return (
-    <div className="w-full border bg-card p-8 sm:p-12 text-center space-y-8 rounded-3xl shadow-sm relative overflow-hidden">
+    <div className="w-full border bg-card p-5 sm:p-12 text-center space-y-8 rounded-3xl shadow-sm relative overflow-hidden">
       <div className="flex justify-between items-center">
         <div className="flex items-center gap-2">
           <div
@@ -262,7 +262,7 @@ export default function Agent({
 
       {status === "processing_results" ? (
         <div className="py-12 space-y-4 animate-in fade-in duration-300">
-          <Loader2 className="w-12 h-12 text-primary animate-spin mx-auto" />
+          <Loader2 className="w-12 h-12 text-brand-strong dark:text-brand animate-spin mx-auto" />
           <p className="text-sm font-bold max-w-xs mx-auto text-muted-foreground leading-relaxed">
             {statusMessage}
           </p>
@@ -283,13 +283,13 @@ export default function Agent({
             </AnimatePresence>
             <div className="w-28 h-28 border rounded-full flex items-center justify-center bg-background shadow-md relative z-10">
               {status === "connecting" ? (
-                <Loader2 className="w-10 h-10 text-primary animate-spin" />
+                <Loader2 className="w-10 h-10 text-brand-strong dark:text-brand animate-spin" />
               ) : (
                 <Activity
                   className={cn(
                     "w-10 h-10",
                     status === "active"
-                      ? "text-primary"
+                      ? "text-brand-strong dark:text-brand"
                       : "text-muted-foreground/20",
                   )}
                 />

@@ -52,7 +52,7 @@ const AIAnalysisSection = ({
       {data?.analysis ? (
         <AnalysisReport analysis={data.analysis} resumeId={data.id} />
       ) : (
-        <div className="rounded-3xl border bg-card p-10 text-center text-sm text-muted-foreground">
+        <div className="rounded-3xl border bg-card p-6 sm:p-10 text-center text-sm text-muted-foreground">
           The analysis couldn&apos;t be loaded. Open the resume to try again.
         </div>
       )}

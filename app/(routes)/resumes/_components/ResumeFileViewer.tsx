@@ -32,7 +32,7 @@ export default function ResumeFileViewer({ url }: ResumeFileViewerProps) {
 
   if (!url) {
     return (
-      <div className="h-full min-h-[500px] border border-dashed border-muted rounded-3xl flex flex-col items-center justify-center p-8 text-center text-muted-foreground bg-muted/10 animate-in fade-in duration-300">
+      <div className="h-full min-h-[500px] border border-dashed border-muted rounded-3xl flex flex-col items-center justify-center p-5 sm:p-8 text-center text-muted-foreground bg-muted/10 animate-in fade-in duration-300">
         <FileText className="h-10 w-10 mb-3 stroke-[1.25]" />
         <p className="text-sm font-semibold text-foreground">
           No File Binary Found

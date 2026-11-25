@@ -81,7 +81,7 @@ export default function ScoreTimeline({ data }: { data: any[] }) {
                       <p className="text-[11px] text-muted-foreground font-mono font-bold uppercase tracking-wider">
                         {payload[0].payload.date}
                       </p>
-                      <p className="text-xs font-black mt-0.5 text-primary truncate max-w-[180px]">
+                      <p className="text-xs font-black mt-0.5 text-brand-strong dark:text-brand truncate max-w-[180px]">
                         {payload[0].payload.title}
                       </p>
                       <p className="text-lg font-black mt-1 tabular-nums">

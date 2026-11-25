@@ -312,7 +312,7 @@ const AnalyzeResumePage = () => {
     <div className="w-full space-y-6 animate-in fade-in duration-500">
       <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b pb-5">
         <div className="flex items-center gap-3">
-          <div className="p-3 bg-primary/10 text-primary rounded-2xl border">
+          <div className="p-3 bg-primary/10 text-brand-strong dark:text-brand rounded-2xl border">
             <FileSearch className="h-6 w-6" />
           </div>
           <div>
@@ -332,7 +332,7 @@ const AnalyzeResumePage = () => {
         {currentView === "upload" ? (
           <div
             key="upload"
-            className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_400px] items-start"
+            className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_400px] items-start"
           >
             <div className="min-w-0">
               <UploadSection

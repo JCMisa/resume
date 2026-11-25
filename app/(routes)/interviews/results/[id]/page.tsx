@@ -55,7 +55,7 @@ export default async function InterviewResultPage({ params }: PageProps) {
       {/* HEADER META ROW */}
       <header className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b pb-6">
         <div className="flex items-center gap-3">
-          <div className="p-3 bg-primary/10 text-primary rounded-2xl border">
+          <div className="p-3 bg-primary/10 text-brand-strong dark:text-brand rounded-2xl border">
             <Trophy className="h-6 w-6" />
           </div>
           <div>
@@ -89,7 +89,7 @@ export default async function InterviewResultPage({ params }: PageProps) {
                 Overall Performance Score
               </p>
               <div className="relative flex items-center justify-center mx-auto size-28 rounded-full border-4 border-primary/20 bg-primary/5">
-                <span className="text-3xl font-black tracking-tighter text-primary">
+                <span className="text-3xl font-black tracking-tighter text-brand-strong dark:text-brand">
                   {result.overallScore || 0}
                   <span className="text-xs font-normal text-muted-foreground">
                     /100
@@ -114,7 +114,7 @@ export default async function InterviewResultPage({ params }: PageProps) {
                         <span className="text-muted-foreground">
                           {sug.category}
                         </span>
-                        <span className="text-primary">{sug.score}%</span>
+                        <span className="text-brand-strong dark:text-brand">{sug.score}%</span>
                       </div>
                       <Progress value={sug.score} className="h-1.5" />
                     </div>
@@ -188,7 +188,7 @@ export default async function InterviewResultPage({ params }: PageProps) {
             {/* ACTIONABLE IMPROVEMENT RECOMMENDATIONS TIPS LIST */}
             {result.suggestions && result.suggestions.length > 0 && (
               <div className="bg-card border p-6 rounded-3xl shadow-sm space-y-3">
-                <h3 className="text-xs font-black uppercase tracking-widest text-primary flex items-center gap-1.5">
+                <h3 className="text-xs font-black uppercase tracking-widest text-brand-strong dark:text-brand flex items-center gap-1.5">
                   <Lightbulb className="h-4 w-4 fill-primary/10" /> Strategic
                   Upgrades Recommendations
                 </h3>

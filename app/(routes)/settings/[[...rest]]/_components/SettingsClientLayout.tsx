@@ -194,7 +194,7 @@ export default function SettingsClientLayout({
       </div>
 
       <div className="flex-1 min-h-0 w-full px-5 sm:px-8 pt-8 lg:pb-0 pb-10">
-        <div className="grid lg:grid-cols-[260px_1fr] lg:grid-rows-[minmax(0,1fr)] lg:h-full gap-8 items-start lg:items-stretch">
+        <div className="grid grid-cols-1 lg:grid-cols-[260px_1fr] lg:grid-rows-[minmax(0,1fr)] lg:h-full gap-8 items-start lg:items-stretch">
           {/* ── Left sidebar (fixed; scrolls only if the window is too short) ── */}
           <aside className="space-y-6 lg:min-h-0 lg:overflow-y-auto custom-scrollbar lg:pb-8">
             <motion.div

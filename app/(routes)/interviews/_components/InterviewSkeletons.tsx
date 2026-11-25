@@ -8,7 +8,7 @@ import { CardSkeleton } from "@/components/custom/PageSkeletons";
 export function SetupFormSkeleton() {
   return (
     <div className="w-full bg-card border p-6 sm:p-8 rounded-3xl shadow-sm space-y-6">
-      <div className="grid gap-6 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <div className="space-y-5">
           <div className="space-y-2">
             <Skeleton className="h-3.5 w-24" />

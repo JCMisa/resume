@@ -151,7 +151,7 @@ export default async function ResumeDetailsPage({ params, searchParams }: PagePr
             {title}
           </h1>
           <div className="flex flex-wrap items-center gap-2">
-            <span className="inline-flex items-center text-xs font-bold px-3 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20 uppercase tracking-wider">
+            <span className="inline-flex items-center text-xs font-bold px-3 py-0.5 rounded-full bg-primary/10 text-brand-strong dark:text-brand border border-primary/20 uppercase tracking-wider">
               {category}
             </span>
             {/* Built resumes open in the editor; uploads are edited as a copy */}
@@ -188,7 +188,7 @@ export default async function ResumeDetailsPage({ params, searchParams }: PagePr
                 AI Score Rating
               </p>
               <div className="flex items-baseline gap-1">
-                <span className="text-3xl font-black text-primary">
+                <span className="text-3xl font-black text-brand-strong dark:text-brand">
                   {analysis.overallScore}
                 </span>
                 <span className="text-xs text-muted-foreground">/100</span>
@@ -264,7 +264,7 @@ export default async function ResumeDetailsPage({ params, searchParams }: PagePr
               {analysis ? (
                 <AnalysisReport analysis={analysis} resumeId={resumeId} />
               ) : (
-                <div className="rounded-3xl border border-dashed bg-card p-8 text-center space-y-2">
+                <div className="rounded-3xl border border-dashed bg-card p-5 sm:p-8 text-center space-y-2">
                   <Brain className="size-7 text-muted-foreground/50 mx-auto" />
                   <p className="text-sm font-bold">Not analyzed yet</p>
                   <p className="text-xs text-muted-foreground max-w-sm mx-auto">
@@ -312,7 +312,7 @@ export default async function ResumeDetailsPage({ params, searchParams }: PagePr
                             className="rounded-lg gap-1"
                           >
                             <a href={link.url} target="_blank" rel="noreferrer">
-                              <Globe className="h-3.5 w-3.5 text-primary" />
+                              <Globe className="h-3.5 w-3.5 text-brand-strong dark:text-brand" />
                               {link.label || "Link"}
                             </a>
                           </Button>
@@ -323,7 +323,7 @@ export default async function ResumeDetailsPage({ params, searchParams }: PagePr
 
                   {content.professionalSummary && (
                     <div className="pt-4 border-t border-dashed space-y-1">
-                      <h4 className="text-[11px] font-bold text-primary uppercase tracking-widest">
+                      <h4 className="text-[11px] font-bold text-brand-strong dark:text-brand uppercase tracking-widest">
                         Professional Summary
                       </h4>
                       <div className="text-xs text-muted-foreground leading-relaxed space-y-1.5">
@@ -340,7 +340,7 @@ export default async function ResumeDetailsPage({ params, searchParams }: PagePr
                     {experiences.length > 0 && (
                       <div className="space-y-3">
                         <h3 className="text-xs font-bold flex items-center gap-2 px-1 text-muted-foreground uppercase tracking-wider">
-                          <Briefcase className="h-3.5 w-3.5 text-primary" />
+                          <Briefcase className="h-3.5 w-3.5 text-brand-strong dark:text-brand" />
                           Work Experience History
                         </h3>
                         <ScrollArea className="h-[400px] pr-4">
@@ -355,7 +355,7 @@ export default async function ResumeDetailsPage({ params, searchParams }: PagePr
                                     <h4 className="font-extrabold text-base leading-snug">
                                       {exp.role}
                                     </h4>
-                                    <p className="text-xs font-semibold text-primary">
+                                    <p className="text-xs font-semibold text-brand-strong dark:text-brand">
                                       {exp.company}
                                     </p>
                                   </div>
@@ -383,7 +383,7 @@ export default async function ResumeDetailsPage({ params, searchParams }: PagePr
                     {projects.length > 0 && (
                       <div className="space-y-3 pt-2">
                         <h3 className="text-xs font-bold flex items-center gap-2 px-1 text-muted-foreground uppercase tracking-wider">
-                          <FolderGit2 className="h-3.5 w-3.5 text-primary" />
+                          <FolderGit2 className="h-3.5 w-3.5 text-brand-strong dark:text-brand" />
                           Technical Software Projects
                         </h3>
                         <ScrollArea className="h-[350px] pr-4">
@@ -416,7 +416,7 @@ export default async function ResumeDetailsPage({ params, searchParams }: PagePr
                                       href={proj.links[0].url}
                                       target="_blank"
                                       rel="noreferrer"
-                                      className="text-[11px] font-bold text-primary underline flex items-center gap-1"
+                                      className="text-[11px] font-bold text-brand-strong dark:text-brand underline flex items-center gap-1"
                                     >
                                       <Code className="h-3 w-3" />
                                       {proj.links[0].label ||
@@ -437,7 +437,7 @@ export default async function ResumeDetailsPage({ params, searchParams }: PagePr
                     {/* SKILLS BOX (SUPPORTING BOTH GROUPED CATEGORIES & LEGACY EXTRACTS) */}
                     <div className="p-5 border rounded-2xl bg-card shadow-sm space-y-3">
                       <h3 className="text-[11px] font-bold tracking-widest text-muted-foreground uppercase flex items-center gap-1.5">
-                        <Award className="h-3.5 w-3.5 text-primary" /> Parsed
+                        <Award className="h-3.5 w-3.5 text-brand-strong dark:text-brand" /> Parsed
                         Stack Skills
                       </h3>
                       {Object.keys(groupedSkills).length > 0 ? (
@@ -445,7 +445,7 @@ export default async function ResumeDetailsPage({ params, searchParams }: PagePr
                           <div className="space-y-3">
                             {Object.keys(groupedSkills).map((cat) => (
                               <div key={cat} className="space-y-1">
-                                <p className="text-[11px] font-extrabold uppercase text-primary tracking-wider">
+                                <p className="text-[11px] font-extrabold uppercase text-brand-strong dark:text-brand tracking-wider">
                                   {cat}
                                 </p>
                                 <div className="flex flex-wrap gap-1">
@@ -468,7 +468,7 @@ export default async function ResumeDetailsPage({ params, searchParams }: PagePr
                             (skill: string) => (
                               <span
                                 key={skill}
-                                className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-primary/5 text-primary border border-primary/10 tracking-wide"
+                                className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-primary/5 text-brand-strong dark:text-brand border border-primary/10 tracking-wide"
                               >
                                 {skill}
                               </span>
@@ -485,7 +485,7 @@ export default async function ResumeDetailsPage({ params, searchParams }: PagePr
                     {/* EDUCATION BOX */}
                     <div className="p-5 border rounded-2xl bg-card shadow-sm space-y-3">
                       <h3 className="text-[11px] font-bold tracking-widest text-muted-foreground uppercase flex items-center gap-1.5">
-                        <GraduationCap className="h-3.5 w-3.5 text-primary" />{" "}
+                        <GraduationCap className="h-3.5 w-3.5 text-brand-strong dark:text-brand" />{" "}
                         Education History
                       </h3>
                       <ScrollArea className="max-h-[220px] pr-4">
@@ -507,7 +507,7 @@ export default async function ResumeDetailsPage({ params, searchParams }: PagePr
                                       {edu.duration}
                                     </span>
                                     {edu.gwa && (
-                                      <span className="text-[10px] font-mono font-bold text-primary">
+                                      <span className="text-[10px] font-mono font-bold text-brand-strong dark:text-brand">
                                         GWA: {edu.gwa}
                                       </span>
                                     )}
@@ -526,7 +526,7 @@ export default async function ResumeDetailsPage({ params, searchParams }: PagePr
                                     <p className="text-[11px] text-muted-foreground font-semibold">
                                       {edu.institution}
                                     </p>
-                                    <p className="text-[10px] font-mono font-bold text-primary/70">
+                                    <p className="text-[10px] font-mono font-bold text-brand-strong/70 dark:text-brand/70">
                                       {edu.year}
                                     </p>
                                   </div>
@@ -540,7 +540,7 @@ export default async function ResumeDetailsPage({ params, searchParams }: PagePr
                     {certificates.length > 0 && (
                       <div className="p-5 border rounded-2xl bg-card shadow-sm space-y-3">
                         <h3 className="text-[11px] font-bold tracking-widest text-muted-foreground uppercase flex items-center gap-1.5">
-                          <Award className="h-3.5 w-3.5 text-primary" />{" "}
+                          <Award className="h-3.5 w-3.5 text-brand-strong dark:text-brand" />{" "}
                           Certifications
                         </h3>
                         <ScrollArea className="max-h-[220px] pr-4">
@@ -574,7 +574,7 @@ export default async function ResumeDetailsPage({ params, searchParams }: PagePr
                       .map((c) => (
                         <div key={c.id} className="p-5 border rounded-2xl bg-card shadow-sm space-y-3">
                           <h3 className="text-[11px] font-bold tracking-widest text-muted-foreground uppercase flex items-center gap-1.5">
-                            <FileText className="h-3.5 w-3.5 text-primary" /> {c.title || "Custom section"}
+                            <FileText className="h-3.5 w-3.5 text-brand-strong dark:text-brand" /> {c.title || "Custom section"}
                           </h3>
                           <div className="text-xs text-muted-foreground leading-relaxed space-y-1.5 [&_ul]:list-disc [&_ul]:pl-4">
                             <RichBlocks value={c.body} lists />

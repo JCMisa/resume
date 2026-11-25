@@ -42,7 +42,7 @@ export default async function PublicResumePage({ params }: Props) {
   if (!resume) {
     return (
       <main className="min-h-svh flex items-center justify-center bg-stone-100 dark:bg-stone-950 p-4">
-        <div className="max-w-sm w-full rounded-3xl border bg-card p-8 text-center space-y-4">
+        <div className="max-w-sm w-full rounded-3xl border bg-card p-5 sm:p-8 text-center space-y-4">
           <div className="mx-auto size-12 rounded-2xl bg-muted flex items-center justify-center">
             <FileX2 className="size-6 text-muted-foreground" />
           </div>

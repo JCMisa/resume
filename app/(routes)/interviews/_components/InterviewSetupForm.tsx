@@ -68,13 +68,13 @@ export default function InterviewSetupForm({ onSetupComplete }: SetupProps) {
       onSubmit={handleInitialize}
       className="w-full bg-card border p-6 sm:p-8 rounded-3xl shadow-sm space-y-6"
     >
-      <div className="grid gap-6 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         {/* Role + job description */}
         <div className="space-y-5">
           <div className="space-y-2">
             <label
               htmlFor="interview-role"
-              className="text-xs font-black uppercase tracking-wider text-primary flex items-center gap-1.5"
+              className="text-xs font-black uppercase tracking-wider text-brand-strong dark:text-brand flex items-center gap-1.5"
             >
               <Briefcase className="h-4 w-4" /> Target role
             </label>
@@ -110,7 +110,7 @@ export default function InterviewSetupForm({ onSetupComplete }: SetupProps) {
 
         {/* Resume */}
         <div className="space-y-2 flex flex-col">
-          <p className="text-xs font-black uppercase tracking-wider text-primary flex items-center gap-1.5">
+          <p className="text-xs font-black uppercase tracking-wider text-brand-strong dark:text-brand flex items-center gap-1.5">
             <FileText className="h-4 w-4" /> Your resume
           </p>
           <ResumeDropzone state={resume} onChange={setResume} />

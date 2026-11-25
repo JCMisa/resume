@@ -24,7 +24,7 @@ export default function AnalyzeLoading() {
           <Skeleton className="size-9 rounded-full" />
         </div>
       </div>
-      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_400px] items-start">
+      <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_400px] items-start">
         <div className="min-w-0 space-y-6">
           <BlockSkeleton className="h-[320px]" />
           <CardSkeleton lines={4} />

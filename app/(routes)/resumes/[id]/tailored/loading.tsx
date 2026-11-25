@@ -12,7 +12,7 @@ export default function TailoredLoading() {
           <Skeleton className="h-4 w-80 max-w-[60vw]" />
         </div>
       </div>
-      <div className="grid gap-6 lg:grid-cols-[400px_minmax(0,1fr)]">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[400px_minmax(0,1fr)]">
         <div className="space-y-6">
           <Skeleton className="h-44 rounded-3xl" />
           <Skeleton className="h-24 rounded-3xl" />

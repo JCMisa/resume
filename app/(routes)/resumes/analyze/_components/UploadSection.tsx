@@ -139,7 +139,7 @@ export default function UploadSection({
           if (f && !busy) onFile(f);
         }}
         className={cn(
-          "relative rounded-3xl border-2 border-dashed p-8 sm:p-10 min-h-[320px] flex flex-col items-center justify-center text-center transition-all outline-none focus-visible:ring-2 focus-visible:ring-brand/50",
+          "relative rounded-3xl border-2 border-dashed p-5 sm:p-10 min-h-[320px] flex flex-col items-center justify-center text-center transition-all outline-none focus-visible:ring-2 focus-visible:ring-brand/50",
           dragging
             ? "border-brand bg-brand/5 scale-[0.995]"
             : failed
@@ -315,7 +315,7 @@ export default function UploadSection({
         <h2 className="text-sm font-black tracking-tight">
           What the analysis covers
         </h2>
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           {COVERS.map(({ icon: Icon, title, text }) => (
             <div key={title} className="flex gap-3">
               <div className="size-9 shrink-0 rounded-xl border bg-muted/30 flex items-center justify-center">

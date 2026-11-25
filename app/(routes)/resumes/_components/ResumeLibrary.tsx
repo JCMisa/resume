@@ -456,7 +456,7 @@ export default function ResumeLibrary({ items }: { items: ResumeLibraryItem[] })
           </Button>
         </div>
       ) : (
-        <ul className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+        <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {visible.map((item) => (
             <ResumeCard
               key={item.id}

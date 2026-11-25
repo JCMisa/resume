@@ -67,11 +67,11 @@ export default function CreateResumeStart({
   }
 
   return (
-    <div className="w-full space-y-8 animate-in fade-in duration-500 pb-24 sm:pb-8">
+    <div className="w-full space-y-8 animate-in fade-in duration-500 sm:pb-8">
       {/* Header + steps */}
       <header className="space-y-5 border-b pb-6">
         <div className="flex items-center gap-3">
-          <div className="p-3 bg-primary/10 text-primary rounded-2xl border">
+          <div className="p-3 bg-primary/10 text-brand-strong dark:text-brand rounded-2xl border">
             <FilePlus2 className="h-6 w-6" />
           </div>
           <div>
@@ -150,7 +150,7 @@ export default function CreateResumeStart({
       {/* Starting point */}
       <section className="space-y-3">
         <h2 className="text-lg font-black tracking-tight">2. How do you want to start?</h2>
-        <div role="radiogroup" aria-label="Starting point" className="grid gap-3 sm:grid-cols-2">
+        <div role="radiogroup" aria-label="Starting point" className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           {(
             [
               { id: "blank", icon: PenLine, title: "Start from scratch", text: "A blank resume. We'll fill in your name and email." },
@@ -241,8 +241,8 @@ export default function CreateResumeStart({
         </p>
       </section>
 
-      {/* Create bar (sticky on phones) */}
-      <div className="fixed sm:static bottom-0 inset-x-0 z-20 border-t sm:border-0 bg-background/95 sm:bg-transparent backdrop-blur sm:backdrop-blur-none p-3 sm:p-0 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+      {/* Create bar: sticky on phones (in the page flow, so it never covers the last content) */}
+      <div className="sticky sm:static bottom-0 z-20 -mx-4 sm:mx-0 border-t sm:border-0 bg-background/95 sm:bg-transparent backdrop-blur sm:backdrop-blur-none px-4 py-3 sm:p-0 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
         <p className="text-xs text-muted-foreground text-center sm:text-left">
           {buildsLeft === null
             ? "Unlimited resume builds on your plan."

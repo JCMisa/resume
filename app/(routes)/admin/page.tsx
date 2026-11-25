@@ -61,7 +61,7 @@ export default async function AdminPage({
     <div className="w-full space-y-6 animate-in fade-in duration-500">
       <AdminAccessWatcher />
       <header className="flex items-center gap-3 border-b pb-5">
-        <div className="p-3 bg-primary/10 text-primary rounded-2xl border">
+        <div className="p-3 bg-primary/10 text-brand-strong dark:text-brand rounded-2xl border">
           <ShieldCheck className="h-6 w-6" />
         </div>
         <div>
@@ -84,7 +84,7 @@ export default async function AdminPage({
       {list.success ? (
         <AdminUsers {...list.data} />
       ) : (
-        <div className="rounded-3xl border bg-card p-10 text-center text-sm text-muted-foreground">
+        <div className="rounded-3xl border bg-card p-6 sm:p-10 text-center text-sm text-muted-foreground">
           {list.error} Refresh the page to try again.
         </div>
       )}

@@ -27,7 +27,7 @@ export default function CreateResumeLoading() {
       </div>
       <div className="space-y-3">
         <Skeleton className="h-6 w-56" />
-        <div className="grid gap-3 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <Skeleton className="h-20 rounded-2xl" />
           <Skeleton className="h-20 rounded-2xl" />
         </div>

@@ -40,7 +40,7 @@ export default function CustomSectionsForm({
       </div>
 
       {sections.length === 0 ? (
-        <div className="border border-dashed rounded-xl p-8 text-center text-xs text-muted-foreground bg-muted/10 space-y-1">
+        <div className="border border-dashed rounded-xl p-5 sm:p-8 text-center text-xs text-muted-foreground bg-muted/10 space-y-1">
           <Shapes className="size-5 mx-auto" />
           <p>Add anything the standard sections don&apos;t cover: awards, languages, volunteering, publications, interests.</p>
         </div>
