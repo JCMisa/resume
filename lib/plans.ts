@@ -5,7 +5,7 @@
 
 export const PRO_PLAN_KEY = "pro";
 /** Display only. The real price is configured in Clerk Billing; keep in sync. */
-export const PRO_PRICE_MONTHLY_USD = 12;
+export const PRO_PRICE_MONTHLY_USD = 20;
 
 export type GatedFeature =
   | "analyze"
