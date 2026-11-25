@@ -13,7 +13,7 @@ export default function ReadinessMatrix({ score }: { score: number }) {
 
       <div className="flex items-center justify-between">
         <div>
-          <span className="text-[10px] font-black uppercase tracking-widest text-brand-strong dark:text-brand bg-brand/8 px-2.5 py-1 rounded-full">
+          <span className="text-[11px] font-black uppercase tracking-widest text-brand-strong dark:text-brand bg-brand/8 px-2.5 py-1 rounded-full">
             ResuMe Composite Score
           </span>
           <h3 className="text-lg font-black tracking-tight mt-2">
@@ -62,7 +62,7 @@ export default function ReadinessMatrix({ score }: { score: number }) {
           >
             {score}%
           </motion.span>
-          <span className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground">
+          <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
             Match Rating
           </span>
         </div>

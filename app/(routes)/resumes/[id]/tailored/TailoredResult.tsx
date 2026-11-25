@@ -142,7 +142,7 @@ export default function TailoredResult({
     }
   }
 
-  const actionLink = cn(buttonVariants({ variant: "outline" }), "rounded-xl gap-1.5 justify-start");
+  const actionLink = cn(buttonVariants({ variant: "outline" }), "rounded-lg gap-1.5 justify-start");
 
   return (
     <div className="w-full space-y-6 animate-in fade-in duration-500">
@@ -183,12 +183,12 @@ export default function TailoredResult({
           <section className="rounded-3xl border bg-card p-5 space-y-4">
             <div className="flex items-center gap-4">
               <div className="text-center">
-                <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Before</p>
+                <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Before</p>
                 <p className="text-3xl font-black tabular-nums text-muted-foreground">{score.before}%</p>
               </div>
               <ArrowRight className="size-5 text-muted-foreground" />
               <div className="text-center">
-                <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Tailored</p>
+                <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Tailored</p>
                 <p className="text-3xl font-black tabular-nums">{score.after}%</p>
               </div>
               {gained > 0 && (
@@ -208,7 +208,7 @@ export default function TailoredResult({
                   >
                     {k.after ? <CheckCircle2 className="size-3 text-primary" /> : <Circle className="size-3" />}
                     {k.term}
-                    {!k.before && k.after && <span className="text-primary text-[9px] font-black uppercase">new</span>}
+                    {!k.before && k.after && <span className="text-primary text-[10px] font-black uppercase">new</span>}
                   </li>
                 ))}
               </ul>
@@ -222,13 +222,13 @@ export default function TailoredResult({
 
           {/* Actions */}
           <section className="grid gap-2 sm:grid-cols-2 lg:grid-cols-1">
-            <Button onClick={() => void downloadPdf()} disabled={busy !== null} className="rounded-xl gap-1.5 font-bold justify-start">
+            <Button onClick={() => void downloadPdf()} disabled={busy !== null} className="rounded-lg gap-1.5 font-bold justify-start">
               {busy === "pdf" ? <Loader2 className="size-4 animate-spin" /> : <Download className="size-4" />} Download PDF
             </Button>
-            <Button variant="outline" onClick={() => void downloadWord()} disabled={busy !== null} className="rounded-xl gap-1.5 justify-start">
+            <Button variant="outline" onClick={() => void downloadWord()} disabled={busy !== null} className="rounded-lg gap-1.5 justify-start">
               {busy === "docx" ? <Loader2 className="size-4 animate-spin" /> : <FileType2 className="size-4" />} Download Word
               {!isPro && (
-                <span className="ml-auto inline-flex items-center gap-1 rounded-full bg-amber-500/15 px-1.5 py-0.5 text-[10px] font-black uppercase tracking-wider text-amber-700 dark:text-amber-400">
+                <span className="ml-auto inline-flex items-center gap-1 rounded-full bg-amber-500/15 px-1.5 py-0.5 text-[11px] font-black uppercase tracking-wider text-amber-700 dark:text-amber-400">
                   <Crown className="size-3" /> Pro
                 </span>
               )}

@@ -17,7 +17,7 @@ export default function InterviewRadar({ data }: { data: any[] }) {
     <div className="bg-white dark:bg-stone-900 border border-stone-100 dark:border-stone-800/80 rounded-3xl p-6 shadow-sm flex flex-col justify-between h-[360px]">
       <div className="flex items-center justify-between border-b pb-3 mb-1">
         <div>
-          <span className="text-[10px] font-bold font-mono text-muted-foreground uppercase tracking-widest">
+          <span className="text-[11px] font-bold font-mono text-muted-foreground uppercase tracking-widest">
             Telemetry Framework
           </span>
           <h3 className="text-lg font-black tracking-tight mt-0.5">

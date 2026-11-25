@@ -29,6 +29,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
+import { useDragScroll } from "@/hooks/useDragScroll";
 import ResumeDocument from "@/components/resume-templates/ResumeDocument";
 import ScaledPage from "@/components/resume-templates/ScaledPage";
 import TemplateGallery from "@/components/resume-templates/TemplateGallery";
@@ -117,6 +118,20 @@ export default function ResumeEditor({ resumeId, initial, ai }: { resumeId: stri
   const [leaving, setLeaving] = useState(false);
   const [mode, setMode] = useState<Mode>("assist");
   const [step, setStep] = useState<StepKey>("personal");
+  const { ref: stripRef, dragging: stripDragging, overflow: stripOverflow, atStart: stripAtStart, atEnd: stripAtEnd } = useDragScroll<HTMLElement>();
+
+  // Keep the current step visible in the strip (e.g. after "Next" moves to a hidden step)
+  useEffect(() => {
+    const strip = stripRef.current;
+    const active = strip?.querySelector<HTMLElement>('[aria-current="step"]');
+    if (!strip || !active) return;
+    // scroll only the strip sideways (scrollIntoView could also move the page)
+    const s = strip.getBoundingClientRect();
+    const a = active.getBoundingClientRect();
+    const pad = 32; // clear the edge fade
+    if (a.left < s.left + pad) strip.scrollBy({ left: a.left - s.left - pad, behavior: "smooth" });
+    else if (a.right > s.right - pad) strip.scrollBy({ left: a.right - s.right + pad, behavior: "smooth" });
+  }, [step, stripRef]);
   const [templatesOpen, setTemplatesOpen] = useState(false);
   const [downloading, setDownloading] = useState(false);
   const [panel, setPanel] = useState<PanelTab | null>(null);
@@ -248,7 +263,17 @@ export default function ResumeEditor({ resumeId, initial, ai }: { resumeId: stri
 
   const editPanel = (
     <div className="rounded-3xl border bg-card shadow-sm flex flex-col min-w-0 lg:h-full lg:min-h-0">
-      <nav aria-label="Resume sections" className="border-b p-2 overflow-x-auto custom-scrollbar">
+      <div className="relative border-b">
+      <nav
+        ref={stripRef}
+        aria-label="Resume sections"
+        className={cn(
+          "p-2 overflow-x-auto custom-scrollbar select-none",
+          stripOverflow && (stripDragging ? "cursor-grabbing" : "cursor-grab"),
+          // keep the grab cursor over the step buttons too
+          stripOverflow && "[&_button]:cursor-[inherit]",
+        )}
+      >
         <ol className="flex gap-1 min-w-max">
           {STEPS.map((s, i) => {
             const active = s.key === step;
@@ -269,7 +294,7 @@ export default function ResumeEditor({ resumeId, initial, ai }: { resumeId: stri
                   ) : (
                     <span
                       className={cn(
-                        "size-4 rounded-full text-[9px] flex items-center justify-center",
+                        "size-4 rounded-full text-[10px] flex items-center justify-center",
                         active ? "bg-primary-foreground/20" : done ? "bg-brand/20 text-brand-strong dark:text-brand" : "bg-muted",
                       )}
                     >
@@ -283,6 +308,22 @@ export default function ResumeEditor({ resumeId, initial, ai }: { resumeId: stri
           })}
         </ol>
       </nav>
+      {/* Edge fades hint that more steps are hidden on that side */}
+      <div
+        aria-hidden
+        className={cn(
+          "pointer-events-none absolute inset-y-0 left-0 w-8 bg-gradient-to-r from-card to-transparent transition-opacity",
+          stripOverflow && !stripAtStart ? "opacity-100" : "opacity-0",
+        )}
+      />
+      <div
+        aria-hidden
+        className={cn(
+          "pointer-events-none absolute inset-y-0 right-0 w-8 bg-gradient-to-l from-card to-transparent transition-opacity",
+          stripOverflow && !stripAtEnd ? "opacity-100" : "opacity-0",
+        )}
+      />
+      </div>
 
       <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar p-4 sm:p-6">{form}</div>
 

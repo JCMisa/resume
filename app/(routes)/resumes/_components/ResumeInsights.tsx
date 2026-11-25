@@ -37,7 +37,7 @@ function Kpi({
         <Icon className="size-4.5" />
       </div>
       <div className="min-w-0">
-        <p className="text-[10px] font-black uppercase tracking-wider text-muted-foreground truncate">
+        <p className="text-[11px] font-black uppercase tracking-wider text-muted-foreground truncate">
           {label}
         </p>
         <p

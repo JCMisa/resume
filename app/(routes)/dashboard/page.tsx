@@ -24,13 +24,13 @@ function SummaryStatCard({
         <Icon className="size-5 stroke-[2]" />
       </div>
       <div className="min-w-0 text-left">
-        <p className="text-[10px] font-black uppercase tracking-wider text-stone-400 leading-none mb-1.5">
+        <p className="text-[11px] font-black uppercase tracking-wider text-muted-foreground leading-none mb-1.5">
           {title}
         </p>
         <h4 className="text-xl font-black tracking-tight text-foreground leading-none tabular-nums mb-1">
           {value}
         </h4>
-        <p className="text-[10px] text-muted-foreground truncate">
+        <p className="text-[11px] text-muted-foreground truncate">
           {description}
         </p>
       </div>

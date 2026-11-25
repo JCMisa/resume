@@ -33,7 +33,7 @@ export default function CustomSectionsForm({
           size="sm"
           disabled={full}
           onClick={() => onChange(addCustomSection(content).content)}
-          className="rounded-lg text-[11px] font-bold h-7 gap-1"
+          className="rounded-lg font-bold gap-1"
         >
           <Plus className="h-3 w-3" /> Add section
         </Button>
@@ -60,7 +60,7 @@ export default function CustomSectionsForm({
                 type="button"
                 variant="ghost"
                 size="icon"
-                className="size-9 shrink-0 rounded-xl text-destructive hover:bg-destructive/10"
+                className="size-9 shrink-0 rounded-lg text-destructive hover:bg-destructive/10"
                 aria-label={`Delete ${s.title || "section"}`}
                 onClick={() => onDelete(removeCustomSection(content, s.id))}
               >

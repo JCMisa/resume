@@ -53,7 +53,7 @@ const itemClass = "gap-3 py-2 text-sm cursor-pointer";
 function Score({ value }: { value: number | null }) {
   if (value == null) return null;
   return (
-    <span className="ml-auto shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-black tabular-nums text-muted-foreground">
+    <span className="ml-auto shrink-0 rounded-full border px-2 py-0.5 text-[11px] font-black tabular-nums text-muted-foreground">
       {value}/100
     </span>
   );
@@ -149,7 +149,7 @@ export function AppSearch({ isAdmin = false }: { isAdmin?: boolean }) {
       >
         <Search className="size-[13px] shrink-0" />
         <span className="flex-1 text-left">Search</span>
-        <kbd className="rounded border bg-background px-1.5 py-0.5 font-mono text-[10px]">{shortcut}</kbd>
+        <kbd className="rounded border bg-background px-1.5 py-0.5 font-mono text-[11px]">{shortcut}</kbd>
       </button>
 
       {/* Mobile: icon button */}

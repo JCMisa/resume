@@ -97,7 +97,7 @@ function matchesFilter(i: ResumeLibraryItem, f: Filter) {
 export function ScorePill({ score, className }: { score: number | null; className?: string }) {
   if (score == null) {
     return (
-      <span className={cn("rounded-lg bg-muted px-2 py-1 text-[10px] font-bold text-muted-foreground", className)}>
+      <span className={cn("rounded-lg bg-muted px-2 py-1 text-[11px] font-bold text-muted-foreground", className)}>
         Not analyzed
       </span>
     );
@@ -148,7 +148,7 @@ function ResumeCard({
           {item.tailored ? (
             <Link
               href={`/resumes/${item.id}/tailored`}
-              className="mt-1 inline-flex max-w-full items-center gap-1 rounded-full border border-brand/30 bg-brand/10 px-2 py-0.5 text-[10px] font-bold text-brand-strong dark:text-brand hover:bg-brand/20"
+              className="mt-1 inline-flex max-w-full items-center gap-1 rounded-full border border-brand/30 bg-brand/10 px-2 py-0.5 text-[11px] font-bold text-brand-strong dark:text-brand hover:bg-brand/20"
               title="See what was tailored"
             >
               <WandSparkles className="size-3 shrink-0" />
@@ -171,7 +171,7 @@ function ResumeCard({
             <Button
               size="icon"
               variant="ghost"
-              className="size-8 shrink-0 rounded-lg"
+              className="shrink-0 rounded-lg"
               aria-label={`Actions for ${item.title}`}
             >
               <MoreHorizontal className="size-4" />
@@ -255,7 +255,7 @@ function ResumeCard({
           <div className="h-full rounded-full bg-brand" style={{ width: `${item.completeness}%` }} />
         </div>
         {item.missingSections.length > 0 && (
-          <p className="text-[10px] text-muted-foreground truncate" title={item.missingSections.join(", ")}>
+          <p className="text-[11px] text-muted-foreground truncate" title={item.missingSections.join(", ")}>
             Missing: {item.missingSections.join(", ")}
           </p>
         )}
@@ -264,12 +264,12 @@ function ResumeCard({
       {item.keywords.length > 0 && (
         <div className="flex flex-wrap gap-1">
           {item.keywords.slice(0, 3).map((k) => (
-            <span key={k} className="rounded-md border px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
+            <span key={k} className="rounded-md border px-1.5 py-0.5 text-[11px] font-medium text-muted-foreground">
               {k}
             </span>
           ))}
           {item.keywords.length > 3 && (
-            <span className="px-1 py-0.5 text-[10px] text-muted-foreground">+{item.keywords.length - 3}</span>
+            <span className="px-1 py-0.5 text-[11px] text-muted-foreground">+{item.keywords.length - 3}</span>
           )}
         </div>
       )}
@@ -398,7 +398,7 @@ export default function ResumeLibrary({ items }: { items: ResumeLibraryItem[] })
           </div>
           <DropdownMenu modal={false}>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="rounded-xl gap-1.5 font-bold">
+              <Button variant="outline" className="rounded-lg gap-1.5 font-bold">
                 <ArrowDownUp className="size-3.5" />
                 {SORTS.find((s) => s.id === sort)?.label}
               </Button>
@@ -536,12 +536,12 @@ export default function ResumeLibrary({ items }: { items: ResumeLibraryItem[] })
 export function LibraryEmptyActions() {
   return (
     <div className="flex flex-wrap justify-center gap-2">
-      <Link href="/resumes/analyze" className={cn(buttonVariants(), "rounded-xl font-bold gap-1.5")}>
+      <Link href="/resumes/analyze" className={cn(buttonVariants(), "rounded-lg font-bold gap-1.5")}>
         <Sparkles className="size-4" /> Analyze a resume
       </Link>
       <Link
         href="/resumes/create"
-        className={cn(buttonVariants({ variant: "outline" }), "rounded-xl font-bold gap-1.5")}
+        className={cn(buttonVariants({ variant: "outline" }), "rounded-lg font-bold gap-1.5")}
       >
         <FilePlus2 className="size-4" /> Build from scratch
       </Link>

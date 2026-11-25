@@ -56,7 +56,7 @@ export default function DesignControls({
       <div className="flex items-center gap-2">
         <p className="text-sm font-black">Colour &amp; font</p>
         {!isPro && (
-          <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/15 px-1.5 py-0.5 text-[10px] font-black uppercase tracking-wider text-amber-700 dark:text-amber-400">
+          <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/15 px-1.5 py-0.5 text-[11px] font-black uppercase tracking-wider text-amber-700 dark:text-amber-400">
             <Crown className="size-3" /> Pro
           </span>
         )}

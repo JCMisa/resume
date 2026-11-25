@@ -113,10 +113,10 @@ function PushPrompt() {
         </button>
       </div>
       <div className="flex gap-2">
-        <Button size="sm" className="rounded-lg h-8 font-bold" disabled={push.busy} onClick={() => void push.turnOn()}>
+        <Button size="sm" className="rounded-lg font-bold" disabled={push.busy} onClick={() => void push.turnOn()}>
           Turn on
         </Button>
-        <Button size="sm" variant="ghost" className="rounded-lg h-8" onClick={dismiss}>
+        <Button size="sm" variant="ghost" className="rounded-lg" onClick={dismiss}>
           Not now
         </Button>
       </div>
@@ -188,7 +188,7 @@ export function NotificationBell() {
         >
           <Bell className="h-[1.2rem] w-[1.2rem]" />
           {unread > 0 && (
-            <span className="absolute -top-1.5 -right-1.5 min-w-4.5 h-4.5 px-1 rounded-full bg-brand text-brand-foreground text-[10px] font-black leading-none flex items-center justify-center tabular-nums ring-2 ring-background">
+            <span className="absolute -top-1.5 -right-1.5 min-w-4.5 h-4.5 px-1 rounded-full bg-brand text-brand-foreground text-[11px] font-black leading-none flex items-center justify-center tabular-nums ring-2 ring-background">
               {unread > 9 ? "9+" : unread}
             </span>
           )}
@@ -247,7 +247,7 @@ export function NotificationBell() {
                     {item.body && (
                       <p className="text-xs text-muted-foreground leading-snug mt-0.5 line-clamp-2">{item.body}</p>
                     )}
-                    <p className="text-[10px] text-muted-foreground mt-1">
+                    <p className="text-[11px] text-muted-foreground mt-1">
                       {formatDistanceToNowStrict(new Date(item.createdAt), { addSuffix: true })}
                     </p>
                   </div>

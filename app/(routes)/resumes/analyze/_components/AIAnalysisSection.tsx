@@ -26,24 +26,24 @@ const AIAnalysisSection = ({
     >
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div className="min-w-0">
-          <p className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">
+          <p className="text-[11px] font-black uppercase tracking-wider text-muted-foreground">
             Report for
           </p>
           <p className="text-base font-bold truncate">{data?.title ?? "Your resume"}</p>
         </div>
         <div className="flex flex-wrap gap-2">
-          <Button variant="outline" onClick={onBack} className="rounded-xl font-bold gap-1.5">
+          <Button variant="outline" onClick={onBack} className="rounded-lg font-bold gap-1.5">
             <ArrowLeft className="size-4" /> Analyze another
           </Button>
           {data && (
             <Link
               href={`/resumes/${data.id}`}
-              className={cn(buttonVariants({ variant: "outline" }), "rounded-xl font-bold gap-1.5")}
+              className={cn(buttonVariants({ variant: "outline" }), "rounded-lg font-bold gap-1.5")}
             >
               <FileText className="size-4" /> Open resume
             </Link>
           )}
-          <Link href="/resumes" className={cn(buttonVariants(), "rounded-xl font-bold gap-1.5")}>
+          <Link href="/resumes" className={cn(buttonVariants(), "rounded-lg font-bold gap-1.5")}>
             All resumes <ArrowRight className="size-4" />
           </Link>
         </div>

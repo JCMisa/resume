@@ -60,7 +60,7 @@ export default function UpgradeModal({
           <Button
             variant="ghost"
             onClick={onClose}
-            className="rounded-xl font-bold text-xs !py-5"
+            className="rounded-lg font-bold !py-5"
           >
             Back to Workspace
           </Button>

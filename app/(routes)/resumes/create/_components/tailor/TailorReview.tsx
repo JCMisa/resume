@@ -169,7 +169,7 @@ export default function TailorReview({
           <ShieldCheck className="size-3.5 shrink-0" />
           Employers, titles, dates and numbers are kept exactly as in your resume.
         </p>
-        <Button onClick={() => void finish()} disabled={saving} className="rounded-xl font-bold gap-1.5 w-full sm:w-auto">
+        <Button onClick={() => void finish()} disabled={saving} className="rounded-lg font-bold gap-1.5 w-full sm:w-auto">
           {saving ? <Loader2 className="size-4 animate-spin" /> : <Check className="size-4" />}
           {saving ? "Saving…" : "Finish & preview"}
         </Button>

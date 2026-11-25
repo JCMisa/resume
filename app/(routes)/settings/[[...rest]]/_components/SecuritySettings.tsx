@@ -32,7 +32,7 @@ function StatusPill({ ok, okText, offText }: { ok: boolean; okText: string; offT
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold",
+        "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-bold",
         ok
           ? "bg-brand/15 text-brand-strong dark:text-brand"
           : "bg-amber-500/15 text-amber-600 dark:text-amber-400",
@@ -156,7 +156,7 @@ export default function SecuritySettings() {
             </p>
           </div>
         </div>
-        <Button onClick={openSecurity} className="rounded-xl font-bold gap-1.5 shrink-0">
+        <Button onClick={openSecurity} className="rounded-lg font-bold gap-1.5 shrink-0">
           <ShieldCheck className="size-4" /> Manage security
         </Button>
       </div>
@@ -236,7 +236,7 @@ export default function SecuritySettings() {
                   variant="ghost"
                   disabled={revoking !== null}
                   onClick={revokeAllOthers}
-                  className="rounded-lg gap-1.5 text-xs text-muted-foreground"
+                  className="rounded-lg gap-1.5 text-muted-foreground"
                 >
                   {revoking === "all" ? (
                     <Loader2 className="size-3.5 animate-spin" />
@@ -272,7 +272,7 @@ export default function SecuritySettings() {
                           <p className="text-sm font-semibold truncate">
                             {device}
                             {current && (
-                              <span className="ml-2 rounded-full bg-brand/15 px-2 py-0.5 text-[10px] font-bold text-brand-strong dark:text-brand">
+                              <span className="ml-2 rounded-full bg-brand/15 px-2 py-0.5 text-[11px] font-bold text-brand-strong dark:text-brand">
                                 This device
                               </span>
                             )}

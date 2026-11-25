@@ -77,7 +77,7 @@ function RequirementGroup({ status, items }: { status: RequirementStatus; items:
             </div>
             <span
               className={cn(
-                "shrink-0 rounded-md px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider",
+                "shrink-0 rounded-md px-1.5 py-0.5 text-[11px] font-bold uppercase tracking-wider",
                 r.importance === "required" ? "bg-foreground/10" : "border text-muted-foreground",
               )}
             >
@@ -100,7 +100,7 @@ export default function JobMatchReport({ data }: { data: JobMatchData }) {
       <section className="rounded-3xl border bg-card shadow-sm p-5 flex flex-col @lg:flex-row gap-5 @lg:items-center">
         <ScoreRing score={data.matchScore} />
         <div className="min-w-0 space-y-2 flex-1">
-          <p className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">
+          <p className="text-[11px] font-black uppercase tracking-wider text-muted-foreground">
             Job match{data.seniority ? ` · ${data.seniority} role` : ""}
           </p>
           <p className="text-lg font-black leading-tight">
@@ -132,7 +132,7 @@ export default function JobMatchReport({ data }: { data: JobMatchData }) {
                   <div className="flex items-baseline justify-between gap-3">
                     <p className="text-sm font-bold">
                       {label}{" "}
-                      <span className="text-[10px] font-semibold text-muted-foreground">
+                      <span className="text-[11px] font-semibold text-muted-foreground">
                         · {Math.round(MATCH_WEIGHTS[key] * 100)}% of score
                       </span>
                     </p>

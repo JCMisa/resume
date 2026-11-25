@@ -123,7 +123,7 @@ export default function CreateResumeStart({
               >
                 <span
                   className={cn(
-                    "size-5 rounded-full flex items-center justify-center text-[10px]",
+                    "size-5 rounded-full flex items-center justify-center text-[11px]",
                     i === 0 ? "bg-primary text-primary-foreground" : "bg-muted",
                   )}
                 >
@@ -216,7 +216,7 @@ export default function CreateResumeStart({
                       </p>
                     </div>
                     {r.score != null && (
-                      <span className="shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-black tabular-nums text-muted-foreground">
+                      <span className="shrink-0 rounded-full border px-2 py-0.5 text-[11px] font-black tabular-nums text-muted-foreground">
                         ATS {r.score}
                       </span>
                     )}
@@ -251,10 +251,10 @@ export default function CreateResumeStart({
               : "You've used all your resume builds this month."}
         </p>
         <div className="flex gap-2 justify-end">
-          <Link href="/resumes" className={cn(buttonVariants({ variant: "ghost" }), "rounded-xl hidden sm:inline-flex")}>
+          <Link href="/resumes" className={cn(buttonVariants({ variant: "ghost" }), "rounded-lg hidden sm:inline-flex")}>
             Cancel
           </Link>
-          <Button onClick={() => void create()} disabled={creating} className="rounded-xl font-bold gap-1.5 w-full sm:w-auto">
+          <Button onClick={() => void create()} disabled={creating} className="rounded-lg font-bold gap-1.5 w-full sm:w-auto">
             {creating ? <Loader2 className="size-4 animate-spin" /> : <ArrowRight className="size-4" />}
             {creating ? "Creating…" : "Create & open editor"}
           </Button>

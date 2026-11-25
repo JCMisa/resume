@@ -15,7 +15,7 @@ function Allowance() {
   const { remaining, limit } = useAiWriting();
   if (remaining === null) return null;
   return (
-    <span className="text-[10px] text-muted-foreground">
+    <span className="text-[11px] text-muted-foreground">
       {remaining} of {limit} AI writes left this month
     </span>
   );
@@ -40,7 +40,7 @@ function AiButton({
       size="sm"
       onClick={onClick}
       disabled={!!anyBusy}
-      className={cn("rounded-lg text-[11px] font-bold h-7 gap-1 border-brand/40 hover:bg-brand/10", className)}
+      className={cn("rounded-lg font-bold gap-1 border-brand/40 hover:bg-brand/10", className)}
     >
       {busy ? <Loader2 className="size-3 animate-spin" /> : <Sparkles className="size-3 text-brand-strong dark:text-brand" />}
       {busy ? "Writing…" : label}
@@ -68,16 +68,16 @@ function SuggestionBox({
           <Sparkles className="size-3.5 text-brand-strong dark:text-brand" /> {title}
         </p>
         <div className="flex items-center gap-1">
-          <Button type="button" variant="ghost" size="sm" className="h-7 px-2 text-[11px] gap-1" onClick={onRetry} disabled={retrying}>
+          <Button type="button" variant="ghost" size="sm" className="gap-1" onClick={onRetry} disabled={retrying}>
             {retrying ? <Loader2 className="size-3 animate-spin" /> : <RotateCcw className="size-3" />} Try again
           </Button>
-          <Button type="button" variant="ghost" size="icon" className="size-7" onClick={onClose} aria-label="Dismiss suggestions">
+          <Button type="button" variant="ghost" size="icon" onClick={onClose} aria-label="Dismiss suggestions">
             <X className="size-3.5" />
           </Button>
         </div>
       </div>
       {children}
-      <p className="text-[10px] text-muted-foreground">
+      <p className="text-[11px] text-muted-foreground">
         AI suggestions can be wrong. Check every fact and fill in any [placeholders] before you send this resume.
       </p>
     </div>
@@ -111,7 +111,7 @@ export function AiSummaryAssist({ hasSummary, onUse }: { hasSummary: boolean; on
                 <Button
                   type="button"
                   size="sm"
-                  className="h-7 rounded-lg text-[11px] font-bold gap-1"
+                  className="rounded-lg font-bold gap-1"
                   onClick={() => {
                     onUse(o);
                     setOptions(null);
@@ -169,7 +169,7 @@ export function AiBulletsAssist({
             <Button
               type="button"
               size="sm"
-              className="h-7 rounded-lg text-[11px] font-bold gap-1"
+              className="rounded-lg font-bold gap-1"
               onClick={() => {
                 onUse(bullets, "replace");
                 setBullets(null);
@@ -182,7 +182,7 @@ export function AiBulletsAssist({
                 type="button"
                 variant="outline"
                 size="sm"
-                className="h-7 rounded-lg text-[11px] font-bold gap-1"
+                className="rounded-lg font-bold gap-1"
                 onClick={() => {
                   onUse(bullets, "add");
                   setBullets(null);
@@ -248,7 +248,7 @@ export function AiSkillsAssist({ onAdd }: { onAdd: (picks: SkillSuggestion[]) =>
                   </button>
                 ))}
               </div>
-              <Button type="button" size="sm" className="h-7 rounded-lg text-[11px] font-bold gap-1" onClick={() => add(skills)}>
+              <Button type="button" size="sm" className="rounded-lg font-bold gap-1" onClick={() => add(skills)}>
                 <Check className="size-3" /> Add all
               </Button>
             </>

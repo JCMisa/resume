@@ -52,7 +52,7 @@ export default async function PublicResumePage({ params }: Props) {
               The link may be old, or its owner stopped sharing it. Ask them for a new link.
             </p>
           </div>
-          <Link href="/" className={cn(buttonVariants({ variant: "outline" }), "rounded-xl")}>
+          <Link href="/" className={cn(buttonVariants({ variant: "outline" }), "rounded-lg")}>
             Go to ResuMe
           </Link>
         </div>

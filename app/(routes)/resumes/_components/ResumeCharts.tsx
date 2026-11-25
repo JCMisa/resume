@@ -65,7 +65,7 @@ function ChartCard({
           type="button"
           onClick={() => setShowTable((v) => !v)}
           aria-pressed={showTable}
-          className="shrink-0 inline-flex items-center gap-1 rounded-lg px-2 py-1 text-[10px] font-bold text-muted-foreground hover:bg-muted transition-colors"
+          className="shrink-0 inline-flex items-center gap-1 rounded-lg px-2 py-1 text-[11px] font-bold text-muted-foreground hover:bg-muted transition-colors"
         >
           <Table2 className="size-3" /> {showTable ? "Chart" : "Table"}
         </button>
@@ -161,7 +161,7 @@ export function ScoreTrendChart({
                 if (!p) return null;
                 return (
                   <TooltipBox>
-                    <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                    <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
                       {p.label}
                     </p>
                     <p className="text-xs font-bold truncate">{p.title}</p>
@@ -222,7 +222,7 @@ export function ScoreDistributionChart({
                 if (!p) return null;
                 return (
                   <TooltipBox>
-                    <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                    <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
                       Score {p.bucket}
                     </p>
                     <p className="text-sm font-black tabular-nums">
@@ -287,7 +287,7 @@ export function ActivityChart({
                   if (!p) return null;
                   return (
                     <TooltipBox>
-                      <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                      <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
                         {p.month}
                       </p>
                       <p className="text-xs tabular-nums">

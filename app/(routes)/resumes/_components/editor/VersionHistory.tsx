@@ -155,7 +155,7 @@ export default function VersionHistory({
             aria-label="Version name"
             className="rounded-xl h-9 text-xs"
           />
-          <Button type="submit" size="sm" className="rounded-xl h-9 gap-1.5 font-bold shrink-0" disabled={busy !== null}>
+          <Button type="submit" size="sm" className="rounded-lg h-9 gap-1.5 font-bold shrink-0" disabled={busy !== null}>
             {busy === "save" ? <Loader2 className="size-4 animate-spin" /> : <Bookmark className="size-4" />} Save version
           </Button>
         </form>
@@ -181,17 +181,17 @@ export default function VersionHistory({
                       {v.kind === "manual" && <Bookmark className="inline size-3 mr-1 -mt-0.5" />}
                       {versionName(v)}
                     </p>
-                    <p className="text-[10px] text-muted-foreground truncate">
+                    <p className="text-[11px] text-muted-foreground truncate">
                       {time(v.createdAt)} · {v.title}
                     </p>
                   </div>
-                  <Button variant="ghost" size="icon" className="size-7" title="Preview" aria-label="Preview" disabled={busy !== null} onClick={() => void openPreview(v)}>
+                  <Button variant="ghost" size="icon" title="Preview" aria-label="Preview" disabled={busy !== null} onClick={() => void openPreview(v)}>
                     {busy === `preview:${v.id}` ? <Loader2 className="size-3.5 animate-spin" /> : <Eye className="size-3.5" />}
                   </Button>
-                  <Button variant="ghost" size="icon" className="size-7" title="Restore" aria-label="Restore" disabled={busy !== null} onClick={() => void restore(v.id)}>
+                  <Button variant="ghost" size="icon" title="Restore" aria-label="Restore" disabled={busy !== null} onClick={() => void restore(v.id)}>
                     {busy === `restore:${v.id}` ? <Loader2 className="size-3.5 animate-spin" /> : <RotateCcw className="size-3.5" />}
                   </Button>
-                  <Button variant="ghost" size="icon" className="size-7 text-destructive hover:bg-destructive/10" title="Delete" aria-label="Delete version" disabled={busy !== null} onClick={() => void remove(v.id)}>
+                  <Button variant="ghost" size="icon" className="text-destructive hover:bg-destructive/10" title="Delete" aria-label="Delete version" disabled={busy !== null} onClick={() => void remove(v.id)}>
                     <Trash2 className="size-3.5" />
                   </Button>
                 </li>
@@ -215,10 +215,10 @@ export default function VersionHistory({
                 </ScaledPage>
               </div>
               <div className="flex justify-end gap-2">
-                <Button variant="outline" className="rounded-xl" onClick={() => setPreview(null)}>
+                <Button variant="outline" className="rounded-lg" onClick={() => setPreview(null)}>
                   Close
                 </Button>
-                <Button className="rounded-xl gap-1.5 font-bold" disabled={busy !== null} onClick={() => void restore(preview.id)}>
+                <Button className="rounded-lg gap-1.5 font-bold" disabled={busy !== null} onClick={() => void restore(preview.id)}>
                   {busy === `restore:${preview.id}` ? <Loader2 className="size-4 animate-spin" /> : <RotateCcw className="size-4" />} Restore this version
                 </Button>
               </div>

@@ -248,7 +248,7 @@ export default function TailorWizard({
                         : `Ready · about ${upload.result.words.toLocaleString()} words`}
                 </p>
               </div>
-              <Button variant="ghost" size="icon" className="size-8 shrink-0" aria-label="Remove file" onClick={() => setUpload(null)}>
+              <Button variant="ghost" size="icon" className="shrink-0" aria-label="Remove file" onClick={() => setUpload(null)}>
                 <X className="size-4" />
               </Button>
             </div>
@@ -342,7 +342,7 @@ export default function TailorWizard({
       {/* Start bar (sticky on phones) */}
       <div className="fixed sm:static bottom-0 inset-x-0 z-20 border-t sm:border-0 bg-background/95 sm:bg-transparent backdrop-blur sm:backdrop-blur-none p-3 sm:p-0 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
         <p className="text-xs text-muted-foreground text-center sm:text-left">{usageLine(usage)}</p>
-        <Button onClick={() => void start()} disabled={usage.allowed && !canStart} className="rounded-xl font-bold gap-1.5 w-full sm:w-auto">
+        <Button onClick={() => void start()} disabled={usage.allowed && !canStart} className="rounded-lg font-bold gap-1.5 w-full sm:w-auto">
           <Sparkles className="size-4" /> Tailor my resume
         </Button>
       </div>

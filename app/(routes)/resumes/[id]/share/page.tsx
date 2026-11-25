@@ -30,7 +30,7 @@ export default async function ShareResumePage({ params }: { params: Promise<{ id
               share a link.
             </p>
           </div>
-          <Link href={`/resumes/create?from=${id}`} className={cn(buttonVariants(), "rounded-xl font-bold gap-1.5")}>
+          <Link href={`/resumes/create?from=${id}`} className={cn(buttonVariants(), "rounded-lg font-bold gap-1.5")}>
             <Copy className="size-4" /> Make an editable copy
           </Link>
         </div>

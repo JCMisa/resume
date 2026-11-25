@@ -155,7 +155,7 @@ export default async function ResumeDetailsPage({ params, searchParams }: PagePr
             {/* Built resumes open in the editor; uploads are edited as a copy */}
             <Link
               href={builtInEditor ? `/resumes/${resumeId}/edit` : `/resumes/create?from=${resumeId}`}
-              className={cn(buttonVariants({ size: "sm", variant: builtInEditor ? "default" : "outline" }), "rounded-lg gap-1.5 h-7")}
+              className={cn(buttonVariants({ size: "sm", variant: builtInEditor ? "default" : "outline" }), "rounded-lg gap-1.5")}
             >
               {builtInEditor ? <FilePen className="size-3.5" /> : <Copy className="size-3.5" />}
               {builtInEditor ? "Edit resume" : "Edit a copy"}
@@ -163,7 +163,7 @@ export default async function ResumeDetailsPage({ params, searchParams }: PagePr
             {builtInEditor && (
               <Link
                 href={`/resumes/${resumeId}/share`}
-                className={cn(buttonVariants({ size: "sm", variant: "outline" }), "rounded-lg gap-1.5 h-7")}
+                className={cn(buttonVariants({ size: "sm", variant: "outline" }), "rounded-lg gap-1.5")}
               >
                 <Share2 className="size-3.5" /> Download & share
               </Link>
@@ -171,7 +171,7 @@ export default async function ResumeDetailsPage({ params, searchParams }: PagePr
             {tailored && (
               <Link
                 href={`/resumes/${resumeId}/tailored`}
-                className={cn(buttonVariants({ size: "sm", variant: "outline" }), "rounded-lg gap-1.5 h-7")}
+                className={cn(buttonVariants({ size: "sm", variant: "outline" }), "rounded-lg gap-1.5")}
               >
                 <WandSparkles className="size-3.5" /> What was tailored
               </Link>
@@ -307,7 +307,7 @@ export default async function ResumeDetailsPage({ params, searchParams }: PagePr
                             asChild
                             size="sm"
                             variant="outline"
-                            className="rounded-xl text-xs gap-1"
+                            className="rounded-lg gap-1"
                           >
                             <a href={link.url} target="_blank" rel="noreferrer">
                               <Globe className="h-3.5 w-3.5 text-primary" />
@@ -321,7 +321,7 @@ export default async function ResumeDetailsPage({ params, searchParams }: PagePr
 
                   {content.professionalSummary && (
                     <div className="pt-4 border-t border-dashed space-y-1">
-                      <h4 className="text-[10px] font-bold text-primary uppercase tracking-widest">
+                      <h4 className="text-[11px] font-bold text-primary uppercase tracking-widest">
                         Professional Summary
                       </h4>
                       <div className="text-xs text-muted-foreground leading-relaxed space-y-1.5">
@@ -357,7 +357,7 @@ export default async function ResumeDetailsPage({ params, searchParams }: PagePr
                                       {exp.company}
                                     </p>
                                   </div>
-                                  <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-md bg-muted border text-muted-foreground self-start sm:self-auto">
+                                  <span className="text-[11px] font-mono font-bold px-2 py-0.5 rounded-md bg-muted border text-muted-foreground self-start sm:self-auto">
                                     {exp.duration}
                                   </span>
                                 </div>
@@ -395,7 +395,7 @@ export default async function ResumeDetailsPage({ params, searchParams }: PagePr
                                   <h4 className="font-extrabold text-base leading-none">
                                     {proj.title}
                                   </h4>
-                                  <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-md bg-muted border text-muted-foreground self-start sm:self-auto">
+                                  <span className="text-[11px] font-mono font-bold px-2 py-0.5 rounded-md bg-muted border text-muted-foreground self-start sm:self-auto">
                                     {proj.duration}
                                   </span>
                                 </div>
@@ -414,7 +414,7 @@ export default async function ResumeDetailsPage({ params, searchParams }: PagePr
                                       href={proj.links[0].url}
                                       target="_blank"
                                       rel="noreferrer"
-                                      className="text-[10px] font-bold text-primary underline flex items-center gap-1"
+                                      className="text-[11px] font-bold text-primary underline flex items-center gap-1"
                                     >
                                       <Code className="h-3 w-3" />
                                       {proj.links[0].label ||
@@ -443,14 +443,14 @@ export default async function ResumeDetailsPage({ params, searchParams }: PagePr
                           <div className="space-y-3">
                             {Object.keys(groupedSkills).map((cat) => (
                               <div key={cat} className="space-y-1">
-                                <p className="text-[10px] font-extrabold uppercase text-primary tracking-wider">
+                                <p className="text-[11px] font-extrabold uppercase text-primary tracking-wider">
                                   {cat}
                                 </p>
                                 <div className="flex flex-wrap gap-1">
                                   {groupedSkills[cat].map((sk, i) => (
                                     <span
                                       key={i}
-                                      className="text-[10px] font-medium px-2 py-0.5 rounded bg-muted border"
+                                      className="text-[11px] font-medium px-2 py-0.5 rounded bg-muted border"
                                     >
                                       {sk}
                                     </span>
@@ -466,7 +466,7 @@ export default async function ResumeDetailsPage({ params, searchParams }: PagePr
                             (skill: string) => (
                               <span
                                 key={skill}
-                                className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-primary/5 text-primary border border-primary/10 tracking-wide"
+                                className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-primary/5 text-primary border border-primary/10 tracking-wide"
                               >
                                 {skill}
                               </span>
@@ -501,11 +501,11 @@ export default async function ResumeDetailsPage({ params, searchParams }: PagePr
                                     {edu.schoolName}
                                   </p>
                                   <div className="flex justify-between items-center pt-0.5">
-                                    <span className="text-[9px] font-mono text-muted-foreground">
+                                    <span className="text-[10px] font-mono text-muted-foreground">
                                       {edu.duration}
                                     </span>
                                     {edu.gwa && (
-                                      <span className="text-[9px] font-mono font-bold text-primary">
+                                      <span className="text-[10px] font-mono font-bold text-primary">
                                         GWA: {edu.gwa}
                                       </span>
                                     )}
@@ -524,7 +524,7 @@ export default async function ResumeDetailsPage({ params, searchParams }: PagePr
                                     <p className="text-[11px] text-muted-foreground font-semibold">
                                       {edu.institution}
                                     </p>
-                                    <p className="text-[9px] font-mono font-bold text-primary/70">
+                                    <p className="text-[10px] font-mono font-bold text-primary/70">
                                       {edu.year}
                                     </p>
                                   </div>
@@ -556,7 +556,7 @@ export default async function ResumeDetailsPage({ params, searchParams }: PagePr
                                     <RichInline value={cert.description} />
                                   </p>
                                 )}
-                                <p className="text-[9px] font-mono text-muted-foreground">
+                                <p className="text-[10px] font-mono text-muted-foreground">
                                   {cert.issuedDate}
                                 </p>
                               </div>

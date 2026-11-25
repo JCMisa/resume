@@ -251,7 +251,7 @@ export default function Agent({
               status === "idle" ? "bg-muted" : "bg-emerald-500 animate-pulse",
             )}
           />
-          <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+          <span className="text-[11px] font-black uppercase tracking-widest text-muted-foreground">
             {status.replace("_", " ")}
           </span>
         </div>

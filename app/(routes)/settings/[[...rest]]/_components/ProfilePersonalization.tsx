@@ -189,7 +189,7 @@ export default function ProfilePersonalization() {
                     size="sm"
                     disabled={savingAvatar}
                     onClick={() => fileInputRef.current?.click()}
-                    className="rounded-xl font-bold gap-1.5"
+                    className="rounded-lg font-bold gap-1.5"
                   >
                     <Camera className="size-3.5" /> Change photo
                   </Button>
@@ -200,13 +200,13 @@ export default function ProfilePersonalization() {
                       variant="outline"
                       disabled={savingAvatar}
                       onClick={handleAvatarRemove}
-                      className="rounded-xl font-bold gap-1.5"
+                      className="rounded-lg font-bold gap-1.5"
                     >
                       <Trash2 className="size-3.5" /> Remove
                     </Button>
                   )}
                 </div>
-                <p className="text-[11px] text-stone-400">
+                <p className="text-[11px] text-muted-foreground">
                   JPG, PNG, GIF or WebP, up to 10 MB.
                 </p>
                 <input

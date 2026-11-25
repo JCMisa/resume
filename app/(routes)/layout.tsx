@@ -51,7 +51,7 @@ const RoutesLayout = async ({
             </div>
           </header>
 
-          <main className="flex-1 overflow-y-auto custom-scrollbar p-5">
+          <main className="flex-1 overflow-y-auto custom-scrollbar p-4 sm:p-6">
             <div className="flex h-full w-full flex-1 custom-scrollbar overflow-y-auto">
               {children}
             </div>

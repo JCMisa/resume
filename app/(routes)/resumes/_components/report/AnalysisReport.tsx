@@ -91,7 +91,7 @@ function Rewrites({ items }: { items: ResumeAnalysisData["improvements"] }) {
       {items.map((it, i) => (
         <li key={i} className="rounded-2xl border p-4 space-y-2">
           {it.section && (
-            <span className="text-[10px] font-black uppercase tracking-wider text-brand-strong dark:text-brand">
+            <span className="text-[11px] font-black uppercase tracking-wider text-brand-strong dark:text-brand">
               {it.section}
             </span>
           )}
@@ -120,7 +120,7 @@ function Hero({ a }: { a: ResumeAnalysisData }) {
       <div className="flex items-center gap-4">
         <ScoreRing score={a.overallScore} />
         <div className="@lg:hidden">
-          <p className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">
+          <p className="text-[11px] font-black uppercase tracking-wider text-muted-foreground">
             ATS score
           </p>
           <p className="text-sm font-bold">{a.readability} readability</p>
@@ -128,7 +128,7 @@ function Hero({ a }: { a: ResumeAnalysisData }) {
       </div>
       <div className="min-w-0 space-y-3 flex-1">
         <div className="hidden @lg:block">
-          <p className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">
+          <p className="text-[11px] font-black uppercase tracking-wider text-muted-foreground">
             ATS score · {a.readability} readability
           </p>
         </div>
@@ -284,7 +284,7 @@ function ReportV2({ a }: { a: ResumeAnalysisData }) {
         >
           <ListChecks className="size-3.5" /> ATS checks
           {problems > 0 && (
-            <span className="rounded-full bg-amber-500/20 px-1.5 text-[10px] tabular-nums text-amber-700 dark:text-amber-300">
+            <span className="rounded-full bg-amber-500/20 px-1.5 text-[11px] tabular-nums text-amber-700 dark:text-amber-300">
               {problems}
             </span>
           )}
@@ -295,7 +295,7 @@ function ReportV2({ a }: { a: ResumeAnalysisData }) {
         >
           <Wand2 className="size-3.5" /> Bullet audit
           {weakBullets > 0 && (
-            <span className="rounded-full bg-amber-500/20 px-1.5 text-[10px] tabular-nums text-amber-700 dark:text-amber-300">
+            <span className="rounded-full bg-amber-500/20 px-1.5 text-[11px] tabular-nums text-amber-700 dark:text-amber-300">
               {weakBullets}
             </span>
           )}
@@ -367,7 +367,7 @@ function ReportV2({ a }: { a: ResumeAnalysisData }) {
                       key={k}
                       className="rounded-xl border bg-muted/20 px-3 py-2"
                     >
-                      <dt className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                      <dt className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
                         {k}
                       </dt>
                       <dd className="text-lg font-black tabular-nums">{v}</dd>
@@ -509,7 +509,7 @@ function ReportV2({ a }: { a: ResumeAnalysisData }) {
                       not on your resume
                     </p>
                     <Chips items={skills.suggested} dashed />
-                    <p className="text-[10px] text-muted-foreground">
+                    <p className="text-[11px] text-muted-foreground">
                       Only add skills you actually have.
                     </p>
                   </div>

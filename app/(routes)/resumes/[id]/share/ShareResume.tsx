@@ -185,7 +185,7 @@ export default function ShareResume({
           <p className="text-sm font-bold flex items-center gap-2">
             {label}
             {pro && !isPro && (
-              <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/15 px-1.5 py-0.5 text-[10px] font-black uppercase tracking-wider text-amber-700 dark:text-amber-400">
+              <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/15 px-1.5 py-0.5 text-[11px] font-black uppercase tracking-wider text-amber-700 dark:text-amber-400">
                 <Crown className="size-3" /> Pro
               </span>
             )}
@@ -222,7 +222,7 @@ export default function ShareResume({
                   i === 2 ? "border-primary bg-primary/10" : "text-muted-foreground",
                 )}
               >
-                <span className={cn("size-5 rounded-full flex items-center justify-center text-[10px]", i === 2 ? "bg-primary text-primary-foreground" : "bg-muted")}>
+                <span className={cn("size-5 rounded-full flex items-center justify-center text-[11px]", i === 2 ? "bg-primary text-primary-foreground" : "bg-muted")}>
                   {i < 2 ? <Check className="size-3" /> : 3}
                 </span>
                 {step}
@@ -273,7 +273,7 @@ export default function ShareResume({
               )}
               {downloadButton("txt", FileType2, "Plain text (.txt)", "For pasting into job application forms", () => downloadResumeText(content, title))}
             </div>
-            <Button variant="ghost" size="sm" className="w-full rounded-xl gap-1.5" onClick={() => void copy(resumeToPlainText(content), "text")}>
+            <Button variant="ghost" size="sm" className="w-full rounded-lg gap-1.5" onClick={() => void copy(resumeToPlainText(content), "text")}>
               {copied === "text" ? <Check className="size-4" /> : <ClipboardCopy className="size-4" />} Copy resume as text
             </Button>
           </Card>
@@ -309,7 +309,7 @@ export default function ShareResume({
               <div className="space-y-4 animate-in fade-in duration-300">
                 <div className="flex gap-2">
                   <Input readOnly value={url} aria-label="Your resume link" onFocus={(e) => e.currentTarget.select()} className="rounded-xl font-mono text-xs" />
-                  <Button variant="outline" className="rounded-xl gap-1.5 shrink-0" onClick={() => void copy(url, "link")}>
+                  <Button variant="outline" className="rounded-lg gap-1.5 shrink-0" onClick={() => void copy(url, "link")}>
                     {copied === "link" ? <Check className="size-4" /> : <Copy className="size-4" />}
                     <span className="hidden sm:inline">Copy</span>
                   </Button>
@@ -348,7 +348,7 @@ export default function ShareResume({
                       <p className="text-sm font-bold flex items-center gap-2">
                         {isPro ? `${share.shareViews.toLocaleString()} view${share.shareViews === 1 ? "" : "s"}` : "Link views"}
                         {!isPro && (
-                          <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/15 px-1.5 py-0.5 text-[10px] font-black uppercase tracking-wider text-amber-700 dark:text-amber-400">
+                          <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/15 px-1.5 py-0.5 text-[11px] font-black uppercase tracking-wider text-amber-700 dark:text-amber-400">
                             <Crown className="size-3" /> Pro
                           </span>
                         )}

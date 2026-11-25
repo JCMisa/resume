@@ -41,7 +41,7 @@ function Row({
         <GripVertical className="size-4" />
       </button>
       <span className="flex-1 text-sm font-semibold">{title}</span>
-      {!filled && <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Empty · hidden</span>}
+      {!filled && <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Empty · hidden</span>}
       {/* Buttons as a non-drag alternative (keyboard / small screens) */}
       <button
         type="button"
