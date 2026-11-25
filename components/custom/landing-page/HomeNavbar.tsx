@@ -15,7 +15,6 @@ import { useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Button } from "../../ui/button";
-import Image from "next/image";
 import Link from "next/link";
 import { ArrowRightIcon } from "lucide-react";
 
@@ -34,8 +33,8 @@ export default function HomeNavbar() {
       link: "#how-it-works",
     },
     {
-      name: "Reviews",
-      link: "#reviews",
+      name: "Why ResuMe",
+      link: "#promises",
     },
     {
       name: "Pricing",
@@ -113,21 +112,27 @@ export default function HomeNavbar() {
                 asChild
                 size={"lg"}
               >
-                <Link href={"/dashboard"}>
+                <Link href={"/dashboard"} onClick={() => setIsMobileMenuOpen(false)}>
                   <p className="text-sm tracking-wider">Get Started</p>
                 </Link>
               </Button>
             ) : (
               <div className="flex w-full flex-col gap-4">
                 <NavbarButton
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  variant="primary"
+                  onClick={() => {
+                    setIsMobileMenuOpen(false);
+                    router.push("/sign-in");
+                  }}
+                  variant="secondary"
                   className="w-full"
                 >
                   Sign in
                 </NavbarButton>
                 <NavbarButton
-                  onClick={() => setIsMobileMenuOpen(false)}
+                  onClick={() => {
+                    setIsMobileMenuOpen(false);
+                    router.push("/sign-up");
+                  }}
                   variant="primary"
                   className="w-full"
                 >

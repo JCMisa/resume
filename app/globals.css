@@ -239,3 +239,10 @@
   color: #a8a29e;
   pointer-events: none;
 }
+
+/* Landing page: smooth jumps to #sections (skipped for reduced-motion users) */
+@media (prefers-reduced-motion: no-preference) {
+  html:has(.landing-page) {
+    scroll-behavior: smooth;
+  }
+}

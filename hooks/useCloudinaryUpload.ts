@@ -57,20 +57,15 @@ export function useCloudinaryUpload(): UseCloudinaryUploadReturn {
                 const errorResponse = JSON.parse(
                   xhr.responseText,
                 ) as CloudinaryError;
-                reject(
-                  new Error(
-                    errorResponse.error?.message ||
-                      "Upload operation rejected.",
-                  ),
-                );
+                // the provider's own message can name it; log it, show ours
+                console.error("Upload rejected:", errorResponse.error?.message);
+                reject(new Error("Upload failed. Please try again."));
               }
             });
 
             xhr.addEventListener("error", () => {
               reject(
-                new Error(
-                  "Network disconnect encountered during upload pipeline step.",
-                ),
+                new Error("Upload failed: check your connection and try again."),
               );
             });
 

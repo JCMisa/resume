@@ -6,7 +6,8 @@ export default function Home() {
     <main className="relative">
       <LandingPage />
 
-      <div className="fixed bottom-5 right-5 z-[999999]">
+      {/* solid backing so the button stays visible over dark sections in light mode */}
+      <div className="fixed bottom-5 right-5 z-[999999] rounded-md bg-background shadow-md">
         <ThemeToggler />
       </div>
     </main>

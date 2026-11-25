@@ -26,10 +26,10 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "ResuMe | AI-Powered Smart Resume Builder",
   description:
-    "Transform your career with ResuMe. Using Gemini AI to analyze, improve, and generate high-fidelity, ATS-friendly resumes in seconds.",
+    "Tailor your resume to every job, check it like an ATS would, and practise the interview out loud. Free to start.",
   keywords: [
     "AI Resume Builder",
-    "Next.js Resume Generator",
+    "Tailor Resume to Job Description",
     "ATS-Friendly Resume",
     "Career AI",
     "Professional CV Maker",

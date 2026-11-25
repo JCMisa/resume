@@ -95,7 +95,7 @@ export default async function InterviewResultPage({ params }: PageProps) {
                 </span>
               </div>
               <p className="text-xs text-muted-foreground italic leading-relaxed pt-1">
-                Parsed and evaluated natively via the Gemini AI platform.
+                Scored by ResuMe&apos;s AI from your interview transcript.
               </p>
             </div>
 

@@ -329,8 +329,8 @@ export default function UploadSection({
           ))}
         </div>
         <p className="text-[11px] text-muted-foreground border-t pt-4">
-          Text is extracted in your browser and reviewed by Google Gemini (scanned
-          PDFs are read by Gemini directly). After a successful analysis, PDFs are
+          Text is extracted in your browser and reviewed by our AI (scanned PDFs
+          are read by the AI directly). After a successful analysis, PDFs are
           saved to your account (Word files aren&apos;t stored) so you can
           open them later.
         </p>

@@ -2,6 +2,7 @@ import "server-only";
 
 import { getUserBillingStatus } from "@/lib/actions/billing";
 import { RateLimitError } from "@/lib/arcjet";
+import { publicErrorMessage } from "@/lib/errors";
 import {
   LIMIT_REACHED,
   isProCapped,
@@ -41,6 +42,7 @@ export function toActionError(error: unknown, fallback: string) {
   }
   return {
     success: false as const,
-    error: error instanceof Error ? error.message : fallback,
+    // never show raw library/service errors (they can name internal tools)
+    error: publicErrorMessage(error, fallback),
   };
 }

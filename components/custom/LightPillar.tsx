@@ -490,16 +490,9 @@ const LightPillar: React.FC<LightPillarProps> = ({
     materialRef.current.uniforms.uPillarRotSin.value = Math.sin(pillarRotRad);
   }, [pillarRotation]);
 
-  if (!webGLSupported) {
-    return (
-      <div
-        className={`w-full h-full absolute top-0 left-0 flex items-center justify-center bg-black/10 text-gray-500 text-sm ${className}`}
-        style={{ mixBlendMode }}
-      >
-        WebGL not supported
-      </div>
-    );
-  }
+  // No WebGL (some low-power phones / locked-down browsers): it's decoration,
+  // so just leave it out rather than printing a message over the page.
+  if (!webGLSupported) return null;
 
   return (
     <div

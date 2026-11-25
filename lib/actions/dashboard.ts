@@ -7,6 +7,7 @@ import { db } from "@/config/db";
 import { resumes, interviews, interviewResults } from "@/config/schema";
 import { eq, desc } from "drizzle-orm";
 import { unstable_rethrow } from "next/navigation";
+import { publicErrorMessage } from "@/lib/errors";
 
 export async function getDashboardTelemetryAction() {
   try {
@@ -131,7 +132,7 @@ export async function getDashboardTelemetryAction() {
     console.error("Dashboard calculation pipeline failure:", error);
     return {
       success: false,
-      error: error.message || "Failed to parse system metrics.",
+      error: publicErrorMessage(error, "Couldn't load your dashboard. Please try again."),
     };
   }
 }
