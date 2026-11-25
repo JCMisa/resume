@@ -206,6 +206,8 @@ describe("messages and copy", () => {
     expect(free).toContain(`${FREE_LIMITS.job_match} job description matches`);
     expect(free).toContain(`${FREE_REPORT.bulletRewrites} bullet rewrites`);
     expect(free).toContain(`${FREE_LIMITS.ai_write} AI writing actions`);
+    expect(free).toContain(`${FREE_LIMITS.resume_tailor} tailored resumes to try`);
+    expect(pro).toContain(`${PRO_LIMITS.resume_tailor} tailored resumes / month`);
     expect(pro).toContain(`${PRO_LIMITS.interview} AI mock interviews`);
   });
 });

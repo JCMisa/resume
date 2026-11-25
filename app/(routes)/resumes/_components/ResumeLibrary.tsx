@@ -23,6 +23,7 @@ import {
   Target,
   Trash2,
   UploadCloud,
+  WandSparkles,
   X,
 } from "lucide-react";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -144,12 +145,26 @@ function ResumeCard({
           >
             {item.title}
           </Link>
-          <p className="mt-0.5 flex items-center gap-1.5 text-[11px] text-muted-foreground">
-            <Icon className="size-3 shrink-0" />
-            <span className="truncate">
-              {item.status === "parsed" ? "Uploaded PDF" : "Built in editor"} · {item.category}
-            </span>
-          </p>
+          {item.tailored ? (
+            <Link
+              href={`/resumes/${item.id}/tailored`}
+              className="mt-1 inline-flex max-w-full items-center gap-1 rounded-full border border-brand/30 bg-brand/10 px-2 py-0.5 text-[10px] font-bold text-brand-strong dark:text-brand hover:bg-brand/20"
+              title="See what was tailored"
+            >
+              <WandSparkles className="size-3 shrink-0" />
+              <span className="truncate">
+                Tailored{item.tailored.company || item.tailored.jobTitle ? ` · ${item.tailored.company || item.tailored.jobTitle}` : ""}
+                {!item.tailored.done && " · finish it"}
+              </span>
+            </Link>
+          ) : (
+            <p className="mt-0.5 flex items-center gap-1.5 text-[11px] text-muted-foreground">
+              <Icon className="size-3 shrink-0" />
+              <span className="truncate">
+                {item.status === "parsed" ? "Uploaded PDF" : "Built in editor"} · {item.category}
+              </span>
+            </p>
+          )}
         </div>
         <DropdownMenu modal={false}>
           <DropdownMenuTrigger asChild>
@@ -162,7 +177,7 @@ function ResumeCard({
               <MoreHorizontal className="size-4" />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-44">
+          <DropdownMenuContent align="end" className="w-48">
             <DropdownMenuItem asChild>
               <Link href={`/resumes/${item.id}`}>
                 <FolderOpen className="size-4" /> Open
@@ -186,9 +201,21 @@ function ResumeCard({
                 </Link>
               </DropdownMenuItem>
             )}
+            {item.tailored && (
+              <DropdownMenuItem asChild>
+                <Link href={`/resumes/${item.id}/tailored`}>
+                  <WandSparkles className="size-4" /> What was tailored
+                </Link>
+              </DropdownMenuItem>
+            )}
+            <DropdownMenuItem asChild>
+              <Link href={`/resumes/create?mode=tailor&from=${item.id}`}>
+                <WandSparkles className="size-4" /> Tailor to a job
+              </Link>
+            </DropdownMenuItem>
             <DropdownMenuItem asChild>
               <Link href={`/resumes/${item.id}?tab=match`}>
-                <Target className="size-4" /> Tailor for a job
+                <Target className="size-4" /> Match to a job
               </Link>
             </DropdownMenuItem>
             <DropdownMenuItem onSelect={onRename}>

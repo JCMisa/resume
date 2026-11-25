@@ -20,6 +20,8 @@ export type ResumeLibraryItem = {
   analyzedAt: string | null;
   createdAt: string;
   updatedAt: string;
+  /** Made by "Tailor to a job" (null for every other resume) */
+  tailored: { jobTitle: string; company: string; score: number | null; done: boolean } | null;
 };
 
 export type ResumeStats = {
@@ -41,7 +43,7 @@ export type MonthActivity = { month: string; key: string; analyses: number; buil
 type ResumeRow = Pick<
   Resume,
   "id" | "title" | "category" | "status" | "fileUrl" | "content" | "analysis" | "createdAt" | "updatedAt"
->;
+> & { tailoredFor?: Resume["tailoredFor"] };
 
 const SECTIONS: { key: string; label: string; filled: (c: Resume["content"]) => boolean }[] = [
   { key: "personal", label: "Contact details", filled: (c) => Boolean(c.personalDetails?.name && (c.personalDetails?.email || c.personalDetails?.phone)) },
@@ -84,6 +86,15 @@ export function toLibraryItem(r: ResumeRow, analyzedAt?: Date | null): ResumeLib
       score == null ? null : new Date(analyzedAt ?? r.updatedAt).toISOString(),
     createdAt: new Date(r.createdAt).toISOString(),
     updatedAt: new Date(r.updatedAt).toISOString(),
+    tailored:
+      r.tailoredFor && r.tailoredFor.version === 1
+        ? {
+            jobTitle: typeof r.tailoredFor.jobTitle === "string" ? r.tailoredFor.jobTitle : "",
+            company: typeof r.tailoredFor.company === "string" ? r.tailoredFor.company : "",
+            score: validScore(r.tailoredFor.score?.after),
+            done: r.tailoredFor.stage !== "review",
+          }
+        : null,
   };
 }
 

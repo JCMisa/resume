@@ -38,6 +38,7 @@ export async function getResumeLibraryAction() {
           fileUrl: resumes.fileUrl,
           content: resumes.content,
           analysis: resumes.analysis,
+          tailoredFor: resumes.tailoredFor,
           createdAt: resumes.createdAt,
           updatedAt: resumes.updatedAt,
         })

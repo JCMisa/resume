@@ -21,6 +21,7 @@ import {
   FilePen,
   Copy,
   Share2,
+  WandSparkles,
 } from "lucide-react";
 import Link from "next/link";
 import { getResumeDetailsAction } from "@/lib/actions/resume";
@@ -110,6 +111,7 @@ export default async function ResumeDetailsPage({ params, searchParams }: PagePr
   const builtInEditor = result.data.status === "created";
   const category = result.data.category;
   const fileUrl = result.data.fileUrl || null;
+  const tailored = Boolean(result.data.tailoredFor);
 
   // Extract typecast fields with explicit array fallbacks
   const content = (result.data.content as ResumeContent) || {};
@@ -164,6 +166,14 @@ export default async function ResumeDetailsPage({ params, searchParams }: PagePr
                 className={cn(buttonVariants({ size: "sm", variant: "outline" }), "rounded-lg gap-1.5 h-7")}
               >
                 <Share2 className="size-3.5" /> Download & share
+              </Link>
+            )}
+            {tailored && (
+              <Link
+                href={`/resumes/${resumeId}/tailored`}
+                className={cn(buttonVariants({ size: "sm", variant: "outline" }), "rounded-lg gap-1.5 h-7")}
+              >
+                <WandSparkles className="size-3.5" /> What was tailored
               </Link>
             )}
           </div>

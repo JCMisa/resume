@@ -40,6 +40,7 @@ export const APP_PAGES: AppPage[] = [
   { title: "Dashboard", href: "/dashboard", icon: "dashboard", keywords: ["home", "overview"] },
   { title: "My resumes", href: "/resumes", icon: "resumes", keywords: ["library", "cv", "scores", "ats"] },
   { title: "Create resume", href: "/resumes/create", icon: "create", keywords: ["build", "new", "editor", "cv"] },
+  { title: "Tailor resume to a job", href: "/resumes/create?mode=tailor", icon: "create", keywords: ["tailor", "job", "description", "application", "customize", "rewrite", "apply"] },
   { title: "Analyze with AI", href: "/resumes/analyze", icon: "analyze", keywords: ["upload", "ats", "score", "audit", "pdf", "word"] },
   { title: "Mock interviews", href: "/interviews", icon: "interviews", keywords: ["voice", "practice", "interview"] },
   { title: "Settings", href: "/settings", icon: "settings", keywords: ["profile", "account", "theme", "accent", "name", "photo"] },

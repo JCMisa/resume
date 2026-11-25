@@ -22,6 +22,7 @@ import {
   Mic,
   Target,
   WandSparkles,
+  FileCheck2,
   FilePlus, // 🚀 Added for resume attempts visual styling
 } from "lucide-react";
 import Image from "next/image";
@@ -64,6 +65,8 @@ interface SettingsClientLayoutProps {
       resumes: number | string;
       jobMatches: number | string;
       aiWrites: number | string;
+      tailors: number | string;
+      tailorsThisMonth: number | string;
     };
   };
 }
@@ -318,6 +321,26 @@ export default function SettingsClientLayout({
                 label="AI Writing"
                 value={`${billingData.limits.aiWrites} / ${isPro ? "∞" : FREE_LIMITS.ai_write}`}
                 sub={usageSub("ai_write")}
+              />
+
+              {/* Free: a 3-resume trial that never resets; Pro: 30 a month */}
+              <StatCard
+                icon={FileCheck2}
+                label="Tailored Resumes"
+                value={
+                  billingData.isAdmin
+                    ? `${billingData.limits.tailorsThisMonth} / ∞`
+                    : isPro
+                      ? `${billingData.limits.tailorsThisMonth} / ${PRO_LIMITS.resume_tailor}`
+                      : `${billingData.limits.tailors} / ${FREE_LIMITS.resume_tailor}`
+                }
+                sub={
+                  billingData.isAdmin
+                    ? "Admin: no cap"
+                    : isPro
+                      ? `This month · resets ${formatResetDate()}`
+                      : "Free trial · doesn't reset"
+                }
               />
 
               <StatCard
