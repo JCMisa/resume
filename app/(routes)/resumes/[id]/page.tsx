@@ -31,6 +31,8 @@ import ResumeFileUploader from "../_components/ResumeFileUploader";
 import AnalysisReport from "../_components/report/AnalysisReport";
 import JobMatchPanel from "../_components/job-match/JobMatchPanel";
 
+export const metadata = { title: "Resume" };
+
 interface PageProps {
   params: Promise<{ id: string }>;
   searchParams: Promise<{ tab?: string }>;

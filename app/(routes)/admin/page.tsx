@@ -11,7 +11,7 @@ import { getAdminOverviewAction, listAdminUsersAction } from "@/lib/actions/admi
 import AdminUsers from "./_components/AdminUsers";
 import { AdminAccessRedirect, AdminAccessWatcher } from "./_components/AdminAccess";
 
-export const metadata = { title: "Admin · ResuMe" };
+export const metadata = { title: "Admin" };
 
 function Kpi({
   icon: Icon,

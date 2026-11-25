@@ -8,7 +8,7 @@ import { getShareSettingsAction } from "@/lib/actions/resume-share";
 import { currentUserIsPro } from "@/lib/plan-tier";
 import ShareResume from "./ShareResume";
 
-export const metadata = { title: "Download & share · ResuMe" };
+export const metadata = { title: "Download & share" };
 
 // Step 3 of the builder: downloads (PDF / Word / text) and the public link.
 export default async function ShareResumePage({ params }: { params: Promise<{ id: string }> }) {

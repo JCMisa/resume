@@ -14,6 +14,8 @@ import Link from "next/link";
 import { buttonVariants } from "@/components/ui/button";
 import RetryGradingPanel from "./_components/RetryGradingPanel";
 
+export const metadata = { title: "Interview results" };
+
 interface PageProps {
   params: Promise<{ id: string }>;
 }

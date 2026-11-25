@@ -2,8 +2,9 @@ import { Webhook } from "svix";
 import { headers } from "next/headers";
 import { WebhookEvent } from "@clerk/nextjs/server";
 import { db } from "@/config/db";
-import { users } from "@/config/schema";
-import { eq } from "drizzle-orm";
+import { resumes, users } from "@/config/schema";
+import { and, eq, isNotNull } from "drizzle-orm";
+import { destroyStoredFile } from "@/lib/cloudinary-server";
 import { notifyLater } from "@/lib/notify";
 import { welcomeNotice } from "@/lib/notifications";
 
@@ -106,8 +107,15 @@ export async function POST(req: Request) {
       case "user.deleted": {
         const { id } = evt.data;
 
-        // Soft delete or hard delete - here we hard delete
+        // Hard delete. Every table cascades from users; uploaded resume files
+        // live outside the database, so collect their URLs first and remove
+        // them too (the privacy policy promises account deletion removes them).
+        const files = await db
+          .select({ fileUrl: resumes.fileUrl })
+          .from(resumes)
+          .where(and(eq(resumes.userId, id as string), isNotNull(resumes.fileUrl)));
         await db.delete(users).where(eq(users.id, id as string));
+        await Promise.allSettled(files.map((f) => (f.fileUrl ? destroyStoredFile(f.fileUrl) : null)));
         console.log(`🗑️ User ${id} deleted from database`);
         break;
       }

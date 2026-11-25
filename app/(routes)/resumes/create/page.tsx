@@ -3,7 +3,7 @@ import { getUserBillingStatus } from "@/lib/actions/billing";
 import { FREE_LIMITS, PRO_LIMITS } from "@/lib/plans";
 import CreateResumeStart from "./_components/CreateResumeStart";
 
-export const metadata = { title: "Create resume · ResuMe" };
+export const metadata = { title: "Create resume" };
 
 // Step 1 of the builder: pick a template, start blank or from an existing
 // resume (opens the editor), or "Tailor to a job" (?mode=tailor): upload or

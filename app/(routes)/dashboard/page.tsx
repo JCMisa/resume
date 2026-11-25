@@ -7,6 +7,8 @@ import { FileText, Mic, Sparkles, Award } from "lucide-react";
 import Link from "next/link";
 import { getDashboardTelemetryAction } from "@/lib/actions/dashboard";
 
+export const metadata = { title: "Dashboard" };
+
 function SummaryStatCard({
   icon: Icon,
   title,

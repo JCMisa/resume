@@ -10,6 +10,15 @@ import { shadcn } from "@clerk/ui/themes";
 import { UserStoreWatcher } from "@/providers/UserStoreWatcher";
 import { PushSessionGuard } from "@/providers/PushSessionGuard";
 import { accentBootScript, accentCss } from "@/lib/accents";
+import {
+  GOOGLE_SITE_VERIFICATION,
+  SITE_AUTHOR,
+  SITE_DESCRIPTION,
+  SITE_KEYWORDS,
+  SITE_NAME,
+  SITE_TITLE,
+  SITE_URL,
+} from "@/lib/site";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
 
@@ -23,21 +32,37 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+// Site-wide SEO defaults. Pages set a short `title` ("Dashboard") and the
+// template adds " · ResuMe". Private app pages are noindexed in
+// app/(routes)/layout.tsx; the share image is app/opengraph-image.tsx.
 export const metadata: Metadata = {
-  title: "ResuMe | AI-Powered Smart Resume Builder",
-  description:
-    "Tailor your resume to every job, check it like an ATS would, and practise the interview out loud. Free to start.",
-  keywords: [
-    "AI Resume Builder",
-    "Tailor Resume to Job Description",
-    "ATS-Friendly Resume",
-    "Career AI",
-    "Professional CV Maker",
-  ],
-  authors: [{ name: "John Carlo S. Misa" }],
+  metadataBase: new URL(SITE_URL),
+  title: { default: SITE_TITLE, template: `%s · ${SITE_NAME}` },
+  description: SITE_DESCRIPTION,
+  keywords: SITE_KEYWORDS,
+  authors: [{ name: SITE_AUTHOR }],
+  creator: SITE_AUTHOR,
+  category: "productivity",
+  openGraph: {
+    type: "website",
+    siteName: SITE_NAME,
+    title: SITE_TITLE,
+    description: SITE_DESCRIPTION,
+    url: "/",
+    locale: "en_US",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: SITE_TITLE,
+    description: SITE_DESCRIPTION,
+  },
+  robots: { index: true, follow: true },
+  // Search Console ownership tag (only rendered when the env var is set)
+  verification: GOOGLE_SITE_VERIFICATION ? { google: GOOGLE_SITE_VERIFICATION } : undefined,
+  formatDetection: { telephone: false, email: false, address: false },
   // Installed app (Add to Home Screen): needed for device notifications on iOS
-  applicationName: "ResuMe",
-  appleWebApp: { capable: true, title: "ResuMe", statusBarStyle: "black-translucent" },
+  applicationName: SITE_NAME,
+  appleWebApp: { capable: true, title: SITE_NAME, statusBarStyle: "black-translucent" },
   icons: { apple: "/apple-touch-icon.png" },
 };
 

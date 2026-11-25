@@ -12,6 +12,8 @@ import {
   ScoreTrendChart,
 } from "../_components/ResumeCharts";
 
+export const metadata = { title: "Resumes" };
+
 export default async function ResumesPage() {
   const [library, billing] = await Promise.all([
     getResumeLibraryAction(),

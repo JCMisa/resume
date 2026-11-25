@@ -4,7 +4,7 @@ import { currentUserIsPro } from "@/lib/plan-tier";
 import TailoredResult from "./TailoredResult";
 import TailoredReviewStep from "./TailoredReviewStep";
 
-export const metadata = { title: "Tailored resume · ResuMe" };
+export const metadata = { title: "Tailored resume" };
 
 // Result of "Tailor to a job": the before/after score, what changed, the PDF
 // in the viewer, downloads. A tailored resume that wasn't finished (the user

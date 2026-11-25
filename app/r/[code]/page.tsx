@@ -23,7 +23,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { code } = await params;
   const resume = await getPublicResume(code);
   const robots = { index: false, follow: false };
-  if (!resume) return { title: "Resume not available · ResuMe", robots };
+  if (!resume) return { title: "Resume not available", robots };
   const name = resume.content.personalDetails?.name?.trim() || resume.title;
   const description = headline(resume.content) || "Resume shared with ResuMe";
   return {

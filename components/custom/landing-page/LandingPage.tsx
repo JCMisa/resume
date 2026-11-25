@@ -1505,7 +1505,7 @@ function Footer() {
             </p>
           </div>
 
-          <div className="grid grid-cols-2 gap-8 sm:gap-16 text-sm">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-8 sm:gap-16 text-sm">
             {[
               {
                 heading: "Product",
@@ -1516,6 +1516,11 @@ function Footer() {
                 heading: "Account",
                 links: ["Create account", "Sign in"],
                 hrefs: ["/sign-up", "/sign-in"],
+              },
+              {
+                heading: "Legal",
+                links: ["Privacy", "Terms"],
+                hrefs: ["/privacy", "/terms"],
               },
             ].map((col) => (
               <div key={col.heading}>
