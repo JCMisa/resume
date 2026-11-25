@@ -34,7 +34,7 @@ function Row({ children }: { children: React.ReactNode }) {
 /** Label under an item */
 function Cap({ children }: { children: React.ReactNode }) {
   return (
-    <p className="mt-1 text-center text-[10px] text-muted-foreground">
+    <p className="mt-1 text-center text-[11px] text-muted-foreground">
       {children}
     </p>
   );
@@ -48,7 +48,7 @@ function Swatch({ bg, name }: { bg: string; name: string }) {
         className="h-10 w-20 rounded-md border border-border"
         style={{ background: bg }}
       />
-      <span className="text-[10px] text-muted-foreground">{name}</span>
+      <span className="text-[11px] text-muted-foreground">{name}</span>
     </div>
   );
 }
@@ -122,25 +122,25 @@ const SamplePage = () => {
           <div className="space-y-3">
             <div>
               <p className="text-display">Display 72px</p>
-              <code className="text-[10px] text-muted-foreground">
+              <code className="text-[11px] text-muted-foreground">
                 className=&quot;text-display&quot;
               </code>
             </div>
             <div>
               <p className="text-heading-lg">Heading LG 56px</p>
-              <code className="text-[10px] text-muted-foreground">
+              <code className="text-[11px] text-muted-foreground">
                 className=&quot;text-heading-lg&quot;
               </code>
             </div>
             <div>
               <p className="text-heading">Heading 32px</p>
-              <code className="text-[10px] text-muted-foreground">
+              <code className="text-[11px] text-muted-foreground">
                 className=&quot;text-heading&quot;
               </code>
             </div>
             <div>
               <p className="text-heading-sm">Heading SM 24px</p>
-              <code className="text-[10px] text-muted-foreground">
+              <code className="text-[11px] text-muted-foreground">
                 className=&quot;text-heading-sm&quot;
               </code>
             </div>
@@ -148,7 +148,7 @@ const SamplePage = () => {
               <p className="text-subheading">
                 Subheading 20px — The quick brown fox
               </p>
-              <code className="text-[10px] text-muted-foreground">
+              <code className="text-[11px] text-muted-foreground">
                 className=&quot;text-subheading&quot;
               </code>
             </div>
@@ -156,7 +156,7 @@ const SamplePage = () => {
               <p className="text-body">
                 Body 18px — The quick brown fox jumps over the lazy dog.
               </p>
-              <code className="text-[10px] text-muted-foreground">
+              <code className="text-[11px] text-muted-foreground">
                 className=&quot;text-body&quot;
               </code>
             </div>
@@ -164,7 +164,7 @@ const SamplePage = () => {
               <p className="text-body-sm">
                 Body SM 16px — The quick brown fox jumps over the lazy dog.
               </p>
-              <code className="text-[10px] text-muted-foreground">
+              <code className="text-[11px] text-muted-foreground">
                 className=&quot;text-body-sm&quot;
               </code>
             </div>
@@ -545,14 +545,14 @@ const SamplePage = () => {
               ] as [string, string, string][]
             ).map(([token, val, note]) => (
               <div key={token} className="flex items-center gap-4">
-                <code className="w-36 shrink-0 text-[10px] text-muted-foreground">
+                <code className="w-36 shrink-0 text-[11px] text-muted-foreground">
                   {token}
                 </code>
                 <div
                   className="h-5 shrink-0 rounded-sm bg-deep-teal"
                   style={{ width: val }}
                 />
-                <span className="text-[10px] text-muted-foreground">
+                <span className="text-[11px] text-muted-foreground">
                   {val} — {note}
                 </span>
               </div>

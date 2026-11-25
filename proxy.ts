@@ -11,6 +11,13 @@ const isPublicRoute = createRouteMatcher([
   // Shared resumes (/r/<code>) and their link-preview images. Note the slash:
   // "/r(.*)" would also match /resumes.
   "/r/(.*)",
+  // SEO + legal: crawlers and signed-out visitors must reach these
+  "/robots.txt",
+  "/sitemap.xml",
+  "/opengraph-image(.*)",
+  "/twitter-image(.*)",
+  "/privacy",
+  "/terms",
 ]);
 
 export default clerkMiddleware(async (auth, request) => {

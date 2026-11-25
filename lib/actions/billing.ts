@@ -2,7 +2,7 @@
 
 import { auth, clerkClient } from "@clerk/nextjs/server";
 import { users, interviews, usageEvents } from "@/config/schema";
-import { eq, and, gte, count, ne, or, isNull } from "drizzle-orm";
+import { eq, and, gte, count, ne, or, isNull, sql } from "drizzle-orm";
 import { db } from "@/config/db";
 import {
   LIMIT_PERIOD,
@@ -17,7 +17,7 @@ export async function getUserBillingStatus() {
     return {
       isPro: false,
       isAdmin: false,
-      limits: { analyses: 0, interviews: 0, resumes: 0, jobMatches: 0, aiWrites: 0 },
+      limits: { analyses: 0, interviews: 0, resumes: 0, jobMatches: 0, aiWrites: 0, tailors: 0, tailorsThisMonth: 0 },
       allowed: {
         analyze: false,
         interview: false,
@@ -27,6 +27,7 @@ export async function getUserBillingStatus() {
         tailor: false,
         design: false,
         history: false,
+        resume_tailor: false,
       },
     };
 
@@ -39,7 +40,7 @@ export async function getUserBillingStatus() {
   const jobMatchSince = since("job_match");
   const aiWriteSince = since("ai_write");
 
-  const [[userRecord], [analysesRow], [resumesRow], [interviewsRow], [jobMatchesRow], [aiWritesRow]] =
+  const [[userRecord], [analysesRow], [resumesRow], [interviewsRow], [jobMatchesRow], [aiWritesRow], [tailorsRow]] =
     await Promise.all([
       db
         .select({ role: users.role })
@@ -103,6 +104,14 @@ export async function getUserBillingStatus() {
             aiWriteSince ? gte(usageEvents.createdAt, aiWriteSince) : undefined,
           ),
         ),
+      // Tailored resumes: all-time (Free trial) and this month (Pro cap), one query
+      db
+        .select({
+          total: count(),
+          thisMonth: sql<number>`count(*) filter (where ${usageEvents.createdAt} >= ${monthStart})`.mapWith(Number),
+        })
+        .from(usageEvents)
+        .where(and(eq(usageEvents.userId, userId), eq(usageEvents.kind, "resume_tailor"))),
     ]);
 
   const usage = {
@@ -111,6 +120,8 @@ export async function getUserBillingStatus() {
     resumes: resumesRow?.value ?? 0,
     jobMatches: jobMatchesRow?.value ?? 0,
     aiWrites: aiWritesRow?.value ?? 0,
+    tailors: tailorsRow?.total ?? 0,
+    tailorsThisMonth: tailorsRow?.thisMonth ?? 0,
   };
 
   // Pro is checked by Clerk plan key (not a Clerk feature) so it stays correct

@@ -23,7 +23,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { code } = await params;
   const resume = await getPublicResume(code);
   const robots = { index: false, follow: false };
-  if (!resume) return { title: "Resume not available · ResuMe", robots };
+  if (!resume) return { title: "Resume not available", robots };
   const name = resume.content.personalDetails?.name?.trim() || resume.title;
   const description = headline(resume.content) || "Resume shared with ResuMe";
   return {
@@ -52,7 +52,7 @@ export default async function PublicResumePage({ params }: Props) {
               The link may be old, or its owner stopped sharing it. Ask them for a new link.
             </p>
           </div>
-          <Link href="/" className={cn(buttonVariants({ variant: "outline" }), "rounded-xl")}>
+          <Link href="/" className={cn(buttonVariants({ variant: "outline" }), "rounded-lg")}>
             Go to ResuMe
           </Link>
         </div>

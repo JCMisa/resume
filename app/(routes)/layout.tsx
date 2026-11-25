@@ -9,6 +9,14 @@ import { AppSearch } from "@/components/custom/search/AppSearch";
 import { getCurrentUser } from "@/lib/actions/user";
 import { SidebarFallback } from "./_components/SidebarFallback";
 import UserButtonClient from "./_components/UserButtonClient";
+import type { Metadata } from "next";
+
+// The signed-in app is private: keep every page under it out of search results
+// (robots.txt also blocks crawling these paths).
+export const metadata: Metadata = {
+  title: "Dashboard",
+  robots: { index: false, follow: false },
+};
 
 const RoutesLayout = async ({
   children,
@@ -51,7 +59,7 @@ const RoutesLayout = async ({
             </div>
           </header>
 
-          <main className="flex-1 overflow-y-auto custom-scrollbar p-5">
+          <main className="flex-1 overflow-y-auto custom-scrollbar p-4 sm:p-6">
             <div className="flex h-full w-full flex-1 custom-scrollbar overflow-y-auto">
               {children}
             </div>

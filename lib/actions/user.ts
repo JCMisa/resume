@@ -5,6 +5,7 @@ import { users } from "@/config/schema";
 import { eq } from "drizzle-orm";
 import { db } from "@/config/db";
 import { isAccentId } from "@/lib/accents";
+import { publicErrorMessage } from "@/lib/errors";
 
 /**
  * Copy the user's current Clerk profile (name, avatar) into our users table.
@@ -32,7 +33,7 @@ export async function syncProfileFromClerkAction() {
     console.error("Profile Sync Failure:", error);
     return {
       success: false as const,
-      error: error instanceof Error ? error.message : "Failed to sync profile.",
+      error: publicErrorMessage(error, "Couldn't update your profile. Please try again."),
     };
   }
 }
@@ -54,7 +55,7 @@ export async function updateThemeAccentAction(accent: string) {
     console.error("Theme Accent Update Failure:", error);
     return {
       success: false as const,
-      error: error instanceof Error ? error.message : "Failed to save theme.",
+      error: publicErrorMessage(error, "Couldn't save your theme. Please try again."),
     };
   }
 }

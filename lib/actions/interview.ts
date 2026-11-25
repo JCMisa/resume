@@ -19,6 +19,7 @@ import {
 } from "@/lib/interview";
 import { notifyLater } from "@/lib/notify";
 import { gradingFailedNotice, interviewGradedNotice } from "@/lib/notifications";
+import { publicErrorMessage } from "@/lib/errors";
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
@@ -136,7 +137,7 @@ export async function compileInterviewEvaluationAction(
     console.error("Evaluation Compiler Failed:", error);
     return {
       success: false as const,
-      error: error.message || "Failed to catalog evaluation records.",
+      error: publicErrorMessage(error, "Couldn't save your interview results. Please try again."),
     };
   }
 }
@@ -393,7 +394,7 @@ export async function getInterviewResultDetailsAction(interviewId: string) {
     console.error("Fetch Interview Metrics Failure:", error);
     return {
       success: false,
-      error: error.message || "Failed to load database session registries.",
+      error: publicErrorMessage(error, "Couldn't load your interviews. Please try again."),
     };
   }
 }

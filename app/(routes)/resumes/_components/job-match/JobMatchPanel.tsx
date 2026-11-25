@@ -206,7 +206,7 @@ export default function JobMatchPanel({ resumeId }: { resumeId: string }) {
               <p className="text-[11px] text-muted-foreground">
                 Uses one job match from your plan. The posting is stored with the result so you can revisit it.
               </p>
-              <Button type="submit" disabled={creating || tooShort || chars > MAX_JOB_DESCRIPTION_CHARS} className="rounded-xl font-bold gap-1.5 shrink-0">
+              <Button type="submit" disabled={creating || tooShort || chars > MAX_JOB_DESCRIPTION_CHARS} className="rounded-lg font-bold gap-1.5 shrink-0">
                 {creating ? <Loader2 className="size-4 animate-spin" /> : <Target className="size-4" />}
                 {creating ? "Comparing… (about 5 seconds)" : "Compare with this job"}
               </Button>
@@ -249,7 +249,7 @@ export default function JobMatchPanel({ resumeId }: { resumeId: string }) {
                 <Button
                   size="icon"
                   variant="ghost"
-                  className="size-8 shrink-0 rounded-lg text-muted-foreground hover:text-destructive"
+                  className="shrink-0 rounded-lg text-muted-foreground hover:text-destructive"
                   aria-label={`Delete match for ${m.jobTitle || "this role"}`}
                   onClick={() => remove(m.id)}
                 >

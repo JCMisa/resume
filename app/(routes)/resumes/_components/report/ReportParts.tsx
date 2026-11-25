@@ -101,7 +101,7 @@ export function ScoreRing({ score, size = 112 }: { score: number; size?: number 
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center">
         <span className="text-3xl font-black tabular-nums leading-none">{score}</span>
-        <span className="text-[10px] font-bold text-muted-foreground mt-0.5">/ 100</span>
+        <span className="text-[11px] font-bold text-muted-foreground mt-0.5">/ 100</span>
       </div>
     </div>
   );
@@ -150,7 +150,7 @@ export function SubScoreBars({ scores, weights }: { scores: SubScores; weights: 
             <div className="flex items-baseline justify-between gap-3">
               <p className="text-sm font-bold">
                 {info.label}{" "}
-                <span className="text-[10px] font-semibold text-muted-foreground">
+                <span className="text-[11px] font-semibold text-muted-foreground">
                   · {Math.round(weights[k] * 100)}% of score · {info.source}
                 </span>
               </p>
@@ -244,7 +244,7 @@ export function CopyButton({ text, label = "Copy" }: { text: string; label?: str
           toast.error("Couldn't copy. Select the text instead.");
         }
       }}
-      className="shrink-0 inline-flex items-center gap-1 rounded-lg border px-2 py-1 text-[10px] font-bold text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+      className="shrink-0 inline-flex items-center gap-1 rounded-lg border px-2 py-1 text-[11px] font-bold text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
       aria-label={label === "Copy" ? "Copy text" : label}
     >
       {copied ? <Check className="size-3" /> : <Copy className="size-3" />}
@@ -309,7 +309,7 @@ export function BulletAudit({
         {visible.map((b, i) => (
           <li key={`${b.text}-${i}`} className="rounded-2xl border p-4 space-y-2.5">
             <div className="flex items-center justify-between gap-2">
-              <span className={cn("rounded-md px-2 py-0.5 text-[10px] font-black uppercase tracking-wider", RATING_STYLE[b.rating])}>
+              <span className={cn("rounded-md px-2 py-0.5 text-[11px] font-black uppercase tracking-wider", RATING_STYLE[b.rating])}>
                 {b.rating === "ok" ? "Could be stronger" : b.rating}
               </span>
               {b.context && <span className="text-[11px] text-muted-foreground truncate">{b.context}</span>}
@@ -318,7 +318,7 @@ export function BulletAudit({
             {b.issues.length > 0 && (
               <div className="flex flex-wrap gap-1">
                 {b.issues.map((issue) => (
-                  <span key={issue} className="rounded-md border px-1.5 py-0.5 text-[10px] font-semibold text-muted-foreground">
+                  <span key={issue} className="rounded-md border px-1.5 py-0.5 text-[11px] font-semibold text-muted-foreground">
                     {issue}
                   </span>
                 ))}
@@ -332,7 +332,7 @@ export function BulletAudit({
             {b.rewrite && (
               <div className="rounded-xl border-l-4 border-brand bg-brand/5 px-3 py-2 flex items-start justify-between gap-3">
                 <div className="min-w-0">
-                  <p className="text-[10px] font-black uppercase tracking-wider text-brand-strong dark:text-brand">Suggested</p>
+                  <p className="text-[11px] font-black uppercase tracking-wider text-brand-strong dark:text-brand">Suggested</p>
                   <p className="text-sm font-medium mt-0.5">{b.rewrite}</p>
                 </div>
                 <CopyButton text={b.rewrite} />
@@ -376,7 +376,7 @@ export function RedFlags({ flags }: { flags: RedFlag[] }) {
     <ul className="space-y-2.5">
       {flags.map((f, i) => (
         <li key={i} className="rounded-xl border p-3 space-y-1.5">
-          <span className="rounded-md bg-rose-500/15 px-2 py-0.5 text-[10px] font-black uppercase tracking-wider text-rose-600 dark:text-rose-400">
+          <span className="rounded-md bg-rose-500/15 px-2 py-0.5 text-[11px] font-black uppercase tracking-wider text-rose-600 dark:text-rose-400">
             {FLAG_LABEL[f.type]}
           </span>
           <p className="text-sm">

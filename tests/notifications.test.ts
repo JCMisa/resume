@@ -110,8 +110,35 @@ describe("usageNotice", () => {
   });
 });
 
+describe("lifetime trials and Pro caps", () => {
+  it("a lifetime Free trial: no 'this month', sent once ever", () => {
+    const low = usageNotice("resume_tailor", 2, 3, NOV, { period: "lifetime" })!;
+    expect(low.title).toBe("1 free tailored resume left");
+    expect(low.dedupeKey).toBe("usage:resume_tailor:low:lifetime");
+    const reached = usageNotice("resume_tailor", 3, 3, NOV, { period: "lifetime" })!;
+    expect(reached.body).toContain(`Upgrade to Pro for ${PRO_LIMITS.resume_tailor} a month`);
+    expect(reached.body).not.toContain("resets");
+  });
+
+  it("Pro users at a cap aren't told to upgrade to Pro", () => {
+    const reached = usageNotice("interview", 20, 20, NOV, { isPro: true })!;
+    expect(reached.body).not.toMatch(/upgrade/i);
+  });
+
+  it("tailored resumes: Free counts all-time, Pro counts this month", () => {
+    const usage = { analyses: 0, interviews: 0, resumes: 0, jobMatches: 0, aiWrites: 0, tailors: 2, tailorsThisMonth: 0 };
+    expect(capFor("resume_tailor", { isPro: false, isAdmin: false })).toBe(FREE_LIMITS.resume_tailor);
+    expect(capFor("resume_tailor", { isPro: true, isAdmin: false })).toBe(PRO_LIMITS.resume_tailor);
+    expect(capFor("resume_tailor", { isPro: true, isAdmin: true })).toBe(Infinity);
+    // Free: this is the 3rd ever -> "reached", even with 0 this month
+    expect(usageNoticeFor("resume_tailor", { isPro: false, isAdmin: false, limits: usage }, NOV)?.kind).toBe("usage_reached");
+    // Pro: only this month's count matters
+    expect(usageNoticeFor("resume_tailor", { isPro: true, isAdmin: false, limits: usage }, NOV)).toBeNull();
+  });
+});
+
 describe("capFor / usageNoticeFor", () => {
-  const usage = { analyses: 0, interviews: 0, resumes: 0, jobMatches: 0, aiWrites: 0 };
+  const usage = { analyses: 0, interviews: 0, resumes: 0, jobMatches: 0, aiWrites: 0, tailors: 0, tailorsThisMonth: 0 };
 
   it("free caps, Pro only capped on interviews, admins never", () => {
     expect(capFor("analyze", { isPro: false, isAdmin: false })).toBe(FREE_LIMITS.analyze);

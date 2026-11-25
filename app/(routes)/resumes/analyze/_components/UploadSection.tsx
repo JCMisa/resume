@@ -207,7 +207,7 @@ export default function UploadSection({
                   onReset();
                   browse();
                 }}
-                className="rounded-xl font-bold gap-1.5"
+                className="rounded-lg font-bold gap-1.5"
               >
                 <RefreshCw className="size-4" /> Try another file
               </Button>
@@ -268,7 +268,7 @@ export default function UploadSection({
                   e.stopPropagation();
                   onProceed();
                 }}
-                className="rounded-xl font-black gap-2"
+                className="rounded-lg font-black gap-2"
               >
                 {info?.scanned ? "Analyze scanned resume" : "Analyze resume"}{" "}
                 <ArrowRight className="size-4" />
@@ -281,7 +281,7 @@ export default function UploadSection({
                   onReset();
                   browse();
                 }}
-                className="rounded-xl font-bold"
+                className="rounded-lg font-bold"
               >
                 Choose another file
               </Button>
@@ -329,8 +329,8 @@ export default function UploadSection({
           ))}
         </div>
         <p className="text-[11px] text-muted-foreground border-t pt-4">
-          Text is extracted in your browser and reviewed by Google Gemini (scanned
-          PDFs are read by Gemini directly). After a successful analysis, PDFs are
+          Text is extracted in your browser and reviewed by our AI (scanned PDFs
+          are read by the AI directly). After a successful analysis, PDFs are
           saved to your account (Word files aren&apos;t stored) so you can
           open them later.
         </p>

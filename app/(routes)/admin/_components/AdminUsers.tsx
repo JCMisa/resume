@@ -73,11 +73,11 @@ function Avatar({ user }: { user: AdminUserRow }) {
 
 function RoleBadge({ role }: { role: Role }) {
   return role === "admin" ? (
-    <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 text-primary border border-primary/20 px-2 py-0.5 text-[10px] font-black uppercase tracking-wider">
+    <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 text-primary border border-primary/20 px-2 py-0.5 text-[11px] font-black uppercase tracking-wider">
       <ShieldCheck className="size-3" /> Admin
     </span>
   ) : (
-    <span className="inline-flex items-center rounded-full border bg-muted/40 text-muted-foreground px-2 py-0.5 text-[10px] font-black uppercase tracking-wider">
+    <span className="inline-flex items-center rounded-full border bg-muted/40 text-muted-foreground px-2 py-0.5 text-[11px] font-black uppercase tracking-wider">
       User
     </span>
   );
@@ -86,7 +86,7 @@ function RoleBadge({ role }: { role: Role }) {
 function Stat({ label, value }: { label: string; value: number }) {
   return (
     <div className="min-w-0">
-      <p className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">
+      <p className="text-[11px] font-black uppercase tracking-wider text-muted-foreground">
         {label}
       </p>
       <p className="text-sm font-bold tabular-nums">{value}</p>
@@ -281,7 +281,7 @@ export default function AdminUsers({
                     </p>
                     <RoleBadge role={user.role} />
                     {user.isYou && (
-                      <span className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">
+                      <span className="text-[11px] font-black uppercase tracking-wider text-muted-foreground">
                         You
                       </span>
                     )}
@@ -297,7 +297,7 @@ export default function AdminUsers({
                 <Stat label="Interviews" value={user.interviews} />
                 <Stat label="Analyses" value={user.analysesThisMonth} />
                 <div className="min-w-0">
-                  <p className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">
+                  <p className="text-[11px] font-black uppercase tracking-wider text-muted-foreground">
                     Joined
                   </p>
                   <p className="text-sm font-bold whitespace-nowrap">
@@ -315,7 +315,7 @@ export default function AdminUsers({
                   <Button
                     variant="outline"
                     size="sm"
-                    className="rounded-xl font-bold gap-1.5 w-full md:w-auto"
+                    className="rounded-lg font-bold gap-1.5 w-full md:w-auto"
                     onClick={() => setConfirming({ user, next: "user" })}
                   >
                     <ShieldOff className="size-4" /> Remove admin
@@ -323,7 +323,7 @@ export default function AdminUsers({
                 ) : (
                   <Button
                     size="sm"
-                    className="rounded-xl font-bold gap-1.5 w-full md:w-auto"
+                    className="rounded-lg font-bold gap-1.5 w-full md:w-auto"
                     onClick={() => setConfirming({ user, next: "admin" })}
                   >
                     <ShieldCheck className="size-4" /> Make admin
@@ -345,7 +345,7 @@ export default function AdminUsers({
               <Button
                 variant="outline"
                 size="sm"
-                className="rounded-xl"
+                className="rounded-lg"
                 disabled={page <= 1 || navigating}
                 onClick={() =>
                   navigate({ page: page - 1 > 1 ? String(page - 1) : null })
@@ -360,7 +360,7 @@ export default function AdminUsers({
               <Button
                 variant="outline"
                 size="sm"
-                className="rounded-xl"
+                className="rounded-lg"
                 disabled={page >= pages || navigating}
                 onClick={() => navigate({ page: String(page + 1) })}
                 aria-label="Next page"

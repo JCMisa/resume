@@ -38,6 +38,7 @@ export async function getResumeLibraryAction() {
           fileUrl: resumes.fileUrl,
           content: resumes.content,
           analysis: resumes.analysis,
+          tailoredFor: resumes.tailoredFor,
           createdAt: resumes.createdAt,
           updatedAt: resumes.updatedAt,
         })
@@ -101,18 +102,10 @@ export type ResumeLibraryData = Extract<
   { success: true }
 >["data"];
 
-// Best-effort removal of the archived PDF from Cloudinary (raw upload).
+// Best-effort removal of the archived PDF (server-only SDK, loaded on demand).
 async function destroyCloudinaryFile(fileUrl: string) {
-  try {
-    // .../raw/upload/v123/resumedocs/name.pdf -> "resumedocs/name.pdf" (raw ids keep the extension)
-    const match = fileUrl.match(/\/raw\/upload\/(?:v\d+\/)?(.+)$/);
-    if (!match) return;
-    const publicId = decodeURIComponent(match[1]);
-    const { cloudinary } = await import("@/lib/cloudinary-server");
-    await cloudinary.uploader.destroy(publicId, { resource_type: "raw" });
-  } catch (error) {
-    console.warn("Cloudinary cleanup failed (non-fatal):", error);
-  }
+  const { destroyStoredFile } = await import("@/lib/cloudinary-server");
+  await destroyStoredFile(fileUrl);
 }
 
 export async function deleteResumeAction(resumeId: string) {

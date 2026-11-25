@@ -32,7 +32,7 @@ export default function ScoreTimeline({ data }: { data: any[] }) {
     <div className="bg-white dark:bg-stone-900 border border-stone-100 dark:border-stone-800/80 rounded-3xl p-6 shadow-sm flex flex-col justify-between h-[360px]">
       <div className="flex items-center justify-between border-b pb-3 mb-2">
         <div>
-          <span className="text-[10px] font-bold font-mono text-muted-foreground uppercase tracking-widest">
+          <span className="text-[11px] font-bold font-mono text-muted-foreground uppercase tracking-widest">
             Historical Progress
           </span>
           <h3 className="text-lg font-black tracking-tight mt-0.5">
@@ -78,7 +78,7 @@ export default function ScoreTimeline({ data }: { data: any[] }) {
                 if (active && payload && payload.length) {
                   return (
                     <div className="bg-stone-900 text-stone-50 border border-stone-800 p-3 rounded-xl shadow-xl text-left">
-                      <p className="text-[10px] text-stone-400 font-mono font-bold uppercase tracking-wider">
+                      <p className="text-[11px] text-muted-foreground font-mono font-bold uppercase tracking-wider">
                         {payload[0].payload.date}
                       </p>
                       <p className="text-xs font-black mt-0.5 text-primary truncate max-w-[180px]">
@@ -86,7 +86,7 @@ export default function ScoreTimeline({ data }: { data: any[] }) {
                       </p>
                       <p className="text-lg font-black mt-1 tabular-nums">
                         {payload[0].value}
-                        <span className="text-xs font-normal text-stone-400">
+                        <span className="text-xs font-normal text-muted-foreground">
                           /100
                         </span>
                       </p>

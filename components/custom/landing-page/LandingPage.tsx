@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useRef, useState, useCallback } from "react";
+import React, { useEffect, useRef, useState, useCallback, useSyncExternalStore } from "react";
 import {
   motion,
   useScroll,
@@ -10,13 +10,12 @@ import {
   useSpring,
 } from "framer-motion";
 import Link from "next/link";
+import { useAuth } from "@clerk/nextjs";
 import {
   FileText,
   Mic,
-  Brain,
   Shield,
   Zap,
-  Star,
   Upload,
   Layout,
   BarChart3,
@@ -27,6 +26,13 @@ import {
   TrendingUp,
   Clock,
   ChevronDown,
+  WandSparkles,
+  Lock,
+  Hash,
+  ShieldCheck,
+  ListChecks,
+  Trash2,
+  Heart,
 } from "lucide-react";
 import { ShineBorder } from "@/components/ui/shine-border";
 import HomeNavbar from "./HomeNavbar";
@@ -34,8 +40,36 @@ import LightPillar from "../LightPillar";
 import ElectricBorder from "../ElectricBorder";
 import { Highlighter } from "@/components/ui/highlighter";
 import Image from "next/image";
-import { PLAN_HIGHLIGHTS, PRO_PRICE_MONTHLY_USD } from "@/lib/plans";
+import { FREE_LIMITS, PLAN_HIGHLIGHTS, PRO_LIMITS, PRO_PRICE_MONTHLY_USD } from "@/lib/plans";
+import { TEMPLATE_IDS } from "@/lib/resume-templates";
 import ProCheckoutButton from "@/components/custom/ProCheckoutButton";
+
+// ── Sign-up-first links ───────────────────────────────────────────────────────
+// Signed-out visitors go to sign-up and land on the feature afterwards (Clerk
+// reads redirect_url), instead of being bounced to the sign-in page.
+function useStartHref() {
+  const { isSignedIn } = useAuth();
+  return (to: string) => (isSignedIn ? to : `/sign-up?redirect_url=${encodeURIComponent(to)}`);
+}
+
+const TAILOR_PATH = "/resumes/create?mode=tailor";
+
+// ── Phone check ───────────────────────────────────────────────────────────────
+// The hero parallax (slide + fade on scroll) suits desktop, where the mockup is
+// fully visible first. On phones the mockup sits below the fold, so the effect
+// would fade it out while it is being read.
+const SMALL_QUERY = "(max-width: 639px)";
+function useIsSmallScreen() {
+  return useSyncExternalStore(
+    (cb) => {
+      const mq = window.matchMedia(SMALL_QUERY);
+      mq.addEventListener("change", cb);
+      return () => mq.removeEventListener("change", cb);
+    },
+    () => window.matchMedia(SMALL_QUERY).matches,
+    () => false,
+  );
+}
 
 // ── Animated Number Counter ───────────────────────────────────────────────────
 function Counter({ to, suffix = "" }: { to: number; suffix?: string }) {
@@ -157,7 +191,7 @@ function ATSRing({ score, label }: { score: number; label: string }) {
         />
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center">
-        <span className="text-lg font-black text-brand">{score}</span>
+        <span className="text-lg font-black text-brand-strong dark:text-brand">{score}</span>
         <span className="text-[8px] font-medium text-stone-400 leading-tight text-center">
           {label}
         </span>
@@ -168,13 +202,15 @@ function ATSRing({ score, label }: { score: number; label: string }) {
 
 // ── Hero Section ──────────────────────────────────────────────────────────────
 function Hero() {
+  const startHref = useStartHref();
   const ref = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll({
     target: ref,
     offset: ["start start", "end start"],
   });
-  const y = useTransform(scrollYProgress, [0, 1], ["0%", "22%"]);
-  const opacity = useTransform(scrollYProgress, [0, 0.65], [1, 0]);
+  const small = useIsSmallScreen();
+  const y = useTransform(scrollYProgress, [0, 1], ["0%", small ? "0%" : "22%"]);
+  const opacity = useTransform(scrollYProgress, [0, 0.65], [1, small ? 1 : 0]);
 
   return (
     <section
@@ -200,7 +236,7 @@ function Hero() {
         >
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-brand/10 border border-brand/20 text-brand-strong dark:text-brand text-[11px] font-black uppercase tracking-[0.15em]">
             <Sparkles className="w-3 h-3" />
-            Powered by Google Gemini AI & VAPI Voice
+            New · Tailor your resume to any job
           </div>
         </motion.div>
 
@@ -218,7 +254,7 @@ function Hero() {
           <span className="block text-[clamp(2.6rem,7vw,5.5rem)] font-black tracking-[-0.03em] leading-[1.05]">
             <span className="relative inline-block">
               <Highlighter action="underline" color="brand">
-                <span className="text-primary">precision-built</span>
+                <span className="text-brand-strong dark:text-brand">tailored</span>
               </Highlighter>
               {/* Underline accent */}
               <motion.span
@@ -232,7 +268,7 @@ function Hero() {
                 }}
               />
             </span>
-            <span className="text-stone-900 dark:text-stone-50"> by AI.</span>
+            <span className="text-stone-900 dark:text-stone-50"> to every job.</span>
           </span>
         </motion.h1>
 
@@ -242,8 +278,9 @@ function Hero() {
           transition={{ duration: 0.7, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
           className="text-center text-base sm:text-lg text-stone-500 dark:text-stone-400 max-w-xl mx-auto mb-10 leading-relaxed font-medium"
         >
-          Upload your resume, get a full ATS audit, build a new one live, then
-          practice with a voice AI interviewer — all in one tool.
+          Paste a job post and ResuMe rewrites your resume around it, checks it
+          like an ATS would, and lets you practise the interview out loud. Your
+          employers, dates and numbers stay exactly as you wrote them.
         </motion.p>
 
         {/* CTA Row */}
@@ -254,11 +291,11 @@ function Hero() {
           className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-12"
         >
           <MagneticButton
-            href="/resumes/analyze"
-            className="group relative flex items-center gap-2 px-7 py-3.5 rounded-2xl text-base font-black bg-brand text-brand-foreground hover:bg-brand-hover transition-all duration-200 shadow-lg shadow-brand/25 hover:shadow-xl hover:shadow-brand/35 hover:-translate-y-0.5"
+            href={startHref(TAILOR_PATH)}
+            className="group relative flex w-full sm:w-auto justify-center items-center gap-2 px-7 py-3.5 rounded-2xl text-base font-black bg-brand text-brand-foreground hover:bg-brand-hover transition-all duration-200 shadow-lg shadow-brand/25 hover:shadow-xl hover:shadow-brand/35 hover:-translate-y-0.5"
           >
             <Sparkles className="w-4 h-4" />
-            Analyze My Resume — Free
+            Tailor My Resume — Free
             <motion.span
               className="inline-block"
               animate={{ x: [0, 3, 0] }}
@@ -273,7 +310,7 @@ function Hero() {
           </MagneticButton>
           <Link
             href="#how-it-works"
-            className="flex items-center gap-2 px-6 py-3.5 rounded-2xl text-base font-semibold text-stone-600 dark:text-stone-400 border border-stone-200 dark:border-stone-700 hover:bg-stone-100 dark:hover:bg-stone-800 transition-all"
+            className="flex w-full sm:w-auto justify-center items-center gap-2 px-6 py-3.5 rounded-2xl text-base font-semibold text-stone-600 dark:text-stone-400 border border-stone-200 dark:border-stone-700 hover:bg-stone-100 dark:hover:bg-stone-800 transition-all"
           >
             See how it works
             <ChevronDown className="w-4 h-4" />
@@ -285,39 +322,18 @@ function Hero() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.6, delay: 0.65 }}
-          className="flex flex-wrap items-center justify-center gap-5 text-xs text-stone-400 dark:text-stone-500 mb-16"
+          className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-xs sm:text-sm text-stone-500 dark:text-stone-400 mb-16"
         >
-          <div className="flex items-center gap-2">
-            <div className="flex -space-x-2">
-              {[
-                "var(--brand)",
-                "color-mix(in oklch, var(--brand) 82%, black)",
-                "color-mix(in oklch, var(--brand) 66%, black)",
-                "color-mix(in oklch, var(--brand) 50%, black)",
-              ].map((c, i) => (
-                <div
-                  key={i}
-                  className="w-6 h-6 rounded-full border-2 border-stone-50 dark:border-stone-950 flex items-center justify-center text-[8px] font-black text-white"
-                  style={{ background: c }}
-                >
-                  {["A", "B", "C", "D"][i]}
-                </div>
-              ))}
+          {[
+            `${FREE_LIMITS.resume_tailor} tailored resumes free`,
+            "No credit card needed",
+            "No made-up facts",
+          ].map((t) => (
+            <div key={t} className="flex items-center gap-1.5">
+              <CheckCircle2 className="w-3.5 h-3.5 text-brand-strong dark:text-brand" />
+              <span className="font-medium">{t}</span>
             </div>
-            <span className="font-medium">50,000+ professionals</span>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <div className="flex gap-0.5">
-              {[0, 1, 2, 3, 4].map((i) => (
-                <Star key={i} className="w-3 h-3 fill-brand text-brand" />
-              ))}
-            </div>
-            <span className="font-medium">4.9 rating</span>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <CheckCircle2 className="w-3.5 h-3.5 text-brand" />
-            <span className="font-medium">No credit card needed</span>
-          </div>
+          ))}
         </motion.div>
 
         {/* Hero Dashboard Mockup */}
@@ -336,14 +352,14 @@ function Hero() {
           >
             <div className="bg-white dark:bg-stone-900 rounded-2xl px-4 py-3 border border-stone-200 dark:border-stone-700 shadow-xl flex items-center gap-3">
               <div className="w-9 h-9 rounded-xl bg-brand/10 flex items-center justify-center">
-                <TrendingUp className="w-4 h-4 text-brand" />
+                <TrendingUp className="w-4 h-4 text-brand-strong dark:text-brand" />
               </div>
               <div>
                 <p className="text-[10px] font-bold text-stone-400 uppercase tracking-wide">
                   ATS Score
                 </p>
                 <p className="text-sm font-black text-stone-900 dark:text-stone-100">
-                  42 → <span className="text-brand">91</span>
+                  42 → <span className="text-brand-strong dark:text-brand">91</span>
                 </p>
               </div>
             </div>
@@ -378,8 +394,8 @@ function Hero() {
                 <div className="w-3 h-3 rounded-full bg-brand/80" />
               </div>
               <div className="flex-1 h-5 rounded-md bg-stone-200 dark:bg-stone-700 flex items-center px-3">
-                <span className="text-[10px] font-mono text-stone-400">
-                  app.resume.me/analyze
+                <span className="text-[11px] font-mono text-stone-500 dark:text-stone-400 truncate">
+                  ResuMe · ATS report
                 </span>
               </div>
             </div>
@@ -388,11 +404,11 @@ function Hero() {
             <div className="p-5 sm:p-6">
               <div className="flex items-center gap-2 mb-5">
                 <div className="w-2 h-2 rounded-full bg-brand animate-pulse" />
-                <span className="text-[11px] font-mono font-bold text-brand uppercase tracking-widest">
+                <span className="text-[11px] font-mono font-bold text-brand-strong dark:text-brand uppercase tracking-widest">
                   Analysis Complete
                 </span>
-                <span className="ml-auto text-[10px] text-stone-400 font-mono">
-                  0.4s
+                <span className="ml-auto text-[11px] text-stone-500 dark:text-stone-400 font-mono">
+                  Example
                 </span>
               </div>
 
@@ -400,7 +416,7 @@ function Hero() {
                 {/* Score ring */}
                 <div className="col-span-1 flex flex-col items-center justify-center bg-stone-50 dark:bg-stone-800/50 rounded-2xl p-3 gap-2">
                   <ATSRing score={91} label="ATS" />
-                  <span className="text-[9px] font-bold text-brand uppercase tracking-wide">
+                  <span className="text-[9px] font-bold text-brand-strong dark:text-brand uppercase tracking-wide">
                     Excellent
                   </span>
                 </div>
@@ -441,10 +457,10 @@ function Hero() {
               <div className="mt-4 p-3 rounded-xl bg-brand/6 dark:bg-brand/5 border border-brand/15">
                 <p className="text-[10px] sm:text-[11px] text-stone-600 dark:text-stone-300 leading-relaxed">
                   <span className="font-black text-brand-strong dark:text-brand">
-                    Gemini AI:{" "}
+                    AI tip:{" "}
                   </span>
-                  Add 3 quantified achievements to Work Experience.
-                  Metric-driven bullets increase recruiter engagement by 40%.
+                  Add a measurable result (%, $, time saved) to 3 of your
+                  Work Experience bullets.
                 </p>
               </div>
             </div>
@@ -479,10 +495,10 @@ function Hero() {
 // ── Stats Strip ───────────────────────────────────────────────────────────────
 function StatsStrip() {
   const stats = [
-    { value: 50000, suffix: "+", label: "Resumes Analyzed" },
-    { value: 94, suffix: "%", label: "ATS Pass Rate" },
-    { value: 12000, suffix: "+", label: "Interviews Practiced" },
-    { value: 4.9, suffix: "/5", label: "User Rating" },
+    { value: FREE_LIMITS.resume_tailor, suffix: "", label: "Tailored resumes free" },
+    { value: 13, suffix: "", label: "ATS checks in every report" },
+    { value: TEMPLATE_IDS.length, suffix: "", label: "ATS-friendly templates" },
+    { value: FREE_LIMITS.analyze, suffix: "", label: "Free analyses every month" },
   ];
 
   return (
@@ -513,12 +529,12 @@ function StatsStrip() {
             className="text-center"
           >
             <p
-              className="text-3xl sm:text-4xl font-black text-brand tabular-nums mb-1"
+              className="text-3xl sm:text-4xl font-black text-brand-strong dark:text-brand tabular-nums mb-1"
               style={{ fontFamily: "'Sora', sans-serif" }}
             >
               <Counter to={s.value} suffix={s.suffix} />
             </p>
-            <p className="text-xs sm:text-sm font-medium text-stone-400 dark:text-stone-500">
+            <p className="text-xs sm:text-sm font-medium text-stone-500 dark:text-stone-400">
               {s.label}
             </p>
           </motion.div>
@@ -532,41 +548,41 @@ function StatsStrip() {
 function Features() {
   const features = [
     {
-      icon: BarChart3,
-      title: "ATS Score Analysis",
+      icon: WandSparkles,
+      title: "Tailor to a Job",
       description:
-        "Instant keyword gap analysis, section ratings, structural feedback, and actionable improvement tips — the same lens ATS machines use.",
+        "Paste a job post and get a new version of your resume built around it: the job's keywords, sharper bullets, your best skills first. Your facts stay exactly as you wrote them.",
       accent: true,
     },
     {
-      icon: Brain,
-      title: "Gemini AI Engine",
+      icon: BarChart3,
+      title: "ATS Score Analysis",
       description:
-        "Google Gemini 1.5 Pro understands context, tone, and industry nuance. Not just keyword matching — genuine intelligence.",
+        "A score with the reasons behind it: a 13-point checklist, red flags, keyword gaps and rewrites for your weakest bullets.",
     },
     {
       icon: Layout,
       title: "Live Resume Builder",
       description:
-        "Dual-panel editor: structured form on the left, live preview canvas on the right. Watch your resume render as you type.",
+        "Fill in simple forms and watch the page update as you type, or edit right on the page. AI can draft a summary or sharpen a bullet; you choose what stays.",
     },
     {
       icon: Mic,
       title: "Voice Mock Interviews",
       description:
-        "VAPI-powered voice sessions generate questions from your resume and target role. The AI speaks first — then you respond, naturally. Included with Pro.",
+        "Talk with a voice interviewer about the role you want. Questions come from the job and your resume, and you get a scored report afterwards. Included with Pro.",
     },
     {
       icon: FileText,
-      title: "PDF Import & Export",
+      title: "PDF & Word, In and Out",
       description:
-        "Upload any PDF for instant text extraction and analysis. Export your polished resume in high-fidelity PDF format anytime.",
+        "Upload a PDF or Word file, even a scanned one. Download your resume as a PDF anytime, or as Word with Pro.",
     },
     {
       icon: Shield,
-      title: "Secure & Scalable",
+      title: "Honest by Design",
       description:
-        "Clerk OAuth, Arcjet rate limiting, and enterprise infrastructure. Your data is yours — always encrypted, never shared.",
+        "Every AI rewrite is checked in code: no invented jobs, numbers or skills. Delete your resumes anytime; we never sell your data.",
     },
   ];
 
@@ -582,7 +598,7 @@ function Features() {
             initial={{ opacity: 0, y: 12 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="text-[11px] font-black uppercase tracking-[0.15em] text-brand mb-4"
+            className="text-[11px] font-black uppercase tracking-[0.15em] text-brand-strong dark:text-brand mb-4"
           >
             Everything you need
           </motion.p>
@@ -597,7 +613,7 @@ function Features() {
             >
               Your{" "}
               <Highlighter action="underline" color="brand">
-                <span className="text-primary">complete</span>
+                <span className="text-brand-strong dark:text-brand">complete</span>
               </Highlighter>{" "}
               career toolkit.
             </motion.h2>
@@ -608,14 +624,14 @@ function Features() {
               transition={{ delay: 0.16 }}
               className="text-sm text-stone-500 dark:text-stone-400 max-w-xs leading-relaxed"
             >
-              From upload to offer letter — ResuMe covers every step of your
-              application.
+              From the job post to the interview, every step of your
+              application in one place.
             </motion.p>
           </div>
         </div>
 
         {/* Feature grid — intentionally asymmetric */}
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {features.map((feat, i) => (
             <motion.div
               key={feat.title}
@@ -681,21 +697,21 @@ function HowItWorks() {
       icon: Upload,
       title: "Upload or Build",
       description:
-        "Import your existing PDF resume or craft one from scratch with our live editor. Instant extraction, zero friction.",
+        "Upload your resume as a PDF or Word file, or build one from scratch in the editor.",
     },
     {
       num: "02",
-      icon: Brain,
-      title: "AI Audit",
+      icon: WandSparkles,
+      title: "Tailor & Check",
       description:
-        "Gemini AI analyzes every section — identifying ATS gaps, weak impact phrases, missing keywords, and structural issues.",
+        "Paste the job post. ResuMe tailors your resume to it and shows your ATS score, the keywords you're missing and every change it made.",
     },
     {
       num: "03",
       icon: Mic,
       title: "Interview Practice",
       description:
-        "Paste the job description, upload your resume, and go live with your AI voice interviewer. Get scored and reviewed.",
+        "Practise out loud with a voice interviewer for that role, then get a scored report with tips and the full transcript (Pro).",
     },
   ];
 
@@ -720,14 +736,14 @@ function HowItWorks() {
       />
 
       <div className="max-w-5xl mx-auto">
-        <div className="grid md:grid-cols-2 gap-16 items-start">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-16 items-start">
           {/* Left */}
           <div>
             <motion.p
               initial={{ opacity: 0, y: 12 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              className="text-[11px] font-black uppercase tracking-[0.15em] text-brand mb-4"
+              className="text-[11px] font-black uppercase tracking-[0.15em] text-brand-strong dark:text-brand mb-4"
             >
               Simple process
             </motion.p>
@@ -741,7 +757,7 @@ function HowItWorks() {
             >
               From upload to{" "}
               <Highlighter action="underline" color="brand">
-                <span className="text-primary">interview-ready.</span>
+                <span className="text-brand-strong dark:text-brand">interview-ready.</span>
               </Highlighter>
             </motion.h2>
             <motion.p
@@ -751,8 +767,8 @@ function HowItWorks() {
               transition={{ delay: 0.16 }}
               className="text-stone-500 dark:text-stone-400 text-sm leading-relaxed mb-12"
             >
-              ResuMe compresses what used to take weeks of prep into a single,
-              seamless session.
+              Do in one sitting what used to take a weekend of rewrites and
+              guesswork.
             </motion.p>
 
             {/* Steps */}
@@ -781,7 +797,7 @@ function HowItWorks() {
                   </div>
                   <div className="pt-2 pb-2">
                     <div className="flex items-center gap-2 mb-1.5">
-                      <span className="text-[10px] font-mono font-black text-brand tracking-widest">
+                      <span className="text-[10px] font-mono font-black text-brand-strong dark:text-brand tracking-widest">
                         STEP {step.num}
                       </span>
                     </div>
@@ -805,7 +821,7 @@ function HowItWorks() {
             transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
             className="relative"
           >
-            <div className="relative rounded-2xl overflow-hidden bg-stone-950 border border-stone-800 shadow-2xl p-6">
+            <div className="relative rounded-2xl overflow-hidden bg-stone-950 border border-stone-800 shadow-2xl p-6 pb-16 sm:pb-6">
               {/* Ambient glow */}
               <div className="absolute top-0 right-0 w-48 h-48 bg-brand/8 blur-3xl rounded-full pointer-events-none" />
 
@@ -888,7 +904,7 @@ function HowItWorks() {
               className="absolute -bottom-5 -left-5 sm:-left-8 bg-white dark:bg-stone-800 rounded-2xl p-3.5 shadow-xl border border-stone-100 dark:border-stone-700 flex items-center gap-3"
             >
               <div className="w-10 h-10 rounded-xl bg-brand/15 flex items-center justify-center">
-                <Award className="w-5 h-5 text-brand" />
+                <Award className="w-5 h-5 text-brand-strong dark:text-brand" />
               </div>
               <div>
                 <p className="text-[10px] text-stone-400 font-medium">
@@ -924,7 +940,7 @@ function Capabilities() {
           >
             Built for{" "}
             <Highlighter action="underline" color="brand">
-              <span className="text-primary">serious</span>
+              <span className="text-brand-strong dark:text-brand">serious</span>
             </Highlighter>{" "}
             job seekers.
           </motion.h2>
@@ -939,7 +955,7 @@ function Capabilities() {
           </motion.p>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-5">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           {/* Resume Analysis */}
           <motion.div
             initial={{ opacity: 0, y: 30 }}
@@ -965,15 +981,15 @@ function Capabilities() {
                 <h3 className="font-bold text-stone-900 dark:text-stone-100 text-base">
                   Resume Analysis Engine
                 </h3>
-                <p className="text-[11px] text-stone-400">
-                  Powered by Gemini 1.5 Pro
+                <p className="text-[11px] text-stone-500 dark:text-stone-400">
+                  Full ATS audit with AI
                 </p>
               </div>
             </div>
             <p className="text-sm text-stone-500 dark:text-stone-400 leading-relaxed mb-5">
-              Upload your PDF and get a complete ATS audit in seconds. Identify
-              keyword gaps, weak impact phrases, formatting issues, and
-              line-by-line improvement suggestions.
+              Upload a PDF or Word file and get a full ATS audit: keyword gaps,
+              weak phrases, formatting issues and line-by-line suggestions.
+              Paste a job post to see how well you match it.
             </p>
             <div className="flex flex-wrap gap-2">
               {[
@@ -981,12 +997,12 @@ function Capabilities() {
                 "Keyword Gap",
                 "Impact Phrases",
                 "Format Check",
-                "Section Ratings",
-                "Industry Match",
+                "Red Flags",
+                "Job Match",
               ].map((tag) => (
                 <span
                   key={tag}
-                  className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-brand/8 text-[#3d6000] dark:text-brand border border-brand/15"
+                  className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-brand/8 text-brand-strong dark:text-brand border border-brand/15"
                 >
                   {tag}
                 </span>
@@ -1010,26 +1026,25 @@ function Capabilities() {
                 <h3 className="font-bold text-stone-900 dark:text-stone-100 text-base">
                   Live Resume Builder
                 </h3>
-                <p className="text-[11px] text-stone-400">
-                  Two-column real-time editor
+                <p className="text-[11px] text-stone-500 dark:text-stone-400">
+                  Forms or type on the page
                 </p>
               </div>
             </div>
             <p className="text-sm text-stone-500 dark:text-stone-400 leading-relaxed mb-5">
-              Structured form left, live canvas right. Type your details and
-              watch your polished resume render instantly. Then pass it straight
-              to AI for analysis.
+              Fill in simple forms and watch your resume update as you type,
+              or switch to Document mode and edit right on the page.
             </p>
             <div className="space-y-2.5">
               {[
-                "Personal details & professional summary",
-                "Work experience with bullet points",
-                "Education, skills & projects sections",
+                "AI help for your summary and bullets",
+                "A live ATS score while you write",
                 "Drag-and-drop section reordering",
-                "High-fidelity PDF export",
+                `${TEMPLATE_IDS.length} ATS-friendly templates`,
+                "PDF export, plus Word with Pro",
               ].map((item) => (
                 <div key={item} className="flex items-start gap-2.5">
-                  <CheckCircle2 className="w-4 h-4 text-brand flex-shrink-0 mt-0.5" />
+                  <CheckCircle2 className="w-4 h-4 text-brand-strong dark:text-brand flex-shrink-0 mt-0.5" />
                   <span className="text-sm text-stone-600 dark:text-stone-400">
                     {item}
                   </span>
@@ -1050,7 +1065,7 @@ function Capabilities() {
             <div className="absolute top-0 right-0 w-80 h-80 bg-brand/6 blur-3xl rounded-full pointer-events-none" />
             <div className="absolute bottom-0 left-0 w-64 h-64 bg-brand/4 blur-3xl rounded-full pointer-events-none" />
 
-            <div className="relative z-10 p-7 grid md:grid-cols-2 gap-8 items-center">
+            <div className="relative z-10 p-6 sm:p-7 grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
               <div>
                 <div className="flex items-center gap-3 mb-4">
                   <div className="w-10 h-10 rounded-xl bg-brand/10 border border-brand/15 flex items-center justify-center">
@@ -1060,15 +1075,16 @@ function Capabilities() {
                     <h3 className="font-bold text-stone-100 text-base">
                       Voice Mock Interview
                     </h3>
-                    <p className="text-[11px] text-stone-500">
-                      Powered by VAPI Voice AI
+                    <p className="text-[11px] text-stone-400">
+                      Real voice conversation · Pro
                     </p>
                   </div>
                 </div>
                 <p className="text-sm text-stone-400 leading-relaxed mb-5">
-                  Paste the job description, upload your resume, and the AI
-                  generates 5 custom questions. Speak naturally — get a full
-                  session transcript and performance breakdown instantly after.
+                  Tell it the role and add your resume, and the interviewer asks
+                  5 questions shaped by both. Speak naturally, then get a scored
+                  report with tips and the full transcript. Pro includes
+                  {" "}{PRO_LIMITS.interview} interviews a month.
                 </p>
                 <div className="flex flex-wrap gap-2">
                   {[
@@ -1094,8 +1110,8 @@ function Capabilities() {
                   <span className="text-[10px] font-mono font-black text-brand uppercase tracking-widest">
                     Session Results
                   </span>
-                  <span className="text-[10px] text-stone-600 font-mono">
-                    12 min
+                  <span className="text-[10px] text-stone-500 font-mono">
+                    Example · 5 min
                   </span>
                 </div>
                 {[
@@ -1138,56 +1154,51 @@ function Capabilities() {
   );
 }
 
-// ── Testimonials ──────────────────────────────────────────────────────────────
-function Testimonials() {
-  const reviews = [
+// ── Promises (same card look as the old reviews; no invented testimonials) ──
+// Mirrors real behaviour: the tailoring fact guard in lib/resume-tailor.ts.
+function Promises() {
+  const promises = [
     {
-      quote:
-        "Landed my dream role at a FAANG company after two weeks. The ATS analysis was surgical.",
-      name: "Alicia Chen",
-      role: "Software Engineer @ Google",
-      stars: 5,
+      icon: Lock,
+      title: "Your history stays locked",
+      text: "Employers, job titles, dates, education and contact details are copied from your original, never rewritten.",
+      tag: "Tailor to a job",
     },
     {
-      quote:
-        "The mock interview AI asked harder questions than my real interview. I was genuinely prepared.",
-      name: "Marcus Rivera",
-      role: "Product Manager @ Stripe",
-      stars: 5,
+      icon: Hash,
+      title: "Every number stays",
+      text: "If you wrote 12%, the tailored resume says 12%. A rewrite that drops or changes a number is thrown out.",
+      tag: "Tailor to a job",
     },
     {
-      quote:
-        "My resume score went from 42 to 91 in one session. The suggestions were specific and real.",
-      name: "Priya Nair",
-      role: "Data Scientist @ Shopify",
-      stars: 5,
+      icon: ShieldCheck,
+      title: "No borrowed skills",
+      text: "It won't add a tool or certification from the job post that your resume never mentions.",
+      tag: "Tailor to a job",
     },
     {
-      quote:
-        "The live builder is so clean. Built my entire resume in under 20 minutes. Looks completely professional.",
-      name: "Jake Thompson",
-      role: "UX Designer @ Figma",
-      stars: 5,
+      icon: ListChecks,
+      title: "You confirm the rest",
+      text: "Skills you might be missing are shown as suggestions. Only the ones you tick are added.",
+      tag: "Your choice",
     },
     {
-      quote:
-        "Finally an AI tool that gets what recruiters actually want. Not fluff — real, actionable insights.",
-      name: "Sofia Morales",
-      role: "Marketing Lead @ HubSpot",
-      stars: 5,
+      icon: FileText,
+      title: "Readable by ATS software",
+      text: "Every template is a single column of real text, so screening software can read it the way a person does.",
+      tag: "Templates",
     },
     {
-      quote:
-        "After 3 sessions with ResuMe, I aced my actual interview without breaking a sweat.",
-      name: "Daniel Kim",
-      role: "Backend Engineer @ Vercel",
-      stars: 5,
+      icon: Trash2,
+      title: "Your data, your call",
+      text: "Delete any resume whenever you like. We never sell your data.",
+      tag: "Privacy",
     },
   ];
 
   return (
     <section
-      id="reviews"
+      id="promises"
       className="py-24 sm:py-32 px-5 sm:px-8 bg-white dark:bg-stone-900 relative"
     >
       <LightPillar
@@ -1211,9 +1222,9 @@ function Testimonials() {
             initial={{ opacity: 0, y: 12 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="text-[11px] font-black uppercase tracking-[0.15em] text-brand mb-4"
+            className="text-[11px] font-black uppercase tracking-[0.15em] text-brand-strong dark:text-brand mb-4"
           >
-            Real results
+            Built to be trusted
           </motion.p>
           <motion.h2
             initial={{ opacity: 0, y: 20 }}
@@ -1223,17 +1234,28 @@ function Testimonials() {
             className="text-3xl sm:text-4xl md:text-5xl font-black tracking-tight text-stone-900 dark:text-stone-50 relative"
             style={{ fontFamily: "'Sora', sans-serif" }}
           >
+            AI that{" "}
             <Highlighter action="underline" color="brand">
-              <span className="text-primary">Loved</span>
+              <span className="text-brand-strong dark:text-brand">won&apos;t</span>
             </Highlighter>{" "}
-            by job seekers worldwide.
+            make things up.
           </motion.h2>
+          <motion.p
+            initial={{ opacity: 0, y: 16 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.16 }}
+            className="text-stone-500 dark:text-stone-400 text-sm max-w-md mx-auto mt-4"
+          >
+            Every AI rewrite is checked in code before you see it. Anything that
+            doesn&apos;t pass keeps your original text.
+          </motion.p>
         </div>
 
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {reviews.map((r, i) => (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {promises.map((p, i) => (
             <motion.div
-              key={r.name}
+              key={p.title}
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: "-40px" }}
@@ -1244,25 +1266,18 @@ function Testimonials() {
               }}
               className="group p-6 rounded-2xl bg-stone-50 dark:bg-stone-800/50 border border-stone-100 dark:border-stone-700/50 hover:bg-white dark:hover:bg-stone-800 hover:shadow-md hover:shadow-stone-900/5 transition-all"
             >
-              <div className="flex gap-0.5 mb-4">
-                {Array.from({ length: r.stars }).map((_, j) => (
-                  <Star key={j} className="w-3.5 h-3.5 fill-brand text-brand" />
-                ))}
+              <div className="w-9 h-9 rounded-xl bg-brand/15 flex items-center justify-center mb-4">
+                <p.icon className="w-4 h-4 text-brand-strong dark:text-brand" />
               </div>
-              <p className="text-sm text-stone-600 dark:text-stone-300 leading-relaxed mb-5 italic">
-                &ldquo;{r.quote}&rdquo;
+              <p className="text-base font-bold text-stone-900 dark:text-stone-100 mb-2">
+                {p.title}
               </p>
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-brand/60 to-brand-strong/40 flex items-center justify-center text-[11px] font-black text-brand-foreground">
-                  {r.name[0]}
-                </div>
-                <div>
-                  <p className="text-xs font-bold text-stone-900 dark:text-stone-100">
-                    {r.name}
-                  </p>
-                  <p className="text-[10px] text-stone-400">{r.role}</p>
-                </div>
-              </div>
+              <p className="text-sm text-stone-600 dark:text-stone-300 leading-relaxed mb-5">
+                {p.text}
+              </p>
+              <span className="inline-flex px-2.5 py-1 rounded-full text-[11px] font-bold bg-brand/8 text-brand-strong dark:text-brand border border-brand/15">
+                {p.tag}
+              </span>
             </motion.div>
           ))}
         </div>
@@ -1273,6 +1288,7 @@ function Testimonials() {
 
 // ── Pricing ───────────────────────────────────────────────────────────────────
 function Pricing() {
+  const startHref = useStartHref();
   // Generated from lib/plans.ts so the pricing card always matches what the app enforces
   const free = PLAN_HIGHLIGHTS.free;
   const pro = PLAN_HIGHLIGHTS.pro;
@@ -1288,7 +1304,7 @@ function Pricing() {
             initial={{ opacity: 0, y: 12 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="text-[11px] font-black uppercase tracking-[0.15em] text-brand mb-4"
+            className="text-[11px] font-black uppercase tracking-[0.15em] text-brand-strong dark:text-brand mb-4"
           >
             Simple pricing
           </motion.p>
@@ -1302,13 +1318,13 @@ function Pricing() {
           >
             Start free.{" "}
             <Highlighter action="underline" color="brand">
-              <span className="text-primary">Upgrade</span>
+              <span className="text-brand-strong dark:text-brand">Upgrade</span>
             </Highlighter>{" "}
             anytime.
           </motion.h2>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-5 max-w-2xl mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5 max-w-2xl mx-auto">
           {/* Free */}
           <motion.div
             initial={{ opacity: 0, y: 30 }}
@@ -1317,7 +1333,7 @@ function Pricing() {
             transition={{ duration: 0.6 }}
             className="rounded-2xl p-7 bg-white dark:bg-stone-900 border border-stone-100 dark:border-stone-800"
           >
-            <p className="text-[10px] font-black uppercase tracking-[0.15em] text-stone-400 mb-3">
+            <p className="text-[11px] font-black uppercase tracking-[0.15em] text-stone-500 dark:text-stone-400 mb-3">
               Free
             </p>
             <div className="flex items-baseline gap-1 mb-6">
@@ -1327,7 +1343,7 @@ function Pricing() {
               >
                 $0
               </span>
-              <span className="text-stone-400 text-sm">/month</span>
+              <span className="text-stone-500 dark:text-stone-400 text-sm">/month</span>
             </div>
             <div className="space-y-3 mb-7">
               {free.map((item) => (
@@ -1340,7 +1356,7 @@ function Pricing() {
               ))}
             </div>
             <Link
-              href="/dashboard"
+              href={startHref("/dashboard")}
               className="block w-full py-3 text-center rounded-xl text-sm font-bold border border-stone-200 dark:border-stone-700 text-stone-700 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors"
             >
               Get started free
@@ -1362,11 +1378,11 @@ function Pricing() {
               className=" rounded-2xl p-7 "
             >
               <div className="absolute top-5 right-5">
-                <span className="px-2.5 py-1 rounded-full text-[9px] font-black bg-brand text-brand-foreground uppercase tracking-wider">
+                <span className="px-2.5 py-1 rounded-full text-[10px] font-black bg-brand text-brand-foreground uppercase tracking-wider">
                   Popular
                 </span>
               </div>
-              <p className="text-[10px] font-black uppercase tracking-[0.15em] text-brand mb-3">
+              <p className="text-[10px] font-black uppercase tracking-[0.15em] text-brand-strong dark:text-brand mb-3">
                 Pro
               </p>
               <div className="flex items-baseline gap-1 mb-6">
@@ -1381,8 +1397,8 @@ function Pricing() {
               <div className="space-y-3 mb-7">
                 {pro.map((item) => (
                   <div key={item} className="flex items-center gap-2.5">
-                    <CheckCircle2 className="w-4 h-4 text-brand flex-shrink-0" />
-                    <span className="text-sm text-stone-400">{item}</span>
+                    <CheckCircle2 className="w-4 h-4 text-brand-strong dark:text-brand flex-shrink-0" />
+                    <span className="text-sm text-stone-600 dark:text-stone-400">{item}</span>
                   </div>
                 ))}
               </div>
@@ -1403,6 +1419,7 @@ function Pricing() {
 
 // ── CTA Banner ────────────────────────────────────────────────────────────────
 function CTABanner() {
+  const startHref = useStartHref();
   return (
     <section className="py-16 sm:py-24 px-5 sm:px-8 bg-stone-100/50 dark:bg-stone-900/30 relative">
       <LightPillar
@@ -1426,7 +1443,7 @@ function CTABanner() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.7 }}
-          className="relative rounded-3xl overflow-hidden bg-stone-950 dark:bg-black border border-stone-800 p-10 sm:p-16 text-center"
+          className="relative rounded-3xl overflow-hidden bg-stone-950 dark:bg-black border border-stone-800 px-6 py-10 sm:p-16 text-center"
         >
           {/* Glow */}
           <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 h-80 rounded-full bg-brand/10 blur-3xl pointer-events-none" />
@@ -1435,27 +1452,28 @@ function CTABanner() {
           <div className="relative z-10">
             <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-brand/10 border border-brand/20 text-brand text-[10px] font-black uppercase tracking-[0.15em] mb-6">
               <Zap className="w-3 h-3" />
-              Ready in 30 seconds
+              Free to start
             </div>
             <h2
               className="text-3xl sm:text-4xl md:text-5xl font-black text-stone-50 mb-4 tracking-tight leading-tight"
               style={{ fontFamily: "'Sora', sans-serif" }}
             >
-              Ready to land your dream job?
+              Your next application deserves its own resume.
             </h2>
             <p className="text-stone-400 text-sm sm:text-base max-w-md mx-auto mb-8 leading-relaxed">
-              Join 50,000+ professionals who used ResuMe to craft perfect
-              resumes and ace their interviews.
+              Tailor your first {FREE_LIMITS.resume_tailor} resumes free, see your
+              ATS score and every change, then download a PDF that&apos;s ready
+              to send.
             </p>
             <MagneticButton
-              href="/resumes/analyze"
-              className="inline-flex items-center gap-2 px-8 py-4 rounded-2xl text-base font-black bg-brand text-brand-foreground hover:bg-brand-hover transition-all duration-200 shadow-xl shadow-brand/25 hover:shadow-2xl hover:shadow-brand/35 hover:-translate-y-0.5"
+              href={startHref(TAILOR_PATH)}
+              className="inline-flex items-center justify-center gap-2 px-6 sm:px-8 py-4 rounded-2xl text-base font-black bg-brand text-brand-foreground hover:bg-brand-hover transition-all duration-200 shadow-xl shadow-brand/25 hover:shadow-2xl hover:shadow-brand/35 hover:-translate-y-0.5"
             >
               <Sparkles className="w-4 h-4" />
-              Analyze My Resume — Free
+              Tailor My Resume — Free
               <ArrowRight className="w-4 h-4" />
             </MagneticButton>
-            <p className="text-stone-600 text-xs mt-4">
+            <p className="text-stone-500 text-xs mt-4">
               No credit card required · Cancel anytime
             </p>
           </div>
@@ -1478,31 +1496,31 @@ function Footer() {
                 className="font-black text-lg tracking-tight text-stone-900 dark:text-stone-50"
                 style={{ fontFamily: "'Sora', sans-serif" }}
               >
-                Resu<span className="text-brand">Me</span>
+                Resu<span className="text-brand-strong dark:text-brand">Me</span>
               </span>
             </Link>
-            <p className="text-sm text-stone-400 leading-relaxed">
-              AI-powered resume analysis, building, and mock interview practice
-              — all in one place.
+            <p className="text-sm text-stone-500 dark:text-stone-400 leading-relaxed">
+              Tailor your resume to every job, check it like an ATS would, and
+              practise the interview, all in one place.
             </p>
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-8 text-sm">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-8 sm:gap-16 text-sm">
             {[
               {
                 heading: "Product",
-                links: ["Features", "Pricing", "Changelog"],
-                hrefs: ["#features", "#pricing", "/changelog"],
+                links: ["Features", "How it works", "Pricing"],
+                hrefs: ["#features", "#how-it-works", "#pricing"],
               },
               {
-                heading: "Resources",
-                links: ["Blog", "Docs", "Support"],
-                hrefs: ["/blog", "/docs", "/support"],
+                heading: "Account",
+                links: ["Create account", "Sign in"],
+                hrefs: ["/sign-up", "/sign-in"],
               },
               {
-                heading: "Company",
-                links: ["About", "Privacy", "Terms"],
-                hrefs: ["/about", "/privacy", "/terms"],
+                heading: "Legal",
+                links: ["Privacy", "Terms"],
+                hrefs: ["/privacy", "/terms"],
               },
             ].map((col) => (
               <div key={col.heading}>
@@ -1526,11 +1544,13 @@ function Footer() {
         </div>
 
         <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-8 border-t border-stone-100 dark:border-stone-800">
-          <p className="text-xs text-stone-400">
+          <p className="text-xs text-stone-500 dark:text-stone-400">
             © {new Date().getFullYear()} ResuMe. All rights reserved.
           </p>
-          <p className="text-xs text-stone-400">
-            Built with Gemini AI &amp; VAPI Voice
+          <p className="flex items-center gap-1 text-xs text-stone-500 dark:text-stone-400">
+            Made with
+            <Heart className="w-3.5 h-3.5 fill-rose-500 text-rose-500" aria-label="love" />
+            by JC Misa
           </p>
         </div>
       </div>
@@ -1541,14 +1561,14 @@ function Footer() {
 // ── Page Entry ────────────────────────────────────────────────────────────────
 export default function LandingPage() {
   return (
-    <div className="min-h-screen relative bg-stone-50 dark:bg-stone-950 text-stone-900 dark:text-stone-100 overflow-x-hidden">
+    <div className="landing-page min-h-screen relative bg-stone-50 dark:bg-stone-950 text-stone-900 dark:text-stone-100 overflow-x-hidden">
       <HomeNavbar />
       <Hero />
       <StatsStrip />
       <Features />
       <HowItWorks />
       <Capabilities />
-      <Testimonials />
+      <Promises />
       <Pricing />
       <CTABanner />
       <Footer />

@@ -33,13 +33,13 @@ function StatusBadge({ item }: { item: InterviewHistoryItem }) {
   }
   if (item.state === "needs_grading") {
     return (
-      <span className="shrink-0 inline-flex items-center gap-1 rounded-lg bg-amber-500/15 px-2 py-1 text-[10px] font-bold text-amber-600 dark:text-amber-400">
+      <span className="shrink-0 inline-flex items-center gap-1 rounded-lg bg-amber-500/15 px-2 py-1 text-[11px] font-bold text-amber-600 dark:text-amber-400">
         <RotateCcw className="size-3" /> Needs grading
       </span>
     );
   }
   return (
-    <span className="shrink-0 rounded-lg bg-muted px-2 py-1 text-[10px] font-bold text-muted-foreground">
+    <span className="shrink-0 rounded-lg bg-muted px-2 py-1 text-[11px] font-bold text-muted-foreground">
       Incomplete
     </span>
   );

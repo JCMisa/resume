@@ -2,8 +2,10 @@ import "server-only";
 
 import { getUserBillingStatus } from "@/lib/actions/billing";
 import { RateLimitError } from "@/lib/arcjet";
+import { publicErrorMessage } from "@/lib/errors";
 import {
   LIMIT_REACHED,
+  isProCapped,
   limitReachedMessage,
   proCapReachedMessage,
   type GatedFeature,
@@ -27,7 +29,7 @@ export async function assertAllowed(feature: GatedFeature) {
   if (!billing.allowed[feature]) {
     // Pro users are only ever blocked by a monthly fair-use cap
     throw new PlanLimitError(
-      billing.isPro ? proCapReachedMessage() : limitReachedMessage(feature),
+      billing.isPro && isProCapped(feature) ? proCapReachedMessage(feature) : limitReachedMessage(feature),
     );
   }
   return billing;
@@ -40,6 +42,7 @@ export function toActionError(error: unknown, fallback: string) {
   }
   return {
     success: false as const,
-    error: error instanceof Error ? error.message : fallback,
+    // never show raw library/service errors (they can name internal tools)
+    error: publicErrorMessage(error, fallback),
   };
 }

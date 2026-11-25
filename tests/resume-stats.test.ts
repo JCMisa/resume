@@ -60,6 +60,33 @@ describe("sectionCompleteness", () => {
   });
 });
 
+describe("toLibraryItem: tailored resumes", () => {
+  it("summarizes the job and the tailored score; plain resumes get null", () => {
+    const tailored = toLibraryItem(
+      row({
+        id: "t",
+        tailoredFor: {
+          version: 1,
+          stage: "review",
+          suggestedSkills: [],
+          jobTitle: "Frontend Engineer",
+          company: "Acme",
+          jobDescription: "",
+          source: "upload",
+          sourceResumeId: null,
+          sourceName: "cv.pdf",
+          createdAt: "",
+          score: { before: 40, after: 72 },
+          keywords: [],
+          changes: [],
+        },
+      }),
+    );
+    expect(tailored.tailored).toEqual({ jobTitle: "Frontend Engineer", company: "Acme", score: 72, done: false });
+    expect(toLibraryItem(row({ id: "p" })).tailored).toBeNull();
+  });
+});
+
 describe("toLibraryItem", () => {
   it("uses the usage-log date as analyzedAt, and none when not analyzed", () => {
     const logged = new Date("2026-03-05T10:00:00Z");

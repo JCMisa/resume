@@ -126,7 +126,7 @@ export default function InterviewRoom({
                 <Image src="/logo.svg" alt="" width={22} height={22} className="shrink-0" />
                 <div className="min-w-0">
                   <p className="text-sm font-black leading-tight truncate">{role}</p>
-                  <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground leading-tight">
+                  <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground leading-tight">
                     Mock interview
                   </p>
                 </div>

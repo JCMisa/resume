@@ -51,7 +51,7 @@ function StatusPill({ status }: { status: PushDeviceStatus }) {
   return (
     <span
       className={cn(
-        "inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-black uppercase tracking-wider",
+        "inline-flex items-center rounded-full border px-2 py-0.5 text-[11px] font-black uppercase tracking-wider",
         on
           ? "border-brand/30 bg-brand/10 text-brand-strong dark:text-brand"
           : status === "blocked"
@@ -190,7 +190,7 @@ export default function NotificationSettings() {
 
       {/* This device */}
       <div className="space-y-3">
-        <p className="text-[10px] font-black uppercase tracking-[0.12em] text-muted-foreground">This device</p>
+        <p className="text-[11px] font-black uppercase tracking-[0.12em] text-muted-foreground">This device</p>
         <div className="flex flex-col sm:flex-row sm:items-center gap-3 rounded-xl border p-4">
           <div className="flex items-start gap-3 flex-1 min-w-0">
             <div className="size-9 shrink-0 rounded-xl border bg-muted/30 flex items-center justify-center">
@@ -256,7 +256,7 @@ export default function NotificationSettings() {
                     <p className="text-sm font-semibold truncate">
                       {d.label}
                       {current && (
-                        <span className="ml-2 text-[10px] font-black uppercase tracking-wider text-brand-strong dark:text-brand">
+                        <span className="ml-2 text-[11px] font-black uppercase tracking-wider text-brand-strong dark:text-brand">
                           This device
                         </span>
                       )}
@@ -268,7 +268,7 @@ export default function NotificationSettings() {
                   <Button
                     size="icon"
                     variant="ghost"
-                    className="size-8 rounded-lg text-muted-foreground hover:text-destructive"
+                    className="rounded-lg text-muted-foreground hover:text-destructive"
                     disabled={removing === d.id}
                     onClick={() => void removeDevice(d)}
                     aria-label={`Remove ${d.label}`}
@@ -284,13 +284,13 @@ export default function NotificationSettings() {
 
       {/* What to notify about */}
       <div className="space-y-3">
-        <p className="text-[10px] font-black uppercase tracking-[0.12em] text-muted-foreground">What to notify me about</p>
+        <p className="text-[11px] font-black uppercase tracking-[0.12em] text-muted-foreground">What to notify me about</p>
         {!prefs ? (
           <div className="h-48 rounded-xl bg-muted animate-pulse" />
         ) : (
           <div className="rounded-xl border divide-y">
             {/* Column headers (wide screens) */}
-            <div className="hidden sm:grid grid-cols-[1fr_repeat(3,84px)] items-center gap-2 px-4 py-2.5 text-[10px] font-black uppercase tracking-wider text-muted-foreground">
+            <div className="hidden sm:grid grid-cols-[1fr_repeat(3,84px)] items-center gap-2 px-4 py-2.5 text-[11px] font-black uppercase tracking-wider text-muted-foreground">
               <span>Category</span>
               <span className="text-center">In-app</span>
               <span className="text-center">Device</span>

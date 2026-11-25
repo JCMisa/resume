@@ -44,7 +44,7 @@ export function useRecentAnalyses() {
 function ScoreBadge({ score }: { score: number | null }) {
   if (score == null) {
     return (
-      <span className="shrink-0 rounded-lg bg-muted px-2 py-1 text-[10px] font-bold text-muted-foreground">
+      <span className="shrink-0 rounded-lg bg-muted px-2 py-1 text-[11px] font-bold text-muted-foreground">
         —
       </span>
     );

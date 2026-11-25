@@ -113,7 +113,7 @@ export default function TailorPanel({
           aria-label="Job description"
         />
         <div className="flex items-center justify-between gap-2">
-          <span className="text-[10px] text-muted-foreground tabular-nums">
+          <span className="text-[11px] text-muted-foreground tabular-nums">
             {jd.length.toLocaleString()} / {MAX_JOB_DESCRIPTION_CHARS.toLocaleString()}
           </span>
           <Button size="sm" className="rounded-lg font-bold gap-1.5" disabled={tooShort || loading} onClick={() => void tailor()}>
@@ -132,7 +132,7 @@ export default function TailorPanel({
     <div className="space-y-4">
       <div className="flex items-center justify-between gap-2">
         <p className="text-xs font-black truncate">{result.jobTitle ? `For: ${result.jobTitle}` : "Suggestions"}</p>
-        <Button variant="ghost" size="sm" className="h-7 text-[11px]" onClick={() => setResult(null)}>
+        <Button variant="ghost" size="sm" onClick={() => setResult(null)}>
           Change job
         </Button>
       </div>
@@ -168,7 +168,7 @@ export default function TailorPanel({
             >
               <p className="text-[11px] text-muted-foreground line-through decoration-muted-foreground/50">{b.original}</p>
               <p className="text-xs leading-relaxed">{b.rewrite}</p>
-              {b.reason && <p className="text-[10px] text-primary">{b.reason}</p>}
+              {b.reason && <p className="text-[11px] text-primary">{b.reason}</p>}
             </Pick>
           ))}
         </section>
@@ -203,7 +203,7 @@ export default function TailorPanel({
       {!nothing && (
         <div className="sticky bottom-0 bg-popover pt-2 pb-1 space-y-1.5">
           <Button
-            className="w-full rounded-xl font-bold gap-1.5"
+            className="w-full rounded-lg font-bold gap-1.5"
             disabled={count === 0}
             onClick={() => {
               const out = applyTailor(content, result, { summary, bulletIds: [...bulletIds], keywords });
@@ -213,7 +213,7 @@ export default function TailorPanel({
           >
             <Check className="size-4" /> Apply {count} change{count === 1 ? "" : "s"}
           </Button>
-          <p className="text-[10px] text-muted-foreground text-center">Check every fact and fill in any [placeholders].</p>
+          <p className="text-[11px] text-muted-foreground text-center">Check every fact and fill in any [placeholders].</p>
         </div>
       )}
     </div>

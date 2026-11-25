@@ -19,7 +19,7 @@ export default function InterviewCapReached() {
         <span className="font-bold text-foreground">{formatResetDate()}</span>.
         In the meantime, your past reports are on the dashboard.
       </p>
-      <Button asChild variant="outline" className="rounded-xl font-bold text-xs px-6">
+      <Button asChild variant="outline" className="rounded-lg font-bold px-6">
         <Link href="/dashboard">Go to dashboard</Link>
       </Button>
     </div>

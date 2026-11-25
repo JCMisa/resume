@@ -8,7 +8,7 @@ import { getUserBillingStatus } from "@/lib/actions/billing";
 import { FREE_LIMITS } from "@/lib/plans";
 import ResumeEditor from "../../_components/editor/ResumeEditor";
 
-export const metadata = { title: "Edit resume · ResuMe" };
+export const metadata = { title: "Edit resume" };
 
 export default async function EditResumePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -32,10 +32,10 @@ export default async function EditResumePage({ params }: { params: Promise<{ id:
             </p>
           </div>
           <div className="flex flex-col sm:flex-row gap-2 justify-center">
-            <Link href={`/resumes/create?from=${resume.id}`} className={cn(buttonVariants(), "rounded-xl font-bold gap-1.5")}>
+            <Link href={`/resumes/create?from=${resume.id}`} className={cn(buttonVariants(), "rounded-lg font-bold gap-1.5")}>
               <Copy className="size-4" /> Make an editable copy
             </Link>
-            <Link href={`/resumes/${resume.id}`} className={cn(buttonVariants({ variant: "outline" }), "rounded-xl")}>
+            <Link href={`/resumes/${resume.id}`} className={cn(buttonVariants({ variant: "outline" }), "rounded-lg")}>
               Back to report
             </Link>
           </div>

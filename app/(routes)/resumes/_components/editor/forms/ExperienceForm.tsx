@@ -63,7 +63,7 @@ export default function ExperienceForm({
           variant="outline"
           size="sm"
           onClick={addExperience}
-          className="rounded-lg text-[11px] font-bold h-7 gap-1"
+          className="rounded-lg font-bold gap-1"
         >
           <Plus className="h-3 w-3" /> Add Employment
         </Button>

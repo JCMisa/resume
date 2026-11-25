@@ -7,7 +7,7 @@ import type { InterviewHistoryItem } from "@/lib/actions/interview";
 function Stat({ label, value }: { label: string; value: React.ReactNode }) {
   return (
     <div className="rounded-xl border bg-muted/20 px-3 py-2.5">
-      <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+      <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
         {label}
       </p>
       <p className="text-xl font-black tabular-nums mt-0.5">{value}</p>

@@ -47,7 +47,7 @@ export default function SkillsForm({ data, onChange }: SkillsFormProps) {
           variant="outline"
           size="sm"
           onClick={addSkillField}
-          className="rounded-lg text-[11px] font-bold h-7 gap-1"
+          className="rounded-lg font-bold gap-1"
         >
           <Plus className="h-3 w-3" /> Add Skill Entry
         </Button>
@@ -88,7 +88,7 @@ export default function SkillsForm({ data, onChange }: SkillsFormProps) {
                 variant="ghost"
                 size="icon"
                 onClick={() => removeSkillField(skill.id)}
-                className="text-destructive hover:bg-destructive/10 rounded-xl shrink-0"
+                className="text-destructive hover:bg-destructive/10 rounded-lg shrink-0"
               >
                 <Trash2 className="h-4 w-4" />
               </Button>

@@ -25,6 +25,8 @@ const usage = (u: Partial<UsageCounts> = {}): UsageCounts => ({
   resumes: 0,
   jobMatches: 0,
   aiWrites: 0,
+  tailors: 0,
+  tailorsThisMonth: 0,
   ...u,
 });
 const free = (u?: Partial<UsageCounts>) =>
@@ -92,6 +94,21 @@ describe("computeAllowed", () => {
     expect(pro().tailor).toBe(true);
   });
 
+  it("tailored resumes: Free 3 ever, Pro 30 a month", () => {
+    expect(free({ tailors: FREE_LIMITS.resume_tailor - 1 }).resume_tailor).toBe(true);
+    expect(free({ tailors: FREE_LIMITS.resume_tailor }).resume_tailor).toBe(false);
+    // Free counts all-time, so a quiet month doesn't give the trial back
+    expect(free({ tailors: FREE_LIMITS.resume_tailor, tailorsThisMonth: 0 }).resume_tailor).toBe(false);
+    // Pro counts this month only
+    expect(pro({ tailors: 500, tailorsThisMonth: PRO_LIMITS.resume_tailor - 1 }).resume_tailor).toBe(true);
+    expect(pro({ tailorsThisMonth: PRO_LIMITS.resume_tailor }).resume_tailor).toBe(false);
+    expect(limitReachedMessage("resume_tailor")).toBe(
+      `You've used all ${FREE_LIMITS.resume_tailor} tailored resumes on the Free plan. Upgrade to Pro for ${PRO_LIMITS.resume_tailor} a month.`,
+    );
+    expect(proCapReachedMessage("resume_tailor")).toContain(`all ${PRO_LIMITS.resume_tailor} tailored resumes`);
+    expect(proCapReachedMessage()).toContain("AI mock interviews");
+  });
+
   it("designer looks and version history are Pro-only", () => {
     expect(free().design).toBe(false);
     expect(free().history).toBe(false);
@@ -128,6 +145,7 @@ describe("computeAllowed", () => {
       tailor: true,
       design: true,
       history: true,
+      resume_tailor: true,
     });
   });
 });
@@ -188,6 +206,8 @@ describe("messages and copy", () => {
     expect(free).toContain(`${FREE_LIMITS.job_match} job description matches`);
     expect(free).toContain(`${FREE_REPORT.bulletRewrites} bullet rewrites`);
     expect(free).toContain(`${FREE_LIMITS.ai_write} AI writing actions`);
+    expect(free).toContain(`${FREE_LIMITS.resume_tailor} tailored resumes to try`);
+    expect(pro).toContain(`${PRO_LIMITS.resume_tailor} tailored resumes / month`);
     expect(pro).toContain(`${PRO_LIMITS.interview} AI mock interviews`);
   });
 });

@@ -18,6 +18,7 @@ import { gateResume } from "@/lib/plan-gating";
 import { currentUserIsPro } from "@/lib/plan-tier";
 import { notifyLater, notifyUsageLater } from "@/lib/notify";
 import { analysisReadyNotice } from "@/lib/notifications";
+import { publicErrorMessage } from "@/lib/errors";
 
 // The original PDF is uploaded by the client only AFTER this succeeds, then attached
 // with updateResumeFileUrlAction, so rejected/failed analyses leave no orphaned files.
@@ -205,7 +206,7 @@ export async function getResumeDetailsAction(resumeId: string) {
     console.error("Fetch Resume Details Failure:", error);
     return {
       success: false,
-      error: error.message || "Failed to load resume details.",
+      error: publicErrorMessage(error, "Couldn't load this resume. Please try again."),
     };
   }
 }

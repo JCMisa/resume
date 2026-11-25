@@ -20,6 +20,13 @@ export const AI_MODELS = {
   aiWriting: "gemini-3.1-flash-lite",
 
   /**
+   * "Tailor to a job" on the Create screen: one bigger rewrite of a whole
+   * resume for a job description (the resume is parsed first with
+   * resumeAnalysis). Flash-Lite: about half a cent per tailored resume.
+   */
+  resumeTailor: "gemini-3.1-flash-lite",
+
+  /**
    * Grading a finished mock interview (Pro only, once per interview).
    * Planned upgrade: "gemini-3.8-flash" (stronger feedback, ~1 cent per grade).
    * On 2026-11-21 it returned 503 "high demand" twice for our API key, so it's

@@ -41,7 +41,7 @@ export default function InterviewProTeaser() {
     <div className="grid gap-6 lg:grid-cols-2 items-start animate-in fade-in zoom-in-95 duration-300">
       {/* Pitch */}
       <div className="border rounded-3xl bg-card p-8 space-y-6 shadow-sm">
-        <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 border border-primary/20 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-primary">
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 border border-primary/20 px-3 py-1 text-[11px] font-black uppercase tracking-widest text-primary">
           <Crown className="size-3" /> Pro feature
         </span>
 
@@ -86,10 +86,10 @@ export default function InterviewProTeaser() {
       {/* Sample report preview */}
       <div className="relative border rounded-3xl bg-card p-8 space-y-6 shadow-sm overflow-hidden">
         <div className="flex items-center justify-between">
-          <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+          <p className="text-[11px] font-black uppercase tracking-widest text-muted-foreground">
             Sample report
           </p>
-          <span className="text-[10px] font-mono text-muted-foreground">
+          <span className="text-[11px] font-mono text-muted-foreground">
             Frontend Engineer
           </span>
         </div>

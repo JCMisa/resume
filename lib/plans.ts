@@ -5,7 +5,7 @@
 
 export const PRO_PLAN_KEY = "pro";
 /** Display only. The real price is configured in Clerk Billing; keep in sync. */
-export const PRO_PRICE_MONTHLY_USD = 12;
+export const PRO_PRICE_MONTHLY_USD = 20;
 
 export type GatedFeature =
   | "analyze"
@@ -17,7 +17,9 @@ export type GatedFeature =
   /** Designer templates + custom colours/fonts */
   | "design"
   /** Resume version history */
-  | "history";
+  | "history"
+  /** "Tailor to a job" on the Create screen: upload/pick a resume + a job -> a tailored copy */
+  | "resume_tailor";
 
 /**
  * Features Free users can't use at all: interviews (Vapi voice calls are the
@@ -41,6 +43,8 @@ export const FREE_LIMITS = {
   job_match: 3,
   /** AI writing actions in the editor (write/improve summary, bullets, skill ideas) */
   ai_write: 10,
+  /** Tailored resumes from the Create screen (a free trial: 3 in total, ever) */
+  resume_tailor: 3,
 } as const satisfies Record<MeteredFeature, number>;
 
 export const LIMIT_PERIOD: Record<MeteredFeature, "lifetime" | "monthly"> = {
@@ -48,6 +52,7 @@ export const LIMIT_PERIOD: Record<MeteredFeature, "lifetime" | "monthly"> = {
   create_resume: "monthly",
   job_match: "monthly",
   ai_write: "monthly",
+  resume_tailor: "lifetime",
 };
 
 /**
@@ -57,7 +62,12 @@ export const LIMIT_PERIOD: Record<MeteredFeature, "lifetime" | "monthly"> = {
  */
 export const PRO_LIMITS = {
   interview: 20,
+  /** Tailored resumes (2 Gemini calls each) */
+  resume_tailor: 30,
 } as const;
+
+export type ProCappedFeature = keyof typeof PRO_LIMITS;
+export const isProCapped = (f: GatedFeature): f is ProCappedFeature => f in PRO_LIMITS;
 
 /** Start of the current monthly allowance period (1st of this month, UTC). */
 export function startOfMonthUTC(from = new Date()) {
@@ -95,6 +105,10 @@ export type UsageCounts = {
   resumes: number;
   jobMatches: number;
   aiWrites: number;
+  /** Tailored resumes ever (the Free limit is lifetime) */
+  tailors: number;
+  /** Tailored resumes this month (the Pro cap) */
+  tailorsThisMonth: number;
 };
 
 /** What a user may start right now, given their plan and this period's usage. */
@@ -117,6 +131,7 @@ export function computeAllowed({
       tailor: true,
       design: true,
       history: true,
+      resume_tailor: true,
     };
   }
   if (isPro) {
@@ -129,6 +144,7 @@ export function computeAllowed({
       tailor: true,
       design: true,
       history: true,
+      resume_tailor: usage.tailorsThisMonth < PRO_LIMITS.resume_tailor,
     };
   }
   return {
@@ -140,6 +156,7 @@ export function computeAllowed({
     tailor: false, // Pro-only
     design: false, // Pro-only
     history: false, // Pro-only
+    resume_tailor: usage.tailors < FREE_LIMITS.resume_tailor,
   };
 }
 
@@ -151,6 +168,7 @@ const NOUNS: Record<MeteredFeature, string> = {
   create_resume: "resume builds",
   job_match: "job matches",
   ai_write: "AI writing actions",
+  resume_tailor: "tailored resumes",
 };
 
 /** Human-readable allowance, e.g. "5 AI resume analyses per month". */
@@ -183,12 +201,20 @@ export function limitReachedMessage(feature: GatedFeature) {
     LIMIT_PERIOD[feature] === "monthly"
       ? `this month (resets ${formatResetDate()})`
       : "on the Free plan";
-  return `You've used all ${FREE_LIMITS[feature]} ${NOUNS[feature]} ${period}. Upgrade to Pro for unlimited access.`;
+  const upsell = isProCapped(feature)
+    ? `Upgrade to Pro for ${PRO_LIMITS[feature]} a month.`
+    : "Upgrade to Pro for unlimited access.";
+  return `You've used all ${FREE_LIMITS[feature]} ${NOUNS[feature]} ${period}. ${upsell}`;
 }
 
+const PRO_CAP_NOUNS: Record<ProCappedFeature, string> = {
+  interview: "AI mock interviews",
+  resume_tailor: "tailored resumes",
+};
+
 /** Message for a Pro user who hit a monthly fair-use cap. */
-export function proCapReachedMessage() {
-  return `You've used all ${PRO_LIMITS.interview} AI mock interviews for this month. Your allowance resets on ${formatResetDate()}.`;
+export function proCapReachedMessage(feature: ProCappedFeature = "interview") {
+  return `You've used all ${PRO_LIMITS[feature]} ${PRO_CAP_NOUNS[feature]} for this month. Your allowance resets on ${formatResetDate()}.`;
 }
 
 /**
@@ -214,6 +240,7 @@ export const PLAN_HIGHLIGHTS = {
     `${FREE_LIMITS.job_match} job description matches / month`,
     `${FREE_LIMITS.create_resume} resumes / month in the builder`,
     `${FREE_LIMITS.ai_write} AI writing actions / month`,
+    `${FREE_LIMITS.resume_tailor} tailored resumes to try`,
     "Live ATS checks while you write",
     "PDF export",
   ],
@@ -226,6 +253,7 @@ export const PLAN_HIGHLIGHTS = {
     "Scored interview reports & transcripts",
     "Unlimited resumes in the builder",
     "Unlimited AI writing + Tailor to a job",
+    `${PRO_LIMITS.resume_tailor} tailored resumes / month`,
     "Designer templates, custom colours & fonts",
     "Word export, version history & share view counts",
     "PDF export",

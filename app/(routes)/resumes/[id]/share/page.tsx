@@ -8,7 +8,7 @@ import { getShareSettingsAction } from "@/lib/actions/resume-share";
 import { currentUserIsPro } from "@/lib/plan-tier";
 import ShareResume from "./ShareResume";
 
-export const metadata = { title: "Download & share · ResuMe" };
+export const metadata = { title: "Download & share" };
 
 // Step 3 of the builder: downloads (PDF / Word / text) and the public link.
 export default async function ShareResumePage({ params }: { params: Promise<{ id: string }> }) {
@@ -30,7 +30,7 @@ export default async function ShareResumePage({ params }: { params: Promise<{ id
               share a link.
             </p>
           </div>
-          <Link href={`/resumes/create?from=${id}`} className={cn(buttonVariants(), "rounded-xl font-bold gap-1.5")}>
+          <Link href={`/resumes/create?from=${id}`} className={cn(buttonVariants(), "rounded-lg font-bold gap-1.5")}>
             <Copy className="size-4" /> Make an editable copy
           </Link>
         </div>

@@ -22,6 +22,7 @@ import {
   Mic,
   Target,
   WandSparkles,
+  FileCheck2,
   FilePlus, // 🚀 Added for resume attempts visual styling
 } from "lucide-react";
 import Image from "next/image";
@@ -64,6 +65,8 @@ interface SettingsClientLayoutProps {
       resumes: number | string;
       jobMatches: number | string;
       aiWrites: number | string;
+      tailors: number | string;
+      tailorsThisMonth: number | string;
     };
   };
 }
@@ -85,13 +88,13 @@ function StatCard({
         <Icon className="w-4 h-4 text-brand-strong dark:text-brand" />
       </div>
       <div className="min-w-0">
-        <p className="text-[10px] font-bold text-stone-400 uppercase tracking-wider leading-none mb-0.5">
+        <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider leading-none mb-0.5">
           {label}
         </p>
         <p className="text-sm font-black text-stone-900 dark:text-stone-100 leading-none">
           {value}
         </p>
-        <p className="text-[10px] text-stone-400 mt-0.5">{sub}</p>
+        <p className="text-[11px] text-muted-foreground mt-0.5">{sub}</p>
       </div>
     </div>
   );
@@ -199,13 +202,13 @@ export default function SettingsClientLayout({
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}
             >
-              <p className="text-[10px] font-black uppercase tracking-[0.15em] text-brand-strong dark:text-brand mb-1.5">
+              <p className="text-[11px] font-black uppercase tracking-[0.15em] text-brand-strong dark:text-brand mb-1.5">
                 Account
               </p>
               <h1 className="text-2xl font-black tracking-tight text-stone-900 dark:text-stone-50">
                 Settings
               </h1>
-              <p className="text-xs text-stone-400 mt-1 leading-relaxed">
+              <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
                 Manage your profile, security, and preferences.
               </p>
             </motion.div>
@@ -234,11 +237,11 @@ export default function SettingsClientLayout({
                             <p className="text-sm font-semibold leading-none mb-0.5 text-stone-600 dark:text-stone-400">
                               {item.label}
                             </p>
-                            <p className="text-[10px] text-stone-400 leading-none truncate">
+                            <p className="text-[11px] text-muted-foreground leading-none truncate">
                               {item.description}
                             </p>
                           </div>
-                          <span className="shrink-0 rounded-full border border-stone-200 dark:border-stone-700 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-stone-400">
+                          <span className="shrink-0 rounded-full border border-stone-200 dark:border-stone-700 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
                             Soon
                           </span>
                         </button>
@@ -277,7 +280,7 @@ export default function SettingsClientLayout({
                       >
                         {item.label}
                       </p>
-                      <p className="text-[10px] text-stone-400 leading-none truncate">
+                      <p className="text-[11px] text-muted-foreground leading-none truncate">
                         {item.description}
                       </p>
                     </div>
@@ -288,7 +291,7 @@ export default function SettingsClientLayout({
 
             {/* 📊 UPDATED: Renders ALL 3 structural metrics fed dynamically from billing.ts */}
             <div className="space-y-2 pt-2">
-              <p className="text-[10px] font-black uppercase tracking-[0.12em] text-stone-400 px-1 mb-3">
+              <p className="text-[11px] font-black uppercase tracking-[0.12em] text-muted-foreground px-1 mb-3">
                 Usage Limits
               </p>
 
@@ -318,6 +321,26 @@ export default function SettingsClientLayout({
                 label="AI Writing"
                 value={`${billingData.limits.aiWrites} / ${isPro ? "∞" : FREE_LIMITS.ai_write}`}
                 sub={usageSub("ai_write")}
+              />
+
+              {/* Free: a 3-resume trial that never resets; Pro: 30 a month */}
+              <StatCard
+                icon={FileCheck2}
+                label="Tailored Resumes"
+                value={
+                  billingData.isAdmin
+                    ? `${billingData.limits.tailorsThisMonth} / ∞`
+                    : isPro
+                      ? `${billingData.limits.tailorsThisMonth} / ${PRO_LIMITS.resume_tailor}`
+                      : `${billingData.limits.tailors} / ${FREE_LIMITS.resume_tailor}`
+                }
+                sub={
+                  billingData.isAdmin
+                    ? "Admin: no cap"
+                    : isPro
+                      ? `This month · resets ${formatResetDate()}`
+                      : "Free trial · doesn't reset"
+                }
               />
 
               <StatCard

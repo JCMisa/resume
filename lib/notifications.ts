@@ -1,4 +1,4 @@
-import { FREE_LIMITS, PRO_LIMITS, type UsageCounts } from "./plans";
+import { FREE_LIMITS, LIMIT_PERIOD, PRO_LIMITS, type UsageCounts } from "./plans";
 
 // Pure notification rules (unit-tested in tests/notifications.test.ts).
 // Creating/sending lives in lib/notify.ts (server-only); this file is safe to
@@ -25,6 +25,7 @@ export const CATEGORY_INFO: Record<NotificationCategory, { label: string; descri
 export const NOTIFICATION_KINDS = [
   "analysis_ready",
   "job_match_ready",
+  "tailor_ready",
   "interview_graded",
   "grading_failed",
   "usage_low",
@@ -38,6 +39,7 @@ export type NotificationKind = (typeof NOTIFICATION_KINDS)[number];
 export const KIND_CATEGORY: Record<NotificationKind, NotificationCategory> = {
   analysis_ready: "results",
   job_match_ready: "results",
+  tailor_ready: "results",
   interview_graded: "results",
   grading_failed: "results",
   usage_low: "usage",
@@ -127,17 +129,18 @@ export function pushPayload(n: { title: string; body: string; href: string | nul
 
 // ── Plan usage warnings ─────────────────────────────────────────────────────
 
-export type UsageFeature = "analyze" | "create_resume" | "job_match" | "ai_write" | "interview";
+export type UsageFeature = "analyze" | "create_resume" | "job_match" | "ai_write" | "resume_tailor" | "interview";
 
 const FEATURE_TEXT: Record<UsageFeature, { one: string; many: string; href: string }> = {
   analyze: { one: "AI analysis", many: "AI analyses", href: "/resumes/analyze" },
   create_resume: { one: "resume build", many: "resume builds", href: "/resumes/create" },
   job_match: { one: "job match", many: "job matches", href: "/resumes" },
   ai_write: { one: "AI writing action", many: "AI writing actions", href: "/resumes" },
+  resume_tailor: { one: "tailored resume", many: "tailored resumes", href: "/resumes/create" },
   interview: { one: "mock interview", many: "mock interviews", href: "/interviews" },
 };
 
-const USAGE_COUNT_KEY: Record<UsageFeature, keyof UsageCounts> = {
+const USAGE_COUNT_KEY: Record<Exclude<UsageFeature, "resume_tailor">, keyof UsageCounts> = {
   analyze: "analyses",
   create_resume: "resumes",
   job_match: "jobMatches",
@@ -145,10 +148,16 @@ const USAGE_COUNT_KEY: Record<UsageFeature, keyof UsageCounts> = {
   interview: "interviews",
 };
 
-/** The monthly cap that applies to this user for a feature (Infinity = none). */
+/** Which usage count applies: tailored resumes are counted all-time on Free, monthly on Pro. */
+function usageCount(feature: UsageFeature, billing: { isPro: boolean; limits: UsageCounts }): number {
+  if (feature === "resume_tailor") return billing.isPro ? billing.limits.tailorsThisMonth : billing.limits.tailors;
+  return billing.limits[USAGE_COUNT_KEY[feature]];
+}
+
+/** The cap that applies to this user for a feature (Infinity = none). */
 export function capFor(feature: UsageFeature, plan: { isPro: boolean; isAdmin: boolean }): number {
   if (plan.isAdmin) return Infinity;
-  if (plan.isPro) return feature === "interview" ? PRO_LIMITS.interview : Infinity;
+  if (plan.isPro) return feature in PRO_LIMITS ? PRO_LIMITS[feature as keyof typeof PRO_LIMITS] : Infinity;
   return feature === "interview" ? Infinity : FREE_LIMITS[feature];
 }
 
@@ -161,7 +170,11 @@ export function usageNoticeFor(
   billing: { isPro: boolean; isAdmin: boolean; limits: UsageCounts },
   now = new Date(),
 ): NotificationInput | null {
-  return usageNotice(feature, billing.limits[USAGE_COUNT_KEY[feature]] + 1, capFor(feature, billing), now);
+  const lifetime = !billing.isPro && feature !== "interview" && LIMIT_PERIOD[feature] === "lifetime";
+  return usageNotice(feature, usageCount(feature, billing) + 1, capFor(feature, billing), now, {
+    period: lifetime ? "lifetime" : "monthly",
+    isPro: billing.isPro,
+  });
 }
 
 /** "2026-11": usage warnings are sent at most once per feature per month. */
@@ -173,32 +186,41 @@ export function monthKey(date = new Date()) {
  * Warning to send after a metered action, given usage *including* it.
  * One left -> "low" (only for limits of 3+, so tiny limits don't double-warn);
  * none left -> "reached". Otherwise nothing.
+ * `period: "lifetime"` = a Free trial that never resets (sent once, ever).
  */
 export function usageNotice(
   feature: UsageFeature,
   usedAfter: number,
   limit: number,
   now = new Date(),
+  opts: { period?: "monthly" | "lifetime"; isPro?: boolean } = {},
 ): NotificationInput | null {
   if (!Number.isFinite(limit) || limit <= 0) return null;
   const text = FEATURE_TEXT[feature];
-  const month = monthKey(now);
+  const lifetime = opts.period === "lifetime";
+  // Monthly warnings repeat each month; a lifetime one is sent once
+  const scope = lifetime ? "lifetime" : monthKey(now);
   if (usedAfter === limit) {
+    const proCap = feature in PRO_LIMITS ? PRO_LIMITS[feature as keyof typeof PRO_LIMITS] : null;
     return {
       kind: "usage_reached",
-      title: `You've used all your ${text.many} this month`,
-      body: `You've used ${limit} of ${limit}. Your allowance resets on the 1st, or upgrade to Pro for more.`,
+      title: lifetime ? `You've used all your free ${text.many}` : `You've used all your ${text.many} this month`,
+      body: lifetime
+        ? `You've used ${limit} of ${limit}. Upgrade to Pro for ${proCap ? `${proCap} a month` : "unlimited access"}.`
+        : opts.isPro
+          ? `You've used ${limit} of ${limit}. Your allowance resets on the 1st.`
+          : `You've used ${limit} of ${limit}. Your allowance resets on the 1st, or upgrade to Pro for more.`,
       href: "/settings?tab=billing",
-      dedupeKey: `usage:${feature}:reached:${month}`,
+      dedupeKey: `usage:${feature}:reached:${scope}`,
     };
   }
   if (limit >= 3 && usedAfter === limit - 1) {
     return {
       kind: "usage_low",
-      title: `1 ${text.one} left this month`,
-      body: `You've used ${usedAfter} of ${limit}. It resets on the 1st.`,
+      title: lifetime ? `1 free ${text.one} left` : `1 ${text.one} left this month`,
+      body: lifetime ? `You've used ${usedAfter} of ${limit} on the Free plan.` : `You've used ${usedAfter} of ${limit}. It resets on the 1st.`,
       href: text.href,
-      dedupeKey: `usage:${feature}:low:${month}`,
+      dedupeKey: `usage:${feature}:low:${scope}`,
     };
   }
   return null;
@@ -272,6 +294,16 @@ export function analysisReadyNotice(resume: {
     title: "Your resume analysis is ready",
     body: `${resume.title}${typeof score === "number" ? `: ATS score ${score}/100` : ""}. See what to fix next.`,
     href: `/resumes/${resume.id}`,
+  };
+}
+
+/** A tailored resume is ready to review (from the Create screen). */
+export function tailorReadyNotice(resume: { id: string; title: string }, score: { before: number; after: number }): NotificationInput {
+  return {
+    kind: "tailor_ready",
+    title: "Your tailored resume is ready",
+    body: `${resume.title}: keyword match ${score.before}% → ${score.after}%. Review it and download.`,
+    href: `/resumes/${resume.id}/tailored`,
   };
 }
 

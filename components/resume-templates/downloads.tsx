@@ -17,13 +17,22 @@ function saveBlob(blob: Blob, filename: string) {
   setTimeout(() => URL.revokeObjectURL(url), 10_000);
 }
 
-export async function downloadResumePdf(content: ResumeContent, template: TemplateDef, title: string) {
+/** The resume as a PDF file in memory (same file the download gives). */
+export async function buildResumePdfBlob(content: ResumeContent, template: TemplateDef, title: string): Promise<Blob> {
   // Loaded on demand: the PDF engine is large
   const [{ pdf }, { default: ResumePdfDocument }] = await Promise.all([
     import("@react-pdf/renderer"),
     import("./ResumePdfDocument"),
   ]);
-  const blob = await pdf(<ResumePdfDocument content={content} template={template} title={title} />).toBlob();
+  return pdf(<ResumePdfDocument content={content} template={template} title={title} />).toBlob();
+}
+
+export async function downloadResumePdf(content: ResumeContent, template: TemplateDef, title: string) {
+  saveBlob(await buildResumePdfBlob(content, template, title), `${fileSlug(title)}.pdf`);
+}
+
+/** Save a PDF that was already made (e.g. the one shown in a viewer). */
+export function savePdfBlob(blob: Blob, title: string) {
   saveBlob(blob, `${fileSlug(title)}.pdf`);
 }
 

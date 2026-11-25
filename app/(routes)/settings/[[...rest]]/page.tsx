@@ -2,9 +2,7 @@ import { getUserBillingStatus } from "@/lib/actions/billing";
 import SettingsClientLayout from "./_components/SettingsClientLayout";
 
 export const metadata = {
-  title: "Settings & Usage Billing | ResuMe",
-  description:
-    "Monitor real-time AI usage statistics, account profiles, and active tier configurations.",
+  title: "Settings",
 };
 
 export default async function SettingsPage() {

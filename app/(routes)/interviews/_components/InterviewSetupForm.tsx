@@ -120,7 +120,7 @@ export default function InterviewSetupForm({ onSetupComplete }: SetupProps) {
       <Button
         type="submit"
         disabled={!ready || !role.trim()}
-        className="w-full font-bold h-11 rounded-xl"
+        className="w-full font-bold h-11 rounded-lg"
       >
         <Play className="h-4 w-4 mr-2" />
         Continue to interview

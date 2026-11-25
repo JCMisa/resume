@@ -12,6 +12,8 @@ import {
   ScoreTrendChart,
 } from "../_components/ResumeCharts";
 
+export const metadata = { title: "Resumes" };
+
 export default async function ResumesPage() {
   const [library, billing] = await Promise.all([
     getResumeLibraryAction(),
@@ -34,11 +36,11 @@ export default async function ResumesPage() {
       <div className="flex gap-2 shrink-0">
         <Link
           href="/resumes/create"
-          className={cn(buttonVariants({ variant: "outline" }), "rounded-xl font-bold gap-1.5")}
+          className={cn(buttonVariants({ variant: "outline" }), "rounded-lg font-bold gap-1.5")}
         >
           <FilePlus2 className="size-4" /> Build
         </Link>
-        <Link href="/resumes/analyze" className={cn(buttonVariants(), "rounded-xl font-bold gap-1.5")}>
+        <Link href="/resumes/analyze" className={cn(buttonVariants(), "rounded-lg font-bold gap-1.5")}>
           <Sparkles className="size-4" /> Analyze
         </Link>
       </div>

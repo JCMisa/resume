@@ -38,8 +38,8 @@ export default function ResumeFileViewer({ url }: ResumeFileViewerProps) {
           No File Binary Found
         </p>
         <p className="text-xs max-w-xs mt-1">
-          This legacy resume was parsed before Cloudinary backup archiving was
-          configured.
+          This resume was added before original files were saved, so only its
+          text is available.
         </p>
       </div>
     );

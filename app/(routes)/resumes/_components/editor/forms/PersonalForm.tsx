@@ -99,7 +99,7 @@ export default function PersonalForm({ data, onChange }: PersonalFormProps) {
             variant="outline"
             size="sm"
             onClick={addLinkField}
-            className="rounded-lg text-[11px] font-bold h-7 gap-1"
+            className="rounded-lg font-bold gap-1"
           >
             <Plus className="h-3 w-3" /> Add Profile Link
           </Button>
@@ -127,7 +127,7 @@ export default function PersonalForm({ data, onChange }: PersonalFormProps) {
               variant="ghost"
               size="icon"
               onClick={() => removeLinkField(index)}
-              className="text-destructive hover:bg-destructive/10 rounded-xl"
+              className="text-destructive hover:bg-destructive/10 rounded-lg"
             >
               <Trash2 className="h-4 w-4" />
             </Button>

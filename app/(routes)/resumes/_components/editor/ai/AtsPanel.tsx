@@ -66,7 +66,7 @@ export default function AtsPanel({
       <div className="rounded-2xl border p-4 flex items-center gap-4">
         <div className="text-center shrink-0">
           <p className={cn("text-4xl font-black tabular-nums leading-none", TONE[band.tone])}>{report.score}</p>
-          <p className="text-[10px] text-muted-foreground mt-1">/ 100</p>
+          <p className="text-[11px] text-muted-foreground mt-1">/ 100</p>
         </div>
         <div className="space-y-0.5 min-w-0">
           <p className={cn("text-sm font-black", TONE[band.tone])}>{band.label}</p>
@@ -128,7 +128,7 @@ export default function AtsPanel({
         </section>
       )}
 
-      <p className="text-[10px] text-muted-foreground leading-relaxed">
+      <p className="text-[11px] text-muted-foreground leading-relaxed">
         This is a quick check without AI. The full AI analysis also judges impact, keywords and clarity, so its score can differ.
       </p>
     </div>
