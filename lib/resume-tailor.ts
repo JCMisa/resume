@@ -334,6 +334,19 @@ export function buildTailorChanges(
   return changes;
 }
 
+/**
+ * Review step preview (browser, no resume needed): the "after" score if the
+ * user adds these skills. A missing keyword counts as found when a ticked
+ * skill matches it. The server recomputes the real score on finish.
+ */
+export function previewScore(keywords: (TailorKeyword & { after: boolean })[], confirmed: SkillSuggestion[]): number {
+  if (!keywords.length) return 0;
+  const names = confirmed.map((s) => s.skill).join(", ");
+  return requirementsScore(
+    keywords.map((k) => ({ importance: k.importance, status: k.after || (names && containsTerm(names, k.term)) ? "found" : "missing" })),
+  );
+}
+
 /** The "Added skills" entry of the change list (null when nothing was added). */
 export function addedSkillsChange(skills: string[]): TailorChange | null {
   return skills.length

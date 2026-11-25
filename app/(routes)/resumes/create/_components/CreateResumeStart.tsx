@@ -3,7 +3,8 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { format } from "date-fns";
-import { ArrowRight, Copy, FilePlus2, FileText, Loader2, PenLine, Sparkles, UploadCloud } from "lucide-react";
+import { ArrowRight, Copy, FilePlus2, FileText, Loader2, PenLine, Sparkles, UploadCloud, WandSparkles } from "lucide-react";
+import TailorWizard, { type TailorUsage } from "./tailor/TailorWizard";
 import { toast } from "sonner";
 import Link from "next/link";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -17,20 +18,29 @@ import { describeFreeLimit, isLimitReached, limitReachedMessage } from "@/lib/pl
 type Starter = { id: string; title: string; status: "parsed" | "created"; updatedAt: Date; score: number | null };
 
 const STEPS = ["Choose a template", "Write your resume", "Download & share"];
+const TAILOR_STEPS = ["Your resume + the job", "Review the changes", "Download"];
+
+export type CreateMode = "build" | "tailor";
 
 export default function CreateResumeStart({
   resumes,
   initialFrom,
   buildsLeft,
   allowed,
+  initialMode,
+  tailorUsage,
 }: {
   resumes: Starter[];
   initialFrom: string | null;
   /** null = unlimited (Pro/admin) */
   buildsLeft: number | null;
   allowed: boolean;
+  initialMode: CreateMode;
+  tailorUsage: TailorUsage;
 }) {
   const router = useRouter();
+  const [mode, setMode] = useState<CreateMode>(initialMode);
+  const steps = mode === "tailor" ? TAILOR_STEPS : STEPS;
   const [templateId, setTemplateId] = useState<TemplateId>(DEFAULT_TEMPLATE);
   const [source, setSource] = useState<"blank" | "existing">(initialFrom ? "existing" : "blank");
   const [fromId, setFromId] = useState<string | null>(initialFrom ?? resumes[0]?.id ?? null);
@@ -67,12 +77,43 @@ export default function CreateResumeStart({
           <div>
             <h1 className="text-2xl font-black tracking-tight">Create a resume</h1>
             <p className="text-sm text-muted-foreground mt-0.5">
-              Pick a look, then fill it in. You can switch templates any time without losing anything.
+              {mode === "tailor"
+                ? "Upload or pick a resume, paste a job, and get a version tailored to it. Nothing is invented."
+                : "Pick a look, then fill it in. You can switch templates any time without losing anything."}
             </p>
           </div>
         </div>
+
+        {/* Build from scratch / a copy, or tailor an existing resume to a job */}
+        <div role="tablist" aria-label="How to create" className="grid grid-cols-2 gap-2 max-w-xl">
+          {(
+            [
+              { id: "build", icon: PenLine, title: "Build a resume", text: "Blank or from a copy" },
+              { id: "tailor", icon: WandSparkles, title: "Tailor to a job", text: "Upload + job description" },
+            ] as const
+          ).map((m) => (
+            <button
+              key={m.id}
+              type="button"
+              role="tab"
+              aria-selected={mode === m.id}
+              onClick={() => setMode(m.id)}
+              className={cn(
+                "flex items-center gap-3 rounded-2xl border-2 p-3 text-left transition-all",
+                mode === m.id ? "border-primary bg-primary/5" : "border-transparent ring-1 ring-border hover:ring-primary/40",
+              )}
+            >
+              <m.icon className="size-5 shrink-0 text-brand-strong dark:text-brand" />
+              <span className="min-w-0">
+                <span className="block text-sm font-black">{m.title}</span>
+                <span className="block text-[11px] text-muted-foreground truncate">{m.text}</span>
+              </span>
+            </button>
+          ))}
+        </div>
+
         <ol className="flex flex-wrap items-center gap-2 text-xs font-bold">
-          {STEPS.map((step, i) => (
+          {steps.map((step, i) => (
             <li key={step} className="flex items-center gap-2">
               <span
                 className={cn(
@@ -90,12 +131,16 @@ export default function CreateResumeStart({
                 </span>
                 {step}
               </span>
-              {i < STEPS.length - 1 && <ArrowRight className="size-3.5 text-muted-foreground hidden sm:block" />}
+              {i < steps.length - 1 && <ArrowRight className="size-3.5 text-muted-foreground hidden sm:block" />}
             </li>
           ))}
         </ol>
       </header>
 
+      {mode === "tailor" ? (
+        <TailorWizard resumes={resumes} usage={tailorUsage} initialFrom={initialFrom} />
+      ) : (
+      <>
       {/* Templates */}
       <section className="space-y-3">
         <h2 className="text-lg font-black tracking-tight">1. Choose a template</h2>
@@ -215,6 +260,8 @@ export default function CreateResumeStart({
           </Button>
         </div>
       </div>
+      </>
+      )}
 
       <UpgradeModal
         isOpen={upgrade !== null}

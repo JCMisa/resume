@@ -6,6 +6,7 @@ import {
   hasPlaceholder,
   numbersIn,
   pickOfferedSkills,
+  previewScore,
   sanitizeTailorAi,
   sanitizeTailoredFor,
   tailoredTitle,
@@ -187,6 +188,20 @@ describe("before/after score and changes", () => {
     expect(changes[1]).toMatchObject({ before: ["Built the API", "Led a team of 4"], reason: "Go first" });
     expect(changes[3].after).toEqual(["Kubernetes"]);
     expect(buildTailorChanges(original, original, {})).toEqual([]);
+  });
+});
+
+describe("review step preview", () => {
+  it("ticking a skill that matches a missing keyword raises the preview score", () => {
+    const kw = [
+      { term: "React", importance: "required" as const, after: true },
+      { term: "Kubernetes", importance: "required" as const, after: false },
+      { term: "Jest", importance: "preferred" as const, after: false },
+    ];
+    expect(previewScore(kw, [])).toBe(40); // 2 of 5 points
+    expect(previewScore(kw, [{ category: "Cloud", skill: "Kubernetes" }])).toBe(80);
+    expect(previewScore(kw, [{ category: "Cloud", skill: "Kubernetes" }, { category: "Testing", skill: "Jest" }])).toBe(100);
+    expect(previewScore([], [])).toBe(0);
   });
 });
 
