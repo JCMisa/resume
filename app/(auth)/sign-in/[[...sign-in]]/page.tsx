@@ -5,7 +5,11 @@ import Image from "next/image";
 import { ShieldCheck, FileText, BrainCircuit } from "lucide-react";
 import Link from "next/link";
 import { Suspense } from "react";
-import LightPillar from "@/components/custom/LightPillar";
+import dynamic from "next/dynamic";
+
+// WebGL background (three.js): loaded after the page shows, not in the first
+// download. It is absolutely positioned decoration, so nothing shifts.
+const LightPillar = dynamic(() => import("@/components/custom/LightPillar"), { ssr: false });
 
 export default function SignInPage() {
   return (
@@ -45,7 +49,7 @@ export default function SignInPage() {
           <div className="space-y-6">
             <div className="group flex items-start gap-4 p-4 rounded-xl transition-colors hover:bg-stone-200 dark:hover:bg-white/5">
               <div className="mt-1 rounded-lg bg-primary/10 p-2.5">
-                <ShieldCheck className="h-5 w-5 text-primary" />
+                <ShieldCheck className="h-5 w-5 text-brand-strong dark:text-brand" />
               </div>
               <div>
                 <h4 className="font-semibold text-stone-900 dark:text-white">
@@ -61,7 +65,7 @@ export default function SignInPage() {
 
             <div className="group flex items-start gap-4 p-4 rounded-xl transition-colors hover:bg-stone-200 dark:hover:bg-white/5">
               <div className="mt-1 rounded-lg bg-primary/10 p-2.5">
-                <FileText className="h-5 w-5 text-primary" />
+                <FileText className="h-5 w-5 text-brand-strong dark:text-brand" />
               </div>
               <div>
                 <h4 className="font-semibold text-stone-900 dark:text-white">
@@ -76,7 +80,7 @@ export default function SignInPage() {
 
             <div className="group flex items-start gap-4 p-4 rounded-xl transition-colors hover:bg-stone-200 dark:hover:bg-white/5">
               <div className="mt-1 rounded-lg bg-primary/10 p-2.5">
-                <BrainCircuit className="h-5 w-5 text-primary" />
+                <BrainCircuit className="h-5 w-5 text-brand-strong dark:text-brand" />
               </div>
               <div>
                 <h4 className="font-semibold text-stone-900 dark:text-white">
@@ -124,33 +128,37 @@ export default function SignInPage() {
               </p>
             </div>
 
-            <SignIn
-              appearance={{
-                elements: {
-                  formButtonPrimary:
-                    "bg-primary hover:bg-primary/90 text-sm normal-case shadow-sm",
-                  card: "shadow-none border-none bg-transparent p-0",
-                  socialButtonsBlockButton:
-                    "border-input bg-white dark:bg-background hover:bg-accent hover:text-accent-foreground",
-                  dividerLine: "bg-border",
-                  dividerText:
-                    "text-stone-600 dark:text-muted-foreground text-xs uppercase",
-                  footer: "hidden",
-                },
-                options: {
-                  logoImageUrl: "/logo.svg",
-                  socialButtonsVariant: "blockButton",
-                },
-              }}
-            />
+            {/* Reserve the form's space: Clerk renders it after load, and the
+                centered column would otherwise jump (layout shift) */}
+            <div className="w-full min-h-[590px] sm:min-h-[550px] flex justify-center">
+              <SignIn
+                appearance={{
+                  elements: {
+                    formButtonPrimary:
+                      "bg-primary hover:bg-primary/90 text-sm normal-case shadow-sm",
+                    card: "shadow-none border-none bg-transparent p-0",
+                    socialButtonsBlockButton:
+                      "border-input bg-white dark:bg-background hover:bg-accent hover:text-accent-foreground",
+                    dividerLine: "bg-border",
+                    dividerText:
+                      "text-stone-600 dark:text-muted-foreground text-xs uppercase",
+                    footer: "hidden",
+                  },
+                  options: {
+                    logoImageUrl: "/logo.svg",
+                    socialButtonsVariant: "blockButton",
+                  },
+                }}
+              />
+            </div>
 
             <p className="text-center text-xs text-stone-600 dark:text-muted-foreground">
               By continuing, you agree to our{" "}
-              <Link href="/terms" className="text-primary hover:underline">
+              <Link href="/terms" className="text-brand-strong dark:text-brand hover:underline">
                 Terms of Service
               </Link>{" "}
               and{" "}
-              <Link href="/privacy" className="text-primary hover:underline">
+              <Link href="/privacy" className="text-brand-strong dark:text-brand hover:underline">
                 Privacy Policy
               </Link>
               .

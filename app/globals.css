@@ -246,3 +246,28 @@
     scroll-behavior: smooth;
   }
 }
+
+/* Landing hero entrance: CSS (not JS) so text is painted on first load.
+   Per-element distance/duration/delay via --rise and inline animation-*. */
+.hero-rise {
+  animation-name: hero-rise;
+  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+  animation-fill-mode: both;
+}
+@keyframes hero-rise {
+  /* 0.01, not 0: looks the same, but browsers count fully transparent text as
+     "not shown yet", which delayed the page's Largest Contentful Paint */
+  from {
+    opacity: 0.01;
+    transform: translateY(var(--rise, 16px));
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hero-rise {
+    animation: none;
+  }
+}

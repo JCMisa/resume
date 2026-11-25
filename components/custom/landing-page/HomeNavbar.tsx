@@ -12,7 +12,6 @@ import {
   MobileNavMenu,
 } from "../../ui/resizable-navbar";
 import { useUser } from "@clerk/nextjs";
-import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Button } from "../../ui/button";
 import Link from "next/link";
@@ -21,7 +20,6 @@ import { ArrowRightIcon } from "lucide-react";
 export default function HomeNavbar() {
   const { user } = useUser();
 
-  const router = useRouter();
 
   const navItems = [
     {
@@ -67,13 +65,15 @@ export default function HomeNavbar() {
             <div className="flex items-center gap-4">
               <NavbarButton
                 variant="secondary"
-                onClick={() => router.push("/sign-in")}
+                as={Link}
+                href="/sign-in"
               >
                 Sign in
               </NavbarButton>
               <NavbarButton
                 variant="primary"
-                onClick={() => router.push("/sign-up")}
+                as={Link}
+                href="/sign-up"
               >
                 Sign up
               </NavbarButton>
@@ -119,20 +119,18 @@ export default function HomeNavbar() {
             ) : (
               <div className="flex w-full flex-col gap-4">
                 <NavbarButton
-                  onClick={() => {
-                    setIsMobileMenuOpen(false);
-                    router.push("/sign-in");
-                  }}
+                  as={Link}
+                  href="/sign-in"
+                  onClick={() => setIsMobileMenuOpen(false)}
                   variant="secondary"
                   className="w-full"
                 >
                   Sign in
                 </NavbarButton>
                 <NavbarButton
-                  onClick={() => {
-                    setIsMobileMenuOpen(false);
-                    router.push("/sign-up");
-                  }}
+                  as={Link}
+                  href="/sign-up"
+                  onClick={() => setIsMobileMenuOpen(false)}
                   variant="primary"
                   className="w-full"
                 >

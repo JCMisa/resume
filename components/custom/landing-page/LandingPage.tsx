@@ -36,7 +36,11 @@ import {
 } from "lucide-react";
 import { ShineBorder } from "@/components/ui/shine-border";
 import HomeNavbar from "./HomeNavbar";
-import LightPillar from "../LightPillar";
+import dynamic from "next/dynamic";
+
+// WebGL background (three.js): loaded after the page shows, not in the first
+// download. It is absolutely positioned decoration, so nothing shifts.
+const LightPillar = dynamic(() => import("@/components/custom/LightPillar"), { ssr: false });
 import ElectricBorder from "../ElectricBorder";
 import { Highlighter } from "@/components/ui/highlighter";
 import Image from "next/image";
@@ -228,25 +232,21 @@ function Hero() {
         className="relative z-10 w-full max-w-5xl mx-auto"
       >
         {/* Eyebrow */}
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.05 }}
-          className="flex justify-center mb-7"
+        {/* Entrance runs in CSS (.hero-rise) so the text paints before JS loads */}
+        <div
+          className="hero-rise flex justify-center mb-7"
+          style={{ "--rise": "16px", animationDuration: "600ms", animationDelay: "50ms" } as React.CSSProperties}
         >
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-brand/10 border border-brand/20 text-brand-strong dark:text-brand text-[11px] font-black uppercase tracking-[0.15em]">
             <Sparkles className="w-3 h-3" />
             New · Tailor your resume to any job
           </div>
-        </motion.div>
+        </div>
 
         {/* Headline — editorial split */}
-        <motion.h1
-          initial={{ opacity: 0, y: 32 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.12, ease: [0.16, 1, 0.3, 1] }}
-          className="text-center mb-7"
-          style={{ fontFamily: "'Sora', sans-serif" }}
+        <h1
+          className="hero-rise text-center mb-7"
+          style={{ fontFamily: "'Sora', sans-serif", "--rise": "32px", animationDuration: "800ms", animationDelay: "120ms" } as React.CSSProperties}
         >
           <span className="block text-[clamp(2.6rem,7vw,5.5rem)] font-black tracking-[-0.03em] leading-[1.0] text-stone-900 dark:text-stone-50">
             Your resume,
@@ -270,25 +270,21 @@ function Hero() {
             </span>
             <span className="text-stone-900 dark:text-stone-50"> to every job.</span>
           </span>
-        </motion.h1>
+        </h1>
 
-        <motion.p
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
-          className="text-center text-base sm:text-lg text-stone-500 dark:text-stone-400 max-w-xl mx-auto mb-10 leading-relaxed font-medium"
+        <p
+          className="hero-rise text-center text-base sm:text-lg text-stone-600 dark:text-stone-400 max-w-xl mx-auto mb-10 leading-relaxed font-medium"
+          style={{ "--rise": "20px", animationDuration: "700ms", animationDelay: "250ms" } as React.CSSProperties}
         >
           Paste a job post and ResuMe rewrites your resume around it, checks it
           like an ATS would, and lets you practise the interview out loud. Your
           employers, dates and numbers stay exactly as you wrote them.
-        </motion.p>
+        </p>
 
         {/* CTA Row */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.45 }}
-          className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-12"
+        <div
+          className="hero-rise flex flex-col sm:flex-row items-center justify-center gap-3 mb-12"
+          style={{ "--rise": "20px", animationDuration: "600ms", animationDelay: "400ms" } as React.CSSProperties}
         >
           <MagneticButton
             href={startHref(TAILOR_PATH)}
@@ -315,14 +311,12 @@ function Hero() {
             See how it works
             <ChevronDown className="w-4 h-4" />
           </Link>
-        </motion.div>
+        </div>
 
         {/* Trust row */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.6, delay: 0.65 }}
-          className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-xs sm:text-sm text-stone-500 dark:text-stone-400 mb-16"
+        <div
+          className="hero-rise flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-xs sm:text-sm text-stone-500 dark:text-stone-400 mb-16"
+          style={{ "--rise": "0px", animationDuration: "600ms", animationDelay: "600ms" } as React.CSSProperties}
         >
           {[
             `${FREE_LIMITS.resume_tailor} tailored resumes free`,
@@ -334,7 +328,7 @@ function Hero() {
               <span className="font-medium">{t}</span>
             </div>
           ))}
-        </motion.div>
+        </div>
 
         {/* Hero Dashboard Mockup */}
         <motion.div
@@ -394,7 +388,7 @@ function Hero() {
                 <div className="w-3 h-3 rounded-full bg-brand/80" />
               </div>
               <div className="flex-1 h-5 rounded-md bg-stone-200 dark:bg-stone-700 flex items-center px-3">
-                <span className="text-[11px] font-mono text-stone-500 dark:text-stone-400 truncate">
+                <span className="text-[11px] font-mono text-stone-600 dark:text-stone-300 truncate">
                   ResuMe · ATS report
                 </span>
               </div>

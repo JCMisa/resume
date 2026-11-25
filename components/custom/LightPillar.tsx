@@ -374,7 +374,31 @@ const LightPillar: React.FC<LightPillarProps> = ({
 
       rafRef.current = requestAnimationFrame(animate);
     };
-    rafRef.current = requestAnimationFrame(animate);
+
+    // Only draw while this pillar is on screen and the tab is visible: the
+    // landing page has several, and drawing all of them every frame blocked
+    // the main thread for seconds on phones. Resumes where it left off.
+    let onScreen = false;
+    const start = () => {
+      if (rafRef.current || !onScreen || document.hidden) return;
+      lastTime = performance.now();
+      rafRef.current = requestAnimationFrame(animate);
+    };
+    const stop = () => {
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+      rafRef.current = null;
+    };
+    const visibility = new IntersectionObserver(
+      ([entry]) => {
+        onScreen = entry.isIntersecting;
+        if (onScreen) start();
+        else stop();
+      },
+      { rootMargin: "100px" },
+    );
+    visibility.observe(container);
+    const onTabChange = () => (document.hidden ? stop() : start());
+    document.addEventListener("visibilitychange", onTabChange);
 
     // Handle resize with debouncing
     let resizeTimeout: number | null = null;
@@ -401,6 +425,8 @@ const LightPillar: React.FC<LightPillarProps> = ({
 
     // Cleanup
     return () => {
+      visibility.disconnect();
+      document.removeEventListener("visibilitychange", onTabChange);
       window.removeEventListener("resize", handleResize);
       if (interactive) {
         container.removeEventListener("mousemove", handleMouseMove);
