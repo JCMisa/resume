@@ -17,6 +17,7 @@ import {
   ShieldOff,
   Target,
   Video,
+  WandSparkles,
   X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -52,6 +53,7 @@ const PROMPT_SNOOZE_MS = 14 * 24 * 60 * 60 * 1000;
 const KIND_ICON: Record<NotificationKind, { icon: React.ElementType; tone: string }> = {
   analysis_ready: { icon: FileSearch, tone: "text-brand-strong dark:text-brand" },
   job_match_ready: { icon: Target, tone: "text-brand-strong dark:text-brand" },
+  tailor_ready: { icon: WandSparkles, tone: "text-brand-strong dark:text-brand" },
   interview_graded: { icon: Video, tone: "text-brand-strong dark:text-brand" },
   grading_failed: { icon: AlertTriangle, tone: "text-amber-600 dark:text-amber-400" },
   usage_low: { icon: Gauge, tone: "text-amber-600 dark:text-amber-400" },

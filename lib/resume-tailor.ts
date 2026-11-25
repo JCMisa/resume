@@ -26,7 +26,13 @@ export const TAILOR_LIMITS = {
 } as const;
 
 export type KeywordImportance = "required" | "preferred";
-export type TailorKeyword = { term: string; importance: KeywordImportance };
+/**
+ * kind: "tool" = a named thing that is a checkable fact (technology, language,
+ * framework, platform, standard, certification); "skill" = a general ability,
+ * soft skill, domain or role phrase. Only "tool" terms are held to the
+ * "the resume must already mention it" rule.
+ */
+export type TailorKeyword = { term: string; importance: KeywordImportance; kind?: "tool" | "skill" };
 
 export type TailorChange = {
   section: "summary" | "experience" | "projects" | "skills" | "order";
@@ -40,6 +46,13 @@ export type TailorChange = {
 /** Stored with the tailored resume (resumes.tailored_for). */
 export type TailoredFor = {
   version: 1;
+  /**
+   * "review": made by the AI, waiting for the user to tick the missing skills
+   * they really have and pick a template; "done": finished
+   */
+  stage: "review" | "done";
+  /** Missing skills offered in the review step (emptied when done) */
+  suggestedSkills: SkillSuggestion[];
   jobTitle: string;
   company: string;
   jobDescription: string;
@@ -140,6 +153,28 @@ function guardSkills(original: ResumeContent["skills"], raw: unknown, newId: () 
   return out;
 }
 
+// ── Honesty checks on rewritten text ────────────────────────────────────────
+
+/**
+ * Numbers in a text, normalized: "1,200" -> "1200"; "40%" / "40 percent" and
+ * "500+" / "over 500" count as the same number. Metrics, counts, years.
+ */
+export function numbersIn(text: string): Set<string> {
+  return new Set((text.match(/\d[\d,.]*/g) ?? []).map((n) => n.replace(/,/g, "").replace(/\.$/, "")));
+}
+
+const sameSet = (a: Set<string>, b: Set<string>) => a.size === b.size && [...a].every((x) => b.has(x));
+
+/**
+ * Job keywords a rewrite uses that the ORIGINAL resume never mentions: the
+ * model claiming experience the candidate didn't state (e.g. "WCAG").
+ */
+export function unsupportedTerms(rewrite: string, originalText: string, keywords: TailorKeyword[]): string[] {
+  return keywords
+    .filter((k) => k.kind !== "skill" && containsTerm(rewrite, k.term) && !containsTerm(originalText, k.term))
+    .map((k) => k.term);
+}
+
 /** Turn the AI's raw answer into a safe draft based on the original resume. */
 export function sanitizeTailorAi(
   raw: unknown,
@@ -149,9 +184,31 @@ export function sanitizeTailorAi(
   const o = obj(raw);
   const reasons: Record<string, string> = {};
   const content: ResumeContent = structuredClone(original);
+  const originalText = contentText(toPlainContent(original));
 
+  const seenTerms = new Set<string>();
+  const keywords: TailorKeyword[] = [];
+  for (const item of list(o.keywords)) {
+    const k = obj(item);
+    const term = clean(k.term, TAILOR_LIMITS.termMax);
+    if (!term || seenTerms.has(key(term))) continue;
+    seenTerms.add(key(term));
+    keywords.push({
+      term,
+      importance: k.importance === "preferred" ? "preferred" : "required",
+      kind: k.kind === "skill" ? "skill" : "tool",
+    });
+    if (keywords.length === TAILOR_LIMITS.keywords) break;
+  }
+
+  // Summary: no job terms the resume never mentions, no numbers it doesn't contain
   const summary = clean(o.summary, TAILOR_LIMITS.summaryMax);
-  if (okLine(summary, 20)) {
+  const resumeNumbers = numbersIn(originalText);
+  if (
+    okLine(summary, 20) &&
+    !unsupportedTerms(summary, originalText, keywords).length &&
+    [...numbersIn(summary)].every((n) => resumeNumbers.has(n))
+  ) {
     content.professionalSummary = summary;
     const r = clean(o.summaryReason, TAILOR_LIMITS.reasonMax);
     if (r) reasons.summary = r;
@@ -165,8 +222,13 @@ export function sanitizeTailorAi(
       const target = content[field]?.[index] as Record<string, unknown> | undefined;
       if (!Number.isInteger(index) || seen.has(index) || !target) continue;
       seen.add(index);
+      const before = nonEmpty(target[bulletKey] as string[] | undefined).map(plain).join("\n");
       const next = guardBullets(target[bulletKey] as string[] | undefined, e.bullets);
       if (!next) continue;
+      const after = next.join("\n");
+      // Every number kept and none added; no job terms the resume never mentions
+      if (!sameSet(numbersIn(before), numbersIn(after))) continue;
+      if (unsupportedTerms(after, originalText, keywords).length) continue;
       target[bulletKey] = next;
       const r = clean(e.reason, TAILOR_LIMITS.reasonMax);
       if (r) reasons[`${section}:${index}`] = r;
@@ -180,17 +242,6 @@ export function sanitizeTailorAi(
   // Section order: known keys only, every section kept, contact details first
   const order = normalizeSectionOrder(o.sectionOrder, (original.customSections ?? []).map((c) => c.id));
   content.sectionOrder = ["personal", ...order.filter((k) => k !== "personal")];
-
-  const seenTerms = new Set<string>();
-  const keywords: TailorKeyword[] = [];
-  for (const item of list(o.keywords)) {
-    const k = obj(item);
-    const term = clean(k.term, TAILOR_LIMITS.termMax);
-    if (!term || seenTerms.has(key(term))) continue;
-    seenTerms.add(key(term));
-    keywords.push({ term, importance: k.importance === "preferred" ? "preferred" : "required" });
-    if (keywords.length === TAILOR_LIMITS.keywords) break;
-  }
 
   return {
     jobTitle: clean(o.jobTitle, 120),
@@ -273,16 +324,40 @@ export function buildTailorChanges(
   if (beforeSkills.map(key).join("|") !== afterSkills.map(key).join("|")) {
     changes.push({ section: "skills", label: "Skills order", before: beforeSkills, after: afterSkills, reason: "The skills this job asks for come first" });
   }
-  const added = confirmedSkills.map((s) => s.skill).filter((s) => !existingSkillKeys(original.skills).has(key(s)));
-  if (added.length) {
-    changes.push({ section: "skills", label: "Added skills", before: [], after: added, reason: "You confirmed you have these and the job asks for them" });
-  }
+  const added = addedSkillsChange(confirmedSkills.map((s) => s.skill).filter((s) => !existingSkillKeys(original.skills).has(key(s))));
+  if (added) changes.push(added);
 
   const titles = (c: ResumeContent) => c.sectionOrder.filter((k) => k !== "personal").map((k) => sectionTitle(c, k));
   if (original.sectionOrder.join("|") !== tailored.sectionOrder.join("|")) {
     changes.push({ section: "order", label: "Section order", before: titles(original), after: titles(tailored), reason: "The most relevant sections come first" });
   }
   return changes;
+}
+
+/** The "Added skills" entry of the change list (null when nothing was added). */
+export function addedSkillsChange(skills: string[]): TailorChange | null {
+  return skills.length
+    ? { section: "skills", label: "Added skills", before: [], after: skills, reason: "You confirmed you have these and the job asks for them" }
+    : null;
+}
+
+/**
+ * The confirmed skills, keeping only ones that were actually offered (a
+ * client can't add arbitrary skills through the review step).
+ */
+export function pickOfferedSkills(raw: unknown, offered: SkillSuggestion[]): SkillSuggestion[] {
+  const byKey = new Map(offered.map((s) => [key(s.skill), s]));
+  const out: SkillSuggestion[] = [];
+  const seen = new Set<string>();
+  for (const item of list(raw)) {
+    const k = key(typeof obj(item).skill === "string" ? (obj(item).skill as string) : "");
+    const hit = byKey.get(k);
+    if (hit && !seen.has(k)) {
+      seen.add(k);
+      out.push(hit);
+    }
+  }
+  return out;
 }
 
 /** "Resume · Acme · Frontend Developer" (fits the title limit). */
@@ -301,6 +376,8 @@ export function sanitizeTailoredFor(raw: unknown): TailoredFor | null {
   const strings = (v: unknown) => list(v).filter((x): x is string => typeof x === "string").slice(0, 60).map((x) => x.slice(0, 2000));
   return {
     version: 1,
+    stage: o.stage === "review" ? "review" : "done",
+    suggestedSkills: sanitizeSkillSuggestions({ skills: o.suggestedSkills }, [], TAILOR_LIMITS.suggestedSkills),
     jobTitle: str(o.jobTitle, 120),
     company: str(o.company, 120),
     jobDescription: str(o.jobDescription, TAILOR_LIMITS.jobDescriptionMax),

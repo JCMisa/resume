@@ -25,6 +25,7 @@ export const CATEGORY_INFO: Record<NotificationCategory, { label: string; descri
 export const NOTIFICATION_KINDS = [
   "analysis_ready",
   "job_match_ready",
+  "tailor_ready",
   "interview_graded",
   "grading_failed",
   "usage_low",
@@ -38,6 +39,7 @@ export type NotificationKind = (typeof NOTIFICATION_KINDS)[number];
 export const KIND_CATEGORY: Record<NotificationKind, NotificationCategory> = {
   analysis_ready: "results",
   job_match_ready: "results",
+  tailor_ready: "results",
   interview_graded: "results",
   grading_failed: "results",
   usage_low: "usage",
@@ -292,6 +294,16 @@ export function analysisReadyNotice(resume: {
     title: "Your resume analysis is ready",
     body: `${resume.title}${typeof score === "number" ? `: ATS score ${score}/100` : ""}. See what to fix next.`,
     href: `/resumes/${resume.id}`,
+  };
+}
+
+/** A tailored resume is ready to review (from the Create screen). */
+export function tailorReadyNotice(resume: { id: string; title: string }, score: { before: number; after: number }): NotificationInput {
+  return {
+    kind: "tailor_ready",
+    title: "Your tailored resume is ready",
+    body: `${resume.title}: keyword match ${score.before}% → ${score.after}%. Review it and download.`,
+    href: `/resumes/${resume.id}/tailored`,
   };
 }
 

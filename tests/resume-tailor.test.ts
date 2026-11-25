@@ -4,9 +4,12 @@ import {
   compareScores,
   finalizeTailoredContent,
   hasPlaceholder,
+  numbersIn,
+  pickOfferedSkills,
   sanitizeTailorAi,
   sanitizeTailoredFor,
   tailoredTitle,
+  unsupportedTerms,
 } from "@/lib/resume-tailor";
 import { sanitizeEditorContent } from "@/lib/resume-editor";
 
@@ -40,7 +43,7 @@ describe("fact guard", () => {
         // The AI tries to change facts: ignored, only bullets are taken
         role: "Senior Staff Engineer",
         company: "Google",
-        bullets: ["Built a REST API in Go serving 3 internal teams", "Led a team of 4 engineers through 2 launches"],
+        bullets: ["Built a REST API in Go for the platform", "Led a team of 4 engineers"],
         reason: "Uses the job's terms",
       },
       { index: 1, bullets: ["Invented a whole new bullet"], reason: "x" }, // had none: rejected
@@ -106,6 +109,47 @@ describe("fact guard", () => {
     expect(same.keywords).toEqual([]);
   });
 
+  it("a rewrite must keep every number and add none", () => {
+    const dropped = sanitizeTailorAi({ experiences: [{ index: 0, bullets: ["Built the API", "Led a team"] }] }, original, ids);
+    expect(dropped.content.experiences![0].bullets).toEqual(original.experiences![0].bullets);
+    const added = sanitizeTailorAi({ experiences: [{ index: 0, bullets: ["Built the API for 300 users", "Led a team of 4"] }] }, original, ids);
+    expect(added.content.experiences![0].bullets).toEqual(original.experiences![0].bullets);
+    expect([...numbersIn("Cut costs 40% for 1,200 users, 500+ downloads")]).toEqual(["40", "1200", "500"]);
+  });
+
+  it("a rewrite can't claim a named tool the resume never mentions; general skills are fine", () => {
+    const keywords = [
+      { term: "Kubernetes", importance: "required" as const, kind: "tool" as const },
+      { term: "mentoring", importance: "preferred" as const, kind: "skill" as const },
+    ];
+    const claim = sanitizeTailorAi(
+      { keywords, experiences: [{ index: 0, bullets: ["Built the API on Kubernetes", "Led a team of 4"] }] },
+      original,
+      ids,
+    );
+    expect(claim.content.experiences![0].bullets).toEqual(original.experiences![0].bullets);
+    const soft = sanitizeTailorAi(
+      { keywords, experiences: [{ index: 0, bullets: ["Built the API", "Led and mentored a team of 4"] }] },
+      original,
+      ids,
+    );
+    expect(soft.content.experiences![0].bullets).toEqual(["Built the API", "Led and mentored a team of 4"]);
+    expect(unsupportedTerms("Ran Kubernetes", "TypeScript, Go", keywords)).toEqual(["Kubernetes"]);
+  });
+
+  it("a summary can't add numbers or named tools the resume doesn't have", () => {
+    const keywords = [{ term: "Kubernetes", importance: "required" as const, kind: "tool" as const }];
+    expect(sanitizeTailorAi({ keywords, summary: "Engineer with 10 years of Go experience." }, original, ids).content.professionalSummary).toBe(
+      original.professionalSummary,
+    );
+    expect(sanitizeTailorAi({ keywords, summary: "Go engineer running Kubernetes clusters." }, original, ids).content.professionalSummary).toBe(
+      original.professionalSummary,
+    );
+    expect(sanitizeTailorAi({ keywords, summary: "Go engineer who led a team of 4." }, original, ids).content.professionalSummary).toBe(
+      "Go engineer who led a team of 4.",
+    );
+  });
+
   it("spots placeholders", () => {
     expect(hasPlaceholder("Cut costs by [X%]")).toBe(true);
     expect(hasPlaceholder("Served XX users")).toBe(true);
@@ -120,9 +164,9 @@ describe("before/after score and changes", () => {
       experiences: [{ index: 0, bullets: ["Built a REST API in Go", "Led a team of 4"], reason: "Go first" }],
       skills: [{ category: "Languages", skill: "Go" }],
       keywords: [
-        { term: "Go", importance: "required" },
-        { term: "Kubernetes", importance: "required" },
-        { term: "Mentoring", importance: "preferred" },
+        { term: "Go", importance: "required", kind: "tool" },
+        { term: "Kubernetes", importance: "required", kind: "tool" },
+        { term: "Mentoring", importance: "preferred", kind: "skill" },
       ],
     },
     original,
@@ -143,6 +187,16 @@ describe("before/after score and changes", () => {
     expect(changes[1]).toMatchObject({ before: ["Built the API", "Led a team of 4"], reason: "Go first" });
     expect(changes[3].after).toEqual(["Kubernetes"]);
     expect(buildTailorChanges(original, original, {})).toEqual([]);
+  });
+});
+
+describe("review step", () => {
+  it("only skills that were offered can be confirmed", () => {
+    const offered = [{ category: "Cloud", skill: "Kubernetes" }, { category: "Tools", skill: "Terraform" }];
+    expect(
+      pickOfferedSkills([{ skill: "kubernetes" }, { skill: "Rust" }, { skill: "Kubernetes" }, "junk"], offered),
+    ).toEqual([{ category: "Cloud", skill: "Kubernetes" }]);
+    expect(pickOfferedSkills(null, offered)).toEqual([]);
   });
 });
 
@@ -167,6 +221,8 @@ describe("titles and the stored record", () => {
       changes: [{ section: "bogus", label: "Summary", before: ["a", 5], after: ["b"], reason: "r" }],
     })!;
     expect(r.source).toBe("resume");
+    expect(r.stage).toBe("done"); // anything but "review" is finished
+    expect(r.suggestedSkills).toEqual([]);
     expect(r.score).toEqual({ before: 42, after: 100 });
     expect(r.keywords).toEqual([{ term: "Go", importance: "required", before: false, after: true }]);
     expect(r.changes[0]).toMatchObject({ section: "summary", before: ["a"] });
