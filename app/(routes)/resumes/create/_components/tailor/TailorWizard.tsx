@@ -155,8 +155,7 @@ export default function TailorWizard({
           data={review}
           isPro={usage.isPro}
           onLocked={() => setUpgrade("design")}
-          // T4 adds the result page; until then the tailored resume opens in the editor
-          onDone={(id) => router.push(`/resumes/${id}/edit`)}
+          onDone={(id) => router.push(`/resumes/${id}/tailored`)}
         />
         <UpgradeModal isOpen={upgrade !== null} onClose={() => setUpgrade(null)} {...upgradeText} />
       </>

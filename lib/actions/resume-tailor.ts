@@ -202,6 +202,57 @@ export async function startResumeTailorAction(formData: FormData) {
   }
 }
 
+/** A tailored resume for its result page (owner only; never the analysis). */
+export async function getTailoredResumeAction(resumeId: string) {
+  try {
+    const { userId } = await auth();
+    if (!userId) return { success: false as const, error: "Not signed in." };
+    if (typeof resumeId !== "string" || !UUID.test(resumeId)) return { success: false as const, error: "Resume not found." };
+
+    const [row] = await db
+      .select({
+        id: resumes.id,
+        title: resumes.title,
+        status: resumes.status,
+        templateId: resumes.templateId,
+        content: resumes.content,
+        tailoredFor: resumes.tailoredFor,
+        updatedAt: resumes.updatedAt,
+      })
+      .from(resumes)
+      .where(and(eq(resumes.id, resumeId), eq(resumes.userId, userId)));
+    if (!row) return { success: false as const, error: "Resume not found." };
+
+    // Only link back to a source resume that still exists and is the user's
+    const tailoredFor = sanitizeTailoredFor(row.tailoredFor);
+    let sourceTitle: string | null = null;
+    if (tailoredFor?.sourceResumeId && UUID.test(tailoredFor.sourceResumeId)) {
+      const [src] = await db
+        .select({ title: resumes.title })
+        .from(resumes)
+        .where(and(eq(resumes.id, tailoredFor.sourceResumeId), eq(resumes.userId, userId)));
+      sourceTitle = src?.title ?? null;
+    }
+
+    return {
+      success: true as const,
+      data: {
+        id: row.id,
+        title: row.title,
+        status: row.status,
+        templateId: isTemplateId(row.templateId) ? row.templateId : DEFAULT_TEMPLATE,
+        content: sanitizeEditorContent(row.content),
+        tailoredFor,
+        sourceTitle,
+        updatedAt: row.updatedAt,
+      },
+    };
+  } catch (error) {
+    console.error("Get Tailored Resume Failure:", error);
+    return { success: false as const, error: "Couldn't load this resume." };
+  }
+}
+
 /** Review step: add the confirmed skills and the chosen template. Free (no AI). */
 export async function finishResumeTailorAction(resumeId: string, input: { skills?: unknown; templateId?: unknown }) {
   try {
